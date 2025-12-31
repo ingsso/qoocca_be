@@ -80,7 +80,7 @@ public class UserController {
         if (verified == null) return ResponseEntity.badRequest().body("인증이 필요합니다.");
 
         try {
-            Optional<UserEntity> existingUserOpt = userRepository.findByPhone(phone);
+            Optional<UserEntity> existingUserOpt = userRepository.findByPhoneNumber(phone);
 
             if (existingUserOpt.isPresent()) {
                 UserEntity existingUserEntity = existingUserOpt.get();
@@ -115,7 +115,7 @@ public class UserController {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 소셜 유저를 찾을 수 없습니다.");
                 }
 
-                socialUserEntity.setPhone(phone);
+                socialUserEntity.setPhoneNumber(phone);
                 userRepository.save(socialUserEntity);
 
                 return generateLoginResponse(socialUserEntity, response);
@@ -129,7 +129,7 @@ public class UserController {
     public ResponseEntity<String> sendVerificationCode(@RequestBody Map<String, String> body) {
         String phone = body.get("phone");
 
-        Optional<UserEntity> existingUser = userRepository.findByPhone(phone);
+        Optional<UserEntity> existingUser = userRepository.findByPhoneNumber(phone);
 
         if (existingUser.isPresent() && existingUser.get().getPassword() != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("이미 가입된 휴대폰 번호입니다.");

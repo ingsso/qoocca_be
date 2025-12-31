@@ -1,5 +1,6 @@
 package com.example.qoocca_be.user.entity;
 
+import com.example.qoocca_be.academy.entity.AcademyEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -58,4 +59,8 @@ public class UserEntity {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<AcademyEntity> academies = new ArrayList<>();
 }

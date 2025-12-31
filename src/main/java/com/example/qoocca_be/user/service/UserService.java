@@ -26,7 +26,7 @@ public class UserService {
             throw new RuntimeException("휴대폰 인증이 완료되지 않았습니다.");
         }
 
-        UserEntity userEntity = userRepository.findByPhone(req.getPhone())
+        UserEntity userEntity = userRepository.findByPhoneNumber(req.getPhone())
                 .map(existingUser -> {
                     if (existingUser.getPassword() != null) {
                         throw new RuntimeException("이미 사용 중인 전화번호 입니다.");

@@ -1,5 +1,6 @@
 package com.example.qoocca_be.age.entity;
 
+import com.example.qoocca_be.age.model.AgeResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -23,14 +24,21 @@ public class AgeEntity {
     @Column(name = "age_id")
     private Long id;
 
-    @Column(name = "age_code")
+    @Column(name = "age_code", length = 50)
     private String ageCode;
 
     @CreatedDate
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, columnDefinition = "datetime(6)")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", columnDefinition = "datetime(6)")
     private LocalDateTime updatedAt;
+
+    public AgeResponseDto toResponseDto() {
+        return AgeResponseDto.builder()
+                .id(this.id)
+                .ageCode(this.ageCode)
+                .build();
+    }
 }

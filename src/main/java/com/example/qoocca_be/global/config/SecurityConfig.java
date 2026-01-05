@@ -1,6 +1,7 @@
-package com.example.qoocca_be.user.security.config;
+package com.example.qoocca_be.global.config;
 
-import com.example.qoocca_be.user.security.filter.JwtAuthenticationFilter;
+import com.example.qoocca_be.global.jwt.JwtAuthenticationFilter;
+import com.example.qoocca_be.global.security.AcademyApprovalFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AcademyApprovalFilter academyApprovalFilter;
 
     @Value("${cors.allowed-origins}")
     private List<String> allowedOrigins;
@@ -38,12 +40,17 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/private/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/class/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
-                ).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(academyApprovalFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

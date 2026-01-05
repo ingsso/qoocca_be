@@ -1,16 +1,21 @@
 package com.example.qoocca_be.user.service;
 
+import com.example.qoocca_be.global.exception.CustomException;
+import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.user.entity.UserEntity;
-import com.example.qoocca_be.user.model.LoginRequestDto;
 import com.example.qoocca_be.user.model.LoginResponseDto;
-import com.example.qoocca_be.user.model.RedisDao;
 import com.example.qoocca_be.user.model.UserRequestDto;
 import com.example.qoocca_be.user.repository.UserRepository;
-import com.example.qoocca_be.user.security.util.JwtTokenProvider;
+import com.example.qoocca_be.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -18,13 +23,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final RedisDao redisDao;
+    private final SmsService smsService;
+
+    public UserEntity findById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
 
     public LoginResponseDto signup(UserRequestDto req) {
-        String verified = (String) redisDao.getValues("SMS_VERIFIED:" + req.getPhone());
-        if (verified == null || !verified.equals("true")) {
-            throw new RuntimeException("휴대폰 인증이 완료되지 않았습니다.");
-        }
+        smsService.checkIsVerified(req.getPhone());
 
         UserEntity userEntity = userRepository.findByPhoneNumber(req.getPhone())
                 .map(existingUser -> {
@@ -34,6 +41,9 @@ public class UserService {
                     existingUser.setEmail(req.getEmail());
                     existingUser.setUserName(req.getUsername());
                     existingUser.setPassword(passwordEncoder.encode(req.getPassword()));
+                    if (existingUser.getAgree() == null || !existingUser.getAgree()) {
+                        existingUser.setAgree(req.getAgree());
+                    }
                     return existingUser;
                 })
                 .orElseGet(() -> UserEntity.builder()
@@ -41,6 +51,8 @@ public class UserService {
                                 .email(req.getEmail())
                                 .password(passwordEncoder.encode(req.getPassword()))
                                 .phoneNumber(req.getPhone())
+                                .agree(req.getAgree())
+                                .alarm(true)
                                 .role("ROLE_USER")
                                 .agree(true)      // ✅ 추가
                                 .alarm(true)      // ✅ 추가
@@ -48,31 +60,54 @@ public class UserService {
                 );
 
         userRepository.save(userEntity);
-        redisDao.deleteValues("SMS_VERIFIED:" + req.getPhone());
+        smsService.deleteVerifiedState(req.getPhone());
 
-        return generateTokens(userEntity);
+        return jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole());
     }
 
-    public LoginResponseDto login(LoginRequestDto req) {
-        UserEntity userEntity = userRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+    @Transactional
+    public LoginResponseDto linkSocialAccount(String phone, String socialId, String provider, Boolean agree) {
+        String cleanPhone = phone.replaceAll("[^0-9]", "");
+        smsService.checkIsVerified(cleanPhone);
 
-        if (!passwordEncoder.matches(req.getPassword(), userEntity.getPassword())) {
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+        UserEntity tempSocialUser = ("kakao".equals(provider)
+                ? userRepository.findByKakaoId(socialId)
+                : userRepository.findByNaverId(socialId))
+                .orElseThrow(() -> new RuntimeException("소셜 계정을 찾을 수 없습니다."));
+
+        Optional<UserEntity> existingUserOpt = userRepository.findByPhoneNumber(cleanPhone);
+
+        if (existingUserOpt.isPresent()) {
+            UserEntity existingUser = existingUserOpt.get();
+
+            if (!existingUser.getAgree()) {
+                if (agree == null || !agree) {
+                    throw new RuntimeException("약관 동의가 필요합니다.");
+                }
+                existingUser.setAgree(true);
+            }
+
+            if (!existingUser.getId().equals(tempSocialUser.getId())) {
+                userRepository.delete(tempSocialUser);
+                userRepository.flush();
+            }
+
+            if ("kakao".equals(provider)) existingUser.setKakaoId(socialId);
+            else if ("naver".equals(provider)) existingUser.setNaverId(socialId);
+
+            userRepository.save(existingUser);
+            smsService.deleteVerifiedState(cleanPhone);
+            return jwtTokenProvider.generateTokens(existingUser.getId(), existingUser.getRole());
         }
 
-        return generateTokens(userEntity);
-    }
-
-    private LoginResponseDto generateTokens(UserEntity userEntity) {
-        String identifier = userEntity.getEmail();
-        if (identifier == null) {
-            identifier = (userEntity.getKakaoId() != null) ? userEntity.getKakaoId() : userEntity.getNaverId();
+        if (agree == null || !agree) {
+            throw new RuntimeException("약관 동의가 필요합니다.");
         }
 
-        String accessToken = jwtTokenProvider.generateAccessToken(identifier, userEntity.getRole());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(identifier, userEntity.getRole());
+        tempSocialUser.setPhoneNumber(cleanPhone);
+        userRepository.save(tempSocialUser);
 
-        return new LoginResponseDto(accessToken, refreshToken);
+        smsService.deleteVerifiedState(cleanPhone);
+        return jwtTokenProvider.generateTokens(tempSocialUser.getId(), tempSocialUser.getRole());
     }
 }

@@ -1,13 +1,12 @@
 package com.example.qoocca_be.user.service;
 
+import com.example.qoocca_be.global.utils.CookieUtils;
+import com.example.qoocca_be.user.entity.OauthProvider;
 import com.example.qoocca_be.user.entity.UserEntity;
 import com.example.qoocca_be.user.model.LoginResponseDto;
 import com.example.qoocca_be.user.repository.UserRepository;
-import com.example.qoocca_be.user.security.util.JwtTokenProvider;
-import jakarta.servlet.http.Cookie;
+import com.example.qoocca_be.global.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -16,72 +15,45 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+import java.util.Optional;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
-public class NaverOauthService {
+public class NaverOauthService extends SocialOauthService {
 
-    private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Value("${naver.client-id}") private String clientId;
+    @Value("${naver.client-secret}") private String clientSecret;
+    @Value("${naver.redirect-uri}") private String redirectUri;
 
-    @Value("${naver.client-id}")
-    private String clientId;
+    public NaverOauthService(JwtTokenProvider jwtTokenProvider, UserRepository userRepository,
+                             RestTemplate restTemplate, CookieUtils cookieUtils) {
+        super(jwtTokenProvider, userRepository, restTemplate, cookieUtils);
+    }
 
-    @Value("${naver.client-secret}")
-    private String clientSecret;
+    @Override
+    public OauthProvider getProvider() {
+        return OauthProvider.NAVER;
+    }
 
-    @Value("${naver.redirect-uri}")
-    private String redirectUri;
-
-    public LoginResponseDto naverLogin(String code, HttpServletResponse response) {
+    @Override
+    public LoginResponseDto login(String code, HttpServletResponse response) {
         String naverAccessToken = getNaverAccessToken(code);
+
         Map<String, Object> userInfo = getNaverUserInfo(naverAccessToken);
         Map<String, Object> naverResponse = (Map<String, Object>) userInfo.get("response");
 
-        if (naverResponse == null) {
-            throw new RuntimeException("네이버 사용자 정보를 가져오는 데 실패했습니다.");
-        }
-
         String naverId = String.valueOf(naverResponse.get("id"));
 
-        return userRepository.findByNaverId(naverId)
-                .map(user -> {
-                    if (user.getPhoneNumber() == null) {
-                        return LoginResponseDto.builder()
-                                .accessToken("NEED_PHONE_AUTH")
-                                .refreshToken(naverId)
-                                .build();
-                    }
-                    return generateLoginResponse(user, response);
-                })
-                .orElseGet(() -> {
-                    UserEntity newUserEntity = UserEntity.builder()
-                            .naverId(naverId)
-                            .role("ROLE_USER")
-                            .build();
-                    userRepository.save(newUserEntity);
-                    return LoginResponseDto.builder()
-                            .accessToken("NEED_PHONE_AUTH")
-                            .refreshToken(naverId)
-                            .build();
-                });
+        return processSocialLogin(naverId, response);
     }
 
-    private LoginResponseDto generateLoginResponse(UserEntity userEntity, HttpServletResponse response) {
-        String accessToken = jwtTokenProvider.generateAccessToken(userEntity.getNaverId(), userEntity.getRole());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(userEntity.getNaverId(), userEntity.getRole());
-        setRefreshTokenCookie(response, refreshToken);
-        return new LoginResponseDto(accessToken, null);
+    @Override
+    protected Optional<UserEntity> findUserBySocialId(String socialId) {
+        return userRepository.findByNaverId(socialId);
     }
 
-    private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setMaxAge(7 * 24 * 60 * 60);
-        refreshCookie.setPath("/");
-        response.addCookie(refreshCookie);
+    @Override
+    protected void saveNewSocialUser(String socialId) {
+        userRepository.save(UserEntity.builder().naverId(socialId).role("ROLE_USER").build());
     }
 
     private String getNaverAccessToken(String code) {

@@ -1,6 +1,5 @@
-package com.example.qoocca_be.user.security.filter;
+package com.example.qoocca_be.global.jwt;
 
-import com.example.qoocca_be.user.security.util.JwtTokenProvider;
 import com.example.qoocca_be.user.service.CustomUserDetailsService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -34,12 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             if (token != null &&  jwtTokenProvider.validateToken(token)) {
                 if (jwtTokenProvider.isBlacklisted(token)) {
-                    res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    sendErrorResponse(res, HttpServletResponse.SC_UNAUTHORIZED, "이미 로그아웃된 토큰입니다.");
                     return;
                 }
 
-                String identifier = jwtTokenProvider.getIdentifierFromToken(token);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(identifier);
+                String userId = String.valueOf(jwtTokenProvider.getUserIdFromToken(token));
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
@@ -48,9 +47,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (ExpiredJwtException e) {
-            req.setAttribute("exception", "EXPIRED_TOKEN");
+            sendErrorResponse(res, HttpServletResponse.SC_UNAUTHORIZED, "토큰이 만료되었습니다.");
         } catch (JwtException e) {
-            req.setAttribute("exception", "INVALID_TOKEN");
+            sendErrorResponse(res, HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 토큰입니다.");
         }
 
         filterChain.doFilter(req, res);
@@ -62,5 +61,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearer.substring(7);
         }
         return null;
+    }
+
+    private void sendErrorResponse(HttpServletResponse res, int status, String message) throws IOException {
+        res.setStatus(status);
+        res.setContentType("application/json;charset=UTF-8");
+        res.getWriter().write(String.format("{\"error\": \"%s\", \"message\": \"%s\"}", "UNAUTHORIZED", message));
     }
 }

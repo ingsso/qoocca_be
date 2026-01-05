@@ -1,7 +1,6 @@
 package com.example.qoocca_be.receipt.repository;
 
 import com.example.qoocca_be.receipt.entity.ReceiptEntity;
-import com.example.qoocca_be.receipt.entity.ReceiptEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

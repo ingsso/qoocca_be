@@ -1,6 +1,6 @@
 package com.example.qoocca_be.academy.entity;
 
-import com.example.qoocca_be.subject.entity.SubjectEntity;
+import com.example.qoocca_be.age.entity.AgeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -16,12 +16,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "academy_subject")
-public class AcademySubjectEntity {
+@Table(name = "academy_age")
+public class AcademyAgeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "academy_subject_id")
+    @Column(name = "academy_age_id")
     private Long id;
 
     @CreatedDate
@@ -37,11 +37,11 @@ public class AcademySubjectEntity {
     private AcademyEntity academy;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subject_id")
-    private SubjectEntity subject;
+    @JoinColumn(name = "age_id")
+    private AgeEntity age;
 
-    public AcademySubjectEntity(AcademyEntity academy, SubjectEntity subject) {
+    public AcademyAgeEntity(AcademyEntity academy, AgeEntity age) {
         this.academy = academy;
-        this.subject = subject;
+        this.age = age;
     }
 }

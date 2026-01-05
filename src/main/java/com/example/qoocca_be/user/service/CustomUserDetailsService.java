@@ -16,11 +16,11 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
-        UserEntity userEntity = userRepository.findByEmail(identifier)
-                .orElseGet(() -> userRepository.findByKakaoId(identifier)
-                    .orElseGet(() -> userRepository.findByNaverId(identifier)
-                        .orElseThrow(() -> new UsernameNotFoundException("해당 식별자로 사용자를 찾을 수 없습니다: " + identifier))));
+    public UserDetails loadUserByUsername(String userIdStr) throws UsernameNotFoundException {
+        Long userId = Long.parseLong(userIdStr);
+
+        UserEntity userEntity = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("해당 ID로 사용자를 찾을 수 없습니다."));
 
         return new CustomUserDetails(userEntity);
     }

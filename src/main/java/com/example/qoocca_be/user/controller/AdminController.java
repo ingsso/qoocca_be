@@ -1,27 +1,24 @@
 package com.example.qoocca_be.user.controller;
 
-import com.example.qoocca_be.user.entity.UserEntity;
-import com.example.qoocca_be.user.repository.UserRepository;
+import com.example.qoocca_be.academy.service.AcademyService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
+@Tag(name = "Admin API", description = "관리자 전용 API")
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminController {
-    private final UserRepository userRepository;
 
-    @GetMapping("/dashboard")
-    public String adminOnly() {
-        return "어드민 전용 대시보드입니다!";
-    }
+    private final AcademyService academyService;
 
-    @GetMapping("/users")
-    public List<UserEntity> getAllUsers() {
-        return userRepository.findAll();
+    @Operation(summary = "학원 등록 승인")
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<String> approveAcademy(@PathVariable Long id) {
+        academyService.approveAcademy(id);
+        return ResponseEntity.ok("학원 승인이 완료되었습니다.");
     }
 }

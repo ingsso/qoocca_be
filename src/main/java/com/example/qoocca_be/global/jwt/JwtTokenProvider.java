@@ -1,5 +1,6 @@
-package com.example.qoocca_be.user.security.util;
+package com.example.qoocca_be.global.jwt;
 
+import com.example.qoocca_be.user.model.LoginResponseDto;
 import com.example.qoocca_be.user.model.RedisDao;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -21,8 +22,11 @@ public class JwtTokenProvider {
     private final RedisDao redisDao;
     private static final String BLACKLIST_PREFIX = "blacklist:";
 
-    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 30;
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 7;
+    @Value("${jwt.access-token-expiration}")
+    private long accessTokenExpireTime;
+
+    @Value("${jwt.refresh-token-expiration}")
+    private long refreshTokenExpireTime;
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
                             RedisDao redisDao) {
@@ -31,26 +35,38 @@ public class JwtTokenProvider {
         this.redisDao = redisDao;
     }
 
-    public String generateAccessToken(String identifier, String role){
+    public LoginResponseDto generateTokens(Long userId, String role) {
+        String accessToken = generateAccessToken(userId, role);
+        String refreshToken = generateRefreshToken(userId, role);
+
+        return new LoginResponseDto(accessToken, refreshToken);
+    }
+
+    public String generateAccessToken(Long userId, String role){
+        Claims claims = Jwts.claims().setSubject(String.valueOf(userId));
+        claims.put("role", role);
+
         return Jwts.builder()
-                .setSubject(identifier)
-                .claim("role", role)
+                .setClaims(claims)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRE_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpireTime))
                 .signWith(key)
                 .compact();
     }
 
-    public String generateRefreshToken(String identifier, String role){
+    public String generateRefreshToken(Long userId, String role){
+        String subject = String.valueOf(userId);
+        Claims claims = Jwts.claims().setSubject(subject);
+        claims.put("role", role);
+
         String refreshToken =  Jwts.builder()
-                .setSubject(identifier)
-                .claim("role", role)
+                .setClaims(claims)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRE_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpireTime))
                 .signWith(key)
                 .compact();
 
-        redisDao.setValues(identifier, refreshToken, Duration.ofMillis(REFRESH_TOKEN_EXPIRE_TIME));
+        redisDao.setValues(subject, refreshToken, Duration.ofMillis(refreshTokenExpireTime));
 
         return refreshToken;
     }
@@ -68,16 +84,16 @@ public class JwtTokenProvider {
         }
     }
 
-    public String getIdentifierFromToken(String token) {
+    public Long getUserIdFromToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.getSubject();
+            return Long.parseLong(claims.getSubject());
         } catch (ExpiredJwtException e) {
-            return e.getClaims().getSubject();
+            return Long.parseLong(e.getClaims().getSubject());
         }
     }
 
@@ -94,20 +110,16 @@ public class JwtTokenProvider {
         if (!validateToken(token)) return false;
 
         try {
-            String identifier = getIdentifierFromToken(token);
-            String redisToken = (String) redisDao.getValues(identifier);
+            Long userId = getUserIdFromToken(token);
+            String redisToken = (String) redisDao.getValues(String.valueOf(userId));
             return token.equals(redisToken);
         } catch (Exception e) {
             return false;
         }
     }
 
-    public void deleteRefreshToken(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("Username cannot be null or empty");
-        }
-
-        redisDao.deleteValues(username);
+    public void deleteRefreshToken(Long userId) {
+        redisDao.deleteValues(String.valueOf(userId));
     }
 
     public void addToBlacklist(String accessToken) {

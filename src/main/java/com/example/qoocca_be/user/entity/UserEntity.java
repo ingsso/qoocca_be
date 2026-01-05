@@ -18,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "teachers_user")
+@Table(name = "user")
 public class UserEntity {
 
     @Id
@@ -40,14 +40,16 @@ public class UserEntity {
 
     private String password;
 
-    @Column(name = "user_phone_number")
+    @Column(name = "user_phone_number", length = 11)
     private String phoneNumber;
 
     @Column(nullable = false)
-    private Boolean agree;
+    @Builder.Default
+    private Boolean agree = false;
 
     @Column(nullable = false)
-    private Boolean alarm;
+    @Builder.Default
+    private Boolean alarm = true;
 
     @Column(nullable = false)
     private String role;

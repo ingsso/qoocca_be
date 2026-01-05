@@ -1,9 +1,9 @@
 package com.example.qoocca_be.user.security;
 
 import com.example.qoocca_be.user.entity.UserEntity;
+import io.micrometer.common.lang.Nullable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,7 +28,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return userEntity.getEmail();
+        return String.valueOf(userEntity.getId());
     }
 
     @Override
@@ -36,4 +36,7 @@ public class CustomUserDetails implements UserDetails {
         return UserDetails.super.isEnabled();
     }
 
+    public Long getUserId() {
+        return userEntity.getId();
+    }
 }

@@ -1,7 +1,6 @@
 package com.example.qoocca_be.attendance.entity;
 
 import com.example.qoocca_be.student.entity.StudentEntity;
-import com.example.qoocca_be.student.entity.StudentEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;

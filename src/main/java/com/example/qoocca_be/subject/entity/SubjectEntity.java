@@ -1,6 +1,7 @@
 package com.example.qoocca_be.subject.entity;
 
 import com.example.qoocca_be.academy.entity.AcademySubjectEntity;
+import com.example.qoocca_be.subject.model.SubjectResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -46,4 +47,12 @@ public class SubjectEntity {
     @Builder.Default
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
     private List<AcademySubjectEntity> academySubjects = new ArrayList<>();
+
+    public SubjectResponseDto toResponseDto() {
+        return SubjectResponseDto.builder()
+                .id(this.id)
+                .mainSubjectCode(this.mainSubjectCode)
+                .detailSubject(this.detailSubject)
+                .build();
+    }
 }

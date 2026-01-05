@@ -107,9 +107,9 @@ public class AcademyEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @OneToMany(mappedBy = "academy_images", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL)
     private List<AcademyImageEntity> images = new ArrayList<>();
 
-    @OneToMany(mappedBy = "academy_subjects", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL)
     private List<AcademySubjectEntity> academySubjects = new ArrayList<>();
 }

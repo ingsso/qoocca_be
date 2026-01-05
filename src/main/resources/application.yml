@@ -1,13 +1,16 @@
 spring:
   application:
     name: loginBE
+
   config:
     import: optional:file:.env[.properties]
+
   datasource:
     url: jdbc:mysql://localhost:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     show-sql: true
     hibernate:
@@ -16,6 +19,12 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+    #defer-datasource-initialization: true   # ⭐ 중요
+
+  sql:
+    init:
+      mode: never                      # ⭐ data.sql 항상 실행
+
   data:
     redis:
       host: 127.0.0.1

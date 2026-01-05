@@ -2,6 +2,7 @@ package com.example.qoocca_be.student.repository;
 
 import com.example.qoocca_be.student.entity.StudentParentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -36,6 +37,18 @@ public interface StudentParentRepository
             Long studentId,
             Long parentId
     );
+
+    /* =========================
+     * 조회 편의 (추가)
+     * ========================= */
+
+    // 학생의 보호자 ID만 조회
+    @Query("""
+        select sp.parent.parentId
+        from StudentParentEntity sp
+        where sp.student.studentId = :studentId
+    """)
+    List<Long> findParentIdsByStudentId(Long studentId);
 
     /* =========================
      * 삭제

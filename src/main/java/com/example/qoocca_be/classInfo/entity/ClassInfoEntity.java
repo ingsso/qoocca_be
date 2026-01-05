@@ -1,5 +1,8 @@
 package com.example.qoocca_be.classInfo.entity;
 
+import com.example.qoocca_be.academy.entity.AcademyEntity;
+import com.example.qoocca_be.age.entity.AgeEntity;
+import com.example.qoocca_be.subject.entity.SubjectEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -78,10 +81,8 @@ public class ClassInfoEntity {
     private LocalDateTime updatedAt;
 
 
-    /* =========================
-     * 연관관계 (FK)
-     * ========================= */
-   /* @ManyToOne(fetch = FetchType.LAZY)
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "academy_id")
     @ToString.Exclude
     private AcademyEntity academy;
@@ -91,8 +92,8 @@ public class ClassInfoEntity {
     @ToString.Exclude
     private AgeEntity age;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     @ToString.Exclude
-    private SubjectEntity subject;*/
+    private SubjectEntity subject;
 }

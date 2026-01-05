@@ -1,5 +1,6 @@
 package com.example.qoocca_be.parent.entity;
 
+import com.example.qoocca_be.student.entity.StudentParentEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @EntityListeners(AuditingEntityListener.class)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -60,11 +62,9 @@ public class ParentEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    /* =========================
-     * 연관관계 (Student ↔ Parent 매핑)
-     * ========================= */
-    /*@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     @Builder.Default
     @ToString.Exclude
-    private List<StudentParentEntity> studentParents = new ArrayList<>();*/
+    private List<StudentParentEntity> studentParents = new ArrayList<>();
 }

@@ -54,6 +54,8 @@ public class UserService {
                                 .agree(req.getAgree())
                                 .alarm(true)
                                 .role("ROLE_USER")
+                                .agree(true)      // ✅ 추가
+                                .alarm(true)      // ✅ 추가
                                 .build()
                 );
 

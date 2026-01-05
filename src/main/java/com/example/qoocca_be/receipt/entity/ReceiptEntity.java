@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 
 @EntityListeners(AuditingEntityListener.class)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -61,7 +62,7 @@ public class ReceiptEntity {
      * enum 정의
      * ========================= */
     public enum ReceiptStatus {
-        ISSUED,     // 발행
+        ISSUED,     // 영수증발행
         CANCELLED  // 취소
     }
 }

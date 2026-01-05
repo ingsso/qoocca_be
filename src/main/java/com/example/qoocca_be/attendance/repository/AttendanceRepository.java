@@ -12,25 +12,41 @@ import java.util.Optional;
 public interface AttendanceRepository
         extends JpaRepository<AttendanceEntity, Long> {
 
-    // 학생 + 날짜로 출결 조회 (하루 1건)
+    /* =========================
+     * 학생 기준
+     * ========================= */
+
+    // 학생 하루 출결
     Optional<AttendanceEntity> findByStudent_StudentIdAndAttendanceDate(
             Long studentId,
             LocalDate attendanceDate
     );
 
-    // 학생별 출결 전체 조회
+    // 학생 전체 출결
     List<AttendanceEntity> findByStudent_StudentId(Long studentId);
 
-    // 날짜별 출결 조회
-    List<AttendanceEntity> findByAttendanceDate(LocalDate attendanceDate);
-
-    // 상태별 출결 조회
-    List<AttendanceEntity> findByStatus(AttendanceEntity.AttendanceStatus status);
-
-    // 학생 + 기간 조회
+    // 학생 + 기간
     List<AttendanceEntity> findByStudent_StudentIdAndAttendanceDateBetween(
             Long studentId,
             LocalDate startDate,
             LocalDate endDate
+    );
+
+    /* =========================
+     * 관리자 / 선생님 기준
+     * ========================= */
+
+    // 특정 날짜 전체 출결
+    List<AttendanceEntity> findByAttendanceDate(LocalDate attendanceDate);
+
+    // 상태별 전체 조회 (결석자, 지각자 등)
+    List<AttendanceEntity> findByStatus(
+            AttendanceEntity.AttendanceStatus status
+    );
+
+    // 날짜 + 상태 (오늘 결석자)
+    List<AttendanceEntity> findByAttendanceDateAndStatus(
+            LocalDate attendanceDate,
+            AttendanceEntity.AttendanceStatus status
     );
 }

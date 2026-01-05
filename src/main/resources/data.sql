@@ -1,0 +1,136 @@
+-- =========================
+-- Age 데이터 (기존 내용 유지)
+-- =========================
+INSERT IGNORE INTO age (age_id, age_code, created_at, updated_at) 
+VALUES 
+(1, 'toddler', NOW(), NOW()), 
+(2, 'elementary', NOW(), NOW()), 
+(3, 'middle', NOW(), NOW()), 
+(4, 'high', NOW(), NOW()), 
+(5, 'adult', NOW(), NOW());
+ALTER TABLE age AUTO_INCREMENT = 6;
+
+-- =========================
+-- Subject 데이터 (기존 내용 유지)
+-- =========================
+INSERT IGNORE INTO subject (subject_id, main_subject_code, detail_subject, subject_code, created_at, updated_at) 
+VALUES 
+(70, 'KOREA', '교과국어', 'KOR001', NOW(), NOW()),
+(71, 'KOREA', '입시국어', 'KOR002', NOW(), NOW()),
+(72, 'KOREA', '독서/논술/토론/쓰기', 'KOR003', NOW(), NOW()),
+(73, 'MATH', '교과수학', 'MATH001', NOW(), NOW()),
+(74, 'MATH', '입시수학', 'MATH002', NOW(), NOW()),
+(75, 'MATH', '사고력수학', 'MATH003', NOW(), NOW()),
+(76, 'MATH', '연산', 'MATH004', NOW(), NOW()),
+(77, 'MATH', '창의/교구수학', 'MATH005', NOW(), NOW()),
+(78, 'ENGLISH', '교과영어', 'ENG001', NOW(), NOW()),
+(79, 'ENGLISH', '입시영어', 'ENG002', NOW(), NOW()),
+(80, 'ENGLISH', 'ESL(4대영역)', 'ENG003', NOW(), NOW()),
+(81, 'ENGLISH', '놀이영어', 'ENG004', NOW(), NOW()),
+(82, 'ENGLISH', '영어유치부', 'ENG005', NOW(), NOW()),
+(83, 'ENGLISH', '원어민수업', 'ENG006', NOW(), NOW()),
+(84, 'ENGLISH', '영어도서관', 'ENG007', NOW(), NOW()),
+(85, 'FOREIGN_LANGUAGE', '일본어', 'LANG001', NOW(), NOW()),
+(86, 'KOREA', '한자', 'KOR004', NOW(), NOW()),
+(87, 'SOCIETY', '교과사회', 'SOCIETY001', NOW(), NOW()),
+(88, 'SOCIETY', '입시사회', 'SOCIETY002', NOW(), NOW()),
+(89, 'SCIENCE', '교과과학', 'SCIENCE001', NOW(), NOW()),
+(90, 'SCIENCE', '입시과학', 'SCIENCE002', NOW(), NOW()),
+(91, 'SCIENCE', '과학실험', 'SCIENCE003', NOW(), NOW()),
+(92, 'ART', '그리기/회화', 'ART001', NOW(), NOW()),
+(93, 'ART', '창의미술', 'ART002', NOW(), NOW()),
+(94, 'ART', '입시미술', 'ART003', NOW(), NOW()),
+(95, 'ART', '융합미술', 'ART004', NOW(), NOW()),
+(96, 'MUSIC', '피아노', 'MUSIC001', NOW(), NOW()),
+(97, 'MUSIC', '악기', 'MUSIC002', NOW(), NOW()),
+(98, 'MUSIC', '실용음악', 'MUSIC003', NOW(), NOW()),
+(99, 'MUSIC', '입시음악', 'MUSIC004', NOW(), NOW()),
+(100, 'GYM', '태권도', 'GYM001', NOW(), NOW()),
+(101, 'GYM', '줄넘기', 'GYM002', NOW(), NOW()),
+(102, 'GYM', '축구', 'GYM003', NOW(), NOW()),
+(103, 'GYM', '농구', 'GYM004', NOW(), NOW()),
+(104, 'GYM', '야구', 'GYM005', NOW(), NOW()),
+(105, 'GYM', '복싱', 'GYM006', NOW(), NOW()),
+(106, 'GYM', '주짓수', 'GYM007', NOW(), NOW()),
+(107, 'GYM', '킥복싱', 'GYM008', NOW(), NOW()),
+(108, 'GYM', '합기도', 'GYM009', NOW(), NOW()),
+(109, 'GYM', '요가/필라테스', 'GYM010', NOW(), NOW()),
+(110, 'GYM', '발레/무용', 'GYM011', NOW(), NOW()),
+(111, 'HOBBY', '방송댄스', 'HOBBY003', NOW(), NOW()),
+(112, 'GYM', '수영', 'GYM012', NOW(), NOW()),
+(113, 'GYM', '스킨스쿠버', 'GYM013', NOW(), NOW()),
+(114, 'HOBBY', '바둑', 'HOBBY001', NOW(), NOW()),
+(115, 'HOBBY', '가베', 'HOBBY002', NOW(), NOW()),
+(116, 'SCIENCE', '컴퓨터 자격증', 'SCIENCE004', NOW(), NOW()),
+(117, 'SCIENCE', '코딩', 'SCIENCE005', NOW(), NOW()),
+(118, 'HOBBY', '연기', 'HOBBY005', NOW(), NOW()),
+(119, 'FOREIGN_LANGUAGE', '중국어', 'LANG002', NOW(), NOW()),
+(120, 'GYM', '인라인', 'GYM014', NOW(), NOW()),
+(121, 'GYM', '검도', 'GYM015', NOW(), NOW()),
+(122, 'GYM', '배드민턴/테니스', 'GYM016', NOW(), NOW()),
+(123, 'GYM', '배구', 'GYM017', NOW(), NOW()),
+(124, 'GYM', '펜싱', 'GYM018', NOW(), NOW()),
+(125, 'GYM', '골프', 'GYM019', NOW(), NOW()),
+(126, 'GYM', '다이빙', 'GYM020', NOW(), NOW()),
+(127, 'GYM', '아이스하키/피겨', 'GYM021', NOW(), NOW()),
+(128, 'GYM', '클라이밍', 'GYM022', NOW(), NOW()),
+(129, 'GYM', '체조/아크로바틱', 'GYM023', NOW(), NOW()),
+(130, 'HOBBY', '꽃꽂이', 'HOBBY004', NOW(), NOW()),
+(131, 'HOBBY', '체스', 'HOBBY006', NOW(), NOW()),
+(132, 'HOBBY', '치어리딩', 'HOBBY007', NOW(), NOW()),
+(133, 'HOBBY', '서예', 'HOBBY008', NOW(), NOW()),
+(137, 'KOREA', '국어', 'DEFAULT', NOW(), NOW()),
+(138, 'MATH', '수학', 'DEFAULT', NOW(), NOW()),
+(139, 'ENGLISH', '영어', 'DEFAULT', NOW(), NOW()),
+(140, 'FOREIGN_LANGUAGE', '외국어', 'DEFAULT', NOW(), NOW()),
+(141, 'SOCIETY', '사회', 'DEFAULT', NOW(), NOW()),
+(142, 'SCIENCE', '과학', 'DEFAULT', NOW(), NOW()),
+(143, 'ART', '미술', 'DEFAULT', NOW(), NOW()),
+(144, 'MUSIC', '음악', 'DEFAULT', NOW(), NOW()),
+(145, 'GYM', '체육', 'DEFAULT', NOW(), NOW()),
+(146, 'HOBBY', '취미', 'DEFAULT', NOW(), NOW());
+ALTER TABLE subject AUTO_INCREMENT = 147;
+
+-- =========================
+-- Academy 데이터
+-- =========================
+INSERT IGNORE INTO academy 
+(academy_id, city, province, town, address, name, phone_number, user_id, is_show, created_at, updated_at) 
+VALUES
+(1, 'Seoul', 'Gangnam-gu', 'Yeoksam-dong', '123 Gangnam Street', 'Alpha Academy', '02-1111-0001', 1, TRUE, NOW(), NOW()),
+(2, 'Seoul', 'Seocho-gu', 'Seocho-dong', '456 Seocho Street', 'Beta Academy', '02-2222-0002', 2, TRUE, NOW(), NOW()),
+(3, 'Seoul', 'Jongno-gu', 'Jongno 1-ga', '789 Jongno Street', 'Gamma Academy', '02-3333-0003', 3, TRUE, NOW(), NOW());
+
+ALTER TABLE academy AUTO_INCREMENT = 4;
+
+-- =========================
+-- AcademySubject 데이터
+-- =========================
+INSERT IGNORE INTO academy_subject (academy_subject_id, academy_id, subject_id, created_at, updated_at) VALUES
+(1, 1, 70, NOW(), NOW()),
+(2, 1, 73, NOW(), NOW()),
+(3, 1, 78, NOW(), NOW()),
+(4, 2, 79, NOW(), NOW()),
+(5, 2, 89, NOW(), NOW()),
+(6, 3, 92, NOW(), NOW()),
+(7, 3, 96, NOW(), NOW()),
+(8, 3, 100, NOW(), NOW());
+
+ALTER TABLE academy_subject AUTO_INCREMENT = 9;
+
+-- =========================
+-- ClassInfo 데이터
+-- =========================
+INSERT IGNORE INTO class_info 
+(class_id, class_name, s_time, e_time, is_monday, is_tuesday, is_wednesday, is_thursday, is_friday, is_saturday, is_sunday, price, academy_id, age_id, subject_id, created_at, updated_at)
+VALUES
+(1, 'Alpha 국어 초등반', '09:00:00', '11:00:00', TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, '200000', 1, 2, 70, NOW(), NOW()),
+(2, 'Alpha 수학 초등반', '11:30:00', '13:30:00', TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, '220000', 1, 2, 73, NOW(), NOW()),
+(3, 'Alpha 영어 중등반', '14:00:00', '16:00:00', FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, '250000', 1, 3, 78, NOW(), NOW()),
+(4, 'Beta 영어 중등반', '10:00:00', '12:00:00', TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, '240000', 2, 3, 79, NOW(), NOW()),
+(5, 'Beta 과학 고등반', '13:00:00', '15:00:00', TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, '260000', 2, 4, 89, NOW(), NOW()),
+(6, 'Gamma 미술 초등반', '09:30:00', '11:00:00', TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, '180000', 3, 2, 92, NOW(), NOW()),
+(7, 'Gamma 피아노 초등반', '11:30:00', '13:00:00', FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, '200000', 3, 2, 96, NOW(), NOW()),
+(8, 'Gamma 태권도 초등반', '15:00:00', '17:00:00', TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, '210000', 3, 2, 100, NOW(), NOW());
+
+ALTER TABLE class_info AUTO_INCREMENT = 9;

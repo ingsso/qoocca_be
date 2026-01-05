@@ -1,5 +1,6 @@
 package com.example.qoocca_be.student.entity;
 
+import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 
 @EntityListeners(AuditingEntityListener.class)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -47,17 +49,12 @@ public class StudentEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    /* =========================
-     * 연관관계 (FK)
-     * ========================= */
-   /* @ManyToOne(fetch = FetchType.LAZY)
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id", nullable = false)
     @ToString.Exclude
     private ClassInfoEntity classInfo;
-*/
-    /* =========================
-     * enum 정의
-     * ========================= */
+
     public enum StudentStatus {
         ACTIVE,
         INACTIVE,

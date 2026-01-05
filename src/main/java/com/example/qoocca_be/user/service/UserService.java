@@ -42,6 +42,8 @@ public class UserService {
                                 .password(passwordEncoder.encode(req.getPassword()))
                                 .phoneNumber(req.getPhone())
                                 .role("ROLE_USER")
+                                .agree(true)      // ✅ 추가
+                                .alarm(true)      // ✅ 추가
                                 .build()
                 );
 

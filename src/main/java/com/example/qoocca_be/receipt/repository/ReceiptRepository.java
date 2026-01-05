@@ -12,21 +12,37 @@ import java.util.List;
 public interface ReceiptRepository
         extends JpaRepository<ReceiptEntity, Long> {
 
-    // 학생별 영수증 조회
+
+    /* =========================
+     * 학생 기준
+     * ========================= */
+
     List<ReceiptEntity> findByStudent_StudentId(Long studentId);
 
-    // 상태별 영수증 조회
-    List<ReceiptEntity> findByReceiptStatus(ReceiptEntity.ReceiptStatus status);
+    List<ReceiptEntity> findByStudent_StudentIdAndReceiptDateBetween(
+            Long studentId,
+            LocalDateTime start,
+            LocalDateTime end
+    );
 
-    // 기간별 영수증 조회
+    boolean existsByStudent_StudentIdAndReceiptDateBetween(
+            Long studentId,
+            LocalDateTime start,
+            LocalDateTime end
+    );
+
+    /* =========================
+     * 관리자 기준
+     * ========================= */
+
+    // 월 전체 수납
     List<ReceiptEntity> findByReceiptDateBetween(
             LocalDateTime start,
             LocalDateTime end
     );
 
-    // 학생 + 상태별 조회
-    List<ReceiptEntity> findByStudent_StudentIdAndReceiptStatus(
-            Long studentId,
+    // 상태별 수납
+    List<ReceiptEntity> findByReceiptStatus(
             ReceiptEntity.ReceiptStatus status
     );
 }

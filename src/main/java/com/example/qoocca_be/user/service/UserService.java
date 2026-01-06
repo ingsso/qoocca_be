@@ -4,6 +4,7 @@ import com.example.qoocca_be.global.exception.CustomException;
 import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.user.entity.UserEntity;
 import com.example.qoocca_be.user.model.LoginResponseDto;
+import com.example.qoocca_be.user.model.SocialLinkRequestDto;
 import com.example.qoocca_be.user.model.UserRequestDto;
 import com.example.qoocca_be.user.repository.UserRepository;
 import com.example.qoocca_be.global.jwt.JwtTokenProvider;
@@ -25,6 +26,21 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final SmsService smsService;
 
+    private void setAgreements(UserEntity user, UserRequestDto.AgreementsRequest agreements) {
+        if (agreements == null) {
+            log.info("약관 데이터가 null이므로 기존 값을 유지합니다: {}", user.getAgree());
+            return;
+        }
+
+        if (user.getAgree() != null && user.getAgree() && !agreements.isAllRequiredAgreed()) {
+            log.warn("이미 동의한 유저의 권한을 false로 덮어쓰려는 시도를 차단합니다.");
+        } else {
+            user.setAgree(agreements.isAllRequiredAgreed());
+        }
+
+        user.setMarketingAgree(agreements.isMarketing());
+    }
+
     public UserEntity findById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -41,23 +57,23 @@ public class UserService {
                     existingUser.setEmail(req.getEmail());
                     existingUser.setUserName(req.getUsername());
                     existingUser.setPassword(passwordEncoder.encode(req.getPassword()));
-                    if (existingUser.getAgree() == null || !existingUser.getAgree()) {
-                        existingUser.setAgree(req.getAgree());
+                    if (req.getAgreements() != null) {
+                        setAgreements(existingUser, req.getAgreements());
                     }
                     return existingUser;
                 })
-                .orElseGet(() -> UserEntity.builder()
-                                .userName(req.getUsername())
-                                .email(req.getEmail())
-                                .password(passwordEncoder.encode(req.getPassword()))
-                                .phoneNumber(req.getPhone())
-                                .agree(req.getAgree())
-                                .alarm(true)
-                                .role("ROLE_USER")
-                                .agree(true)      // ✅ 추가
-                                .alarm(true)      // ✅ 추가
-                                .build()
-                );
+                .orElseGet(() -> {
+                    UserEntity newUser = UserEntity.builder()
+                            .userName(req.getUsername())
+                            .email(req.getEmail())
+                            .password(passwordEncoder.encode(req.getPassword()))
+                            .phoneNumber(req.getPhone())
+                            .role("ROLE_USER")
+                            .alarm(true)
+                            .build();
+                    setAgreements(newUser, req.getAgreements());
+                    return newUser;
+                });
 
         userRepository.save(userEntity);
         smsService.deleteVerifiedState(req.getPhone());
@@ -66,13 +82,13 @@ public class UserService {
     }
 
     @Transactional
-    public LoginResponseDto linkSocialAccount(String phone, String socialId, String provider, Boolean agree) {
-        String cleanPhone = phone.replaceAll("[^0-9]", "");
+    public LoginResponseDto linkSocialAccount(SocialLinkRequestDto req) {
+        String cleanPhone = req.phone().replaceAll("[^0-9]", "");
         smsService.checkIsVerified(cleanPhone);
 
-        UserEntity tempSocialUser = ("kakao".equals(provider)
-                ? userRepository.findByKakaoId(socialId)
-                : userRepository.findByNaverId(socialId))
+        UserEntity tempSocialUser = ("kakao".equals(req.provider())
+                ? userRepository.findByKakaoId(req.socialId())
+                : userRepository.findByNaverId(req.socialId()))
                 .orElseThrow(() -> new RuntimeException("소셜 계정을 찾을 수 없습니다."));
 
         Optional<UserEntity> existingUserOpt = userRepository.findByPhoneNumber(cleanPhone);
@@ -80,31 +96,33 @@ public class UserService {
         if (existingUserOpt.isPresent()) {
             UserEntity existingUser = existingUserOpt.get();
 
-            if (!existingUser.getAgree()) {
-                if (agree == null || !agree) {
-                    throw new RuntimeException("약관 동의가 필요합니다.");
-                }
+            if (req.agreements() != null) {
+                setAgreements(existingUser, req.agreements());
+            } else {
                 existingUser.setAgree(true);
             }
+
+            if ("kakao".equals(req.provider())) existingUser.setKakaoId(req.socialId());
+            else if ("naver".equals(req.provider())) existingUser.setNaverId(req.socialId());
+
+            // 기존 유저 정보 저장 강제
+            userRepository.save(existingUser);
 
             if (!existingUser.getId().equals(tempSocialUser.getId())) {
                 userRepository.delete(tempSocialUser);
                 userRepository.flush();
             }
 
-            if ("kakao".equals(provider)) existingUser.setKakaoId(socialId);
-            else if ("naver".equals(provider)) existingUser.setNaverId(socialId);
-
-            userRepository.save(existingUser);
             smsService.deleteVerifiedState(cleanPhone);
             return jwtTokenProvider.generateTokens(existingUser.getId(), existingUser.getRole());
         }
 
-        if (agree == null || !agree) {
-            throw new RuntimeException("약관 동의가 필요합니다.");
+        if (req.agreements() == null || !req.agreements().isAllRequiredAgreed()) {
+            throw new RuntimeException("필수 약관 동의가 필요합니다.");
         }
 
         tempSocialUser.setPhoneNumber(cleanPhone);
+        setAgreements(tempSocialUser, req.agreements());
         userRepository.save(tempSocialUser);
 
         smsService.deleteVerifiedState(cleanPhone);

@@ -1,6 +1,6 @@
 package com.example.qoocca_be.academy.entity;
 
-import com.example.qoocca_be.academy.dto.AcademyRequestDto;
+import com.example.qoocca_be.academy.dto.AcademyUpdateDto;
 import com.example.qoocca_be.age.entity.AgeEntity;
 import com.example.qoocca_be.subject.entity.SubjectEntity;
 import com.example.qoocca_be.user.entity.UserEntity;
@@ -18,7 +18,6 @@ import java.util.List;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -40,7 +39,7 @@ public class AcademyEntity {
     @Column(name = "detail_address")
     private String detailAddress;
 
-    @Column(name = "name", nullable = false, length = 191)
+    @Column(length = 255, columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin")
     private String name;
 
     @Column(name = "blog_url", columnDefinition = "TEXT")
@@ -100,7 +99,7 @@ public class AcademyEntity {
 
     @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<AcademyImageEntity> images = new ArrayList<>();
+    private List<AcademyImageEntity> academyImages = new ArrayList<>();
 
     @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -114,31 +113,23 @@ public class AcademyEntity {
         this.approvalStatus = status;
     }
 
-    public ApprovalStatus getApprovalStatus() {
-        return approvalStatus;
-    }
-
-    public void update(AcademyRequestDto req) {
+    public void update(AcademyUpdateDto req) {
         if (req.getName() != null) this.name = req.getName();
-        if (req.getBaseAddress() != null) this.baseAddress = req.getBaseAddress();
-        if (req.getDetailAddress() != null) this.detailAddress = req.getDetailAddress();
         if (req.getPhoneNumber() != null) this.phoneNumber = req.getPhoneNumber();
         if (req.getBriefInfo() != null) this.briefInfo = req.getBriefInfo();
         if (req.getDetailInfo() != null) this.detailInfo = req.getDetailInfo();
 
-        updateAddress(req.getBaseAddress(), req.getDetailAddress());
+        if (req.getBaseAddress() != null || req.getDetailAddress() != null) {
+            String newBase = (req.getBaseAddress() != null) ? req.getBaseAddress() : this.baseAddress;
+            String newDetail = (req.getDetailAddress() != null) ? req.getDetailAddress() : this.detailAddress;
+            updateAddress(newBase, newDetail);
+        }
     }
 
     public void updateAddress(String baseAddress, String detailAddress) {
-        if (baseAddress != null && !baseAddress.isBlank()) {
-            this.baseAddress = baseAddress;
-
-            if (detailAddress != null) {
-                this.detailAddress = detailAddress;
-            }
-
-            this.address = (this.baseAddress + " " + (this.detailAddress != null ? this.detailAddress : "")).trim();
-        }
+        this.baseAddress = baseAddress;
+        this.detailAddress = (detailAddress != null) ? detailAddress : "";
+        this.address = (this.baseAddress + " " + this.detailAddress).trim();
     }
 
     public void updateAges(List<AgeEntity> ages) {
@@ -156,9 +147,9 @@ public class AcademyEntity {
     }
 
     public void updateImages(List<String> imageUrls) {
-        this.images.clear();
+        this.academyImages.clear();
         if (imageUrls != null) {
-            imageUrls.forEach(url -> this.images.add(AcademyImageEntity.builder()
+            imageUrls.forEach(url -> this.academyImages.add(AcademyImageEntity.builder()
                     .imageUrl(url)
                     .academy(this)
                     .build()));

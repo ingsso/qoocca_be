@@ -11,9 +11,10 @@ import java.util.Optional;
 
 public interface AcademyRepository extends JpaRepository<AcademyEntity, Long> {
     @Query("select a from AcademyEntity a " +
-            "left join fetch a.images " +
+            "left join fetch a.academyImages " +
             "where a.id = :id")
     Optional<AcademyEntity> findDetailById(@Param("id") Long id);
     Optional<AcademyEntity> findByUserId(Long userId);
+
     Page<AcademyEntity> findByNameContaining(String name, Pageable pageable);
 }

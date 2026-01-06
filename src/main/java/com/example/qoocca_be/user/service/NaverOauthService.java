@@ -53,7 +53,16 @@ public class NaverOauthService extends SocialOauthService {
 
     @Override
     protected void saveNewSocialUser(String socialId) {
-        userRepository.save(UserEntity.builder().naverId(socialId).role("ROLE_USER").build());
+        userRepository.save(
+                UserEntity
+                        .builder()
+                        .naverId(socialId)
+                        .role("ROLE_USER")
+                        .agree(false)
+                        .marketingAgree(false)
+                        .alarm(true)
+                        .build()
+        );
     }
 
     private String getNaverAccessToken(String code) {

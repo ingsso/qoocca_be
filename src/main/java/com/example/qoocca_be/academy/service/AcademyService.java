@@ -1,6 +1,7 @@
 package com.example.qoocca_be.academy.service;
 
-import com.example.qoocca_be.academy.dto.AcademyRequestDto;
+import com.example.qoocca_be.academy.dto.AcademyCreateRequest;
+import com.example.qoocca_be.academy.dto.AcademyUpdateDto;
 import com.example.qoocca_be.academy.dto.AcademyResponseDto;
 import com.example.qoocca_be.academy.dto.AcademySearchResponseDto;
 import com.example.qoocca_be.academy.entity.AcademyAgeEntity;
@@ -12,7 +13,6 @@ import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.academy.repository.AcademySubjectRepository;
 import com.example.qoocca_be.age.model.AgeResponseDto;
 import com.example.qoocca_be.age.repository.AgeRepository;
-import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.global.common.PageResponseDto;
 import com.example.qoocca_be.global.exception.CustomException;
 import com.example.qoocca_be.global.exception.ErrorCode;
@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 public class AcademyService {
 
     private final UserService userService;
-    private final ClassInfoRepository classInfoRepository;
     private final AcademyRepository academyRepository;
     private final AcademySubjectRepository academySubjectRepository;
     private final AgeRepository ageRepository;
@@ -42,7 +41,7 @@ public class AcademyService {
     private final SubjectRepository subjectRepository;
 
     @Transactional
-    public Long registerAcademy(AcademyRequestDto req, Long userId) {
+    public Long registerAcademy(AcademyCreateRequest req, Long userId) {
         UserEntity user = userService.findById(userId);
 
         AcademyEntity academy = AcademyEntity.builder()
@@ -60,7 +59,18 @@ public class AcademyService {
                 .build();
 
         academy.updateAddress(req.getBaseAddress(), req.getDetailAddress());
-        updateAcademyRelations(academy, req);
+
+        if (req.getAgeIds() != null) {
+            academy.updateAges(ageRepository.findAllById(req.getAgeIds()));
+        }
+
+        if (req.getSubjects() != null) {
+            academy.updateSubjects(subjectRepository.findAllById(req.getSubjects()));
+        }
+
+        if (req.getImageUrls() != null) {
+            academy.updateImages(req.getImageUrls());
+        }
 
         return academyRepository.save(academy).getId();
     }
@@ -91,21 +101,8 @@ public class AcademyService {
         return AcademyResponseDto.from(academy);
     }
 
-//    @Transactional(readOnly = true)
-//    public List<ClassInfoResponseDto> getClassesByAcademyId(Long academyId) {
-//        // 1. 해당 학원이 존재하는지 먼저 검증 (선택 사항이지만 권장)
-//        if (!academyRepository.existsById(academyId)) {
-//            throw new CustomException(ErrorCode.ACADEMY_NOT_FOUND);
-//        }
-//
-//        // 2. ClassInfoRepository에서 academyId로 데이터 조회
-//        return classInfoRepository.findAllByAcademyId(academyId).stream()
-//                .map(ClassInfoResponseDto::from) // Entity를 DTO로 변환
-//                .collect(Collectors.toList());
-//    }
-
     @Transactional
-    public void updateAcademy(Long id, AcademyRequestDto req, Long userId) {
+    public void updateAcademy(Long id, AcademyUpdateDto req, Long userId) {
         AcademyEntity academy = academyRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
@@ -114,18 +111,7 @@ public class AcademyService {
         }
 
         academy.update(req);
-        updateAcademyRelations(academy, req);
-    }
 
-    @Transactional(readOnly = true)
-    public PageResponseDto<AcademySearchResponseDto> searchAcademiesByName(String name, Pageable pageable) {
-        Page<AcademyEntity> academyPage = academyRepository.findByNameContaining(name, pageable);
-        Page<AcademySearchResponseDto> dtoPage = academyPage.map(AcademySearchResponseDto::from);
-
-        return new PageResponseDto<>(dtoPage);
-    }
-
-    private void updateAcademyRelations(AcademyEntity academy, AcademyRequestDto req) {
         if (req.getAgeIds() != null) {
             academy.updateAges(ageRepository.findAllById(req.getAgeIds()));
         }
@@ -137,6 +123,14 @@ public class AcademyService {
         if (req.getImageUrls() != null) {
             academy.updateImages(req.getImageUrls());
         }
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponseDto<AcademySearchResponseDto> searchAcademiesByName(String name, Pageable pageable) {
+        Page<AcademyEntity> academyPage = academyRepository.findByNameContaining(name, pageable);
+        Page<AcademySearchResponseDto> dtoPage = academyPage.map(AcademySearchResponseDto::from);
+
+        return new PageResponseDto<>(dtoPage);
     }
 
     @Transactional

@@ -60,7 +60,7 @@ public class AcademyResponseDto {
                 .websiteUrl(academy.getWebsiteUrl())
                 .instagramUrl(academy.getInstagramUrl())
                 .certificate(academy.getCertificate())
-                .imageUrls(academy.getImages().stream()
+                .imageUrls(academy.getAcademyImages().stream()
                         .map(image -> image.getImageUrl())
                         .collect(Collectors.toList()))
                 .ages(academy.getAcademyAges().stream()

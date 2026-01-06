@@ -81,10 +81,5 @@ public class AcademyController {
         return ResponseEntity.ok(academyService.searchAcademiesByName(name, pageable));
     }
 
-//    @GetMapping("/{id}/classes")
-//    public ResponseEntity<List<ClassInfoResponseDto>> getAcademyClasses(@PathVariable Long id) {
-//        // AcademyService를 통해 해당 학원의 클래스 리스트를 가져옵니다.
-//        List<ClassInfoResponseDto> classes = academyService.getClassesByAcademyId(id);
-//        return ResponseEntity.ok(classes);
-//    }
+
 }

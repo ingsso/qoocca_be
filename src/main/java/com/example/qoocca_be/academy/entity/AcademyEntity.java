@@ -2,6 +2,7 @@ package com.example.qoocca_be.academy.entity;
 
 import com.example.qoocca_be.academy.dto.AcademyRequestDto;
 import com.example.qoocca_be.age.entity.AgeEntity;
+import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.subject.entity.SubjectEntity;
 import com.example.qoocca_be.user.entity.UserEntity;
 import jakarta.persistence.*;
@@ -110,13 +111,15 @@ public class AcademyEntity {
     @Builder.Default
     private List<AcademySubjectEntity> academySubjects = new ArrayList<>();
 
+
+
+
+
+
     public void updateApprovalStatus(ApprovalStatus status) {
         this.approvalStatus = status;
     }
 
-    public ApprovalStatus getApprovalStatus() {
-        return approvalStatus;
-    }
 
     public void update(AcademyRequestDto req) {
         if (req.getName() != null) this.name = req.getName();

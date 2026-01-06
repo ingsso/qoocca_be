@@ -3,6 +3,7 @@ package com.example.qoocca_be.user.controller;
 import com.example.qoocca_be.global.utils.CookieUtils;
 import com.example.qoocca_be.user.model.LoginRequestDto;
 import com.example.qoocca_be.user.model.LoginResponseDto;
+import com.example.qoocca_be.user.model.SocialLinkRequestDto;
 import com.example.qoocca_be.user.model.UserRequestDto;
 import com.example.qoocca_be.user.service.AuthService;
 import com.example.qoocca_be.user.service.SmsService;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +32,7 @@ public class UserController {
 
     @Operation(summary = "회원가입")
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody UserRequestDto req, HttpServletResponse res) {
+    public ResponseEntity<?> signup(@Valid @RequestBody UserRequestDto req, HttpServletResponse res) {
         LoginResponseDto tokens = userService.signup(req);
         cookieUtils.addRefreshTokenCookie(res, tokens.getRefreshToken());
         return ResponseEntity.ok(new LoginResponseDto(tokens.getAccessToken(), null));
@@ -71,13 +73,8 @@ public class UserController {
 
     @Operation(summary = "계정 연동")
     @PostMapping("/link-social")
-    public ResponseEntity<?> linkSocial(@RequestBody Map<String, String> body, HttpServletResponse res) {
-        String phone = body.get("phone");
-        String socialId = body.get("socialId");
-        String provider = body.get("provider");
-        Boolean agree = Boolean.valueOf(body.get("agree"));
-
-        LoginResponseDto tokens = userService.linkSocialAccount(phone, socialId, provider, agree);
+    public ResponseEntity<?> linkSocial(@RequestBody SocialLinkRequestDto req, HttpServletResponse res) {
+        LoginResponseDto tokens = userService.linkSocialAccount(req);
         cookieUtils.addRefreshTokenCookie(res, tokens.getRefreshToken());
         return ResponseEntity.ok(new LoginResponseDto(tokens.getAccessToken(), null));
     }

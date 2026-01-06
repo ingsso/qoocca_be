@@ -89,7 +89,10 @@ VALUES
 (144, 'MUSIC', '음악', 'DEFAULT', NOW(), NOW()),
 (145, 'GYM', '체육', 'DEFAULT', NOW(), NOW()),
 (146, 'HOBBY', '취미', 'DEFAULT', NOW(), NOW());
+
 ALTER TABLE subject AUTO_INCREMENT = 147;
+
+
 
 
 

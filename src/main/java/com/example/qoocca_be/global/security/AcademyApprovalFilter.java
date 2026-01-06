@@ -4,7 +4,9 @@ import com.example.qoocca_be.academy.entity.AcademyEntity;
 import com.example.qoocca_be.academy.entity.ApprovalStatus;
 import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.global.exception.ErrorCode;
+import com.example.qoocca_be.global.exception.ErrorResponse;
 import com.example.qoocca_be.user.security.CustomUserDetails;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +24,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AcademyApprovalFilter extends OncePerRequestFilter {
     private final AcademyRepository academyRepository;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -70,7 +73,13 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
     private void sendErrorResponse(HttpServletResponse res, ErrorCode errorCode) throws IOException {
         res.setStatus(errorCode.getStatus());
         res.setContentType("application/json;charset=UTF-8");
-        res.getWriter().write(String.format("{\"code\": \"%s\", \"message\": \"%s\"}",
-                errorCode.getCode(), errorCode.getMessage()));
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(errorCode.getStatus())
+                .code(errorCode.getCode())
+                .message(errorCode.getMessage())
+                .build();
+
+        res.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 }

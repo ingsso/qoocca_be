@@ -3,6 +3,7 @@ package com.example.qoocca_be.user.entity;
 import com.example.qoocca_be.academy.entity.AcademyEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -17,6 +18,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@DynamicUpdate
 @Builder
 @Table(name = "user")
 public class UserEntity {
@@ -46,6 +48,10 @@ public class UserEntity {
     @Column(nullable = false)
     @Builder.Default
     private Boolean agree = false;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean marketingAgree = false;
 
     @Column(nullable = false)
     @Builder.Default

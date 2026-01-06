@@ -1,6 +1,7 @@
 package com.example.qoocca_be.academy.controller;
 
-import com.example.qoocca_be.academy.dto.AcademyRequestDto;
+import com.example.qoocca_be.academy.dto.AcademyCreateRequest;
+import com.example.qoocca_be.academy.dto.AcademyUpdateDto;
 import com.example.qoocca_be.academy.dto.AcademyResponseDto;
 import com.example.qoocca_be.academy.dto.AcademySearchResponseDto;
 import com.example.qoocca_be.academy.service.AcademyService;
@@ -32,15 +33,11 @@ public class AcademyController {
 
     @Operation(summary = "학원 등록")
     @PostMapping("/register")
-    public ResponseEntity<?> registerAcademy(
-            @Valid @RequestBody AcademyRequestDto dto,
+    public ResponseEntity<Long> registerAcademy(
+            @Valid @RequestBody AcademyCreateRequest dto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        if (userDetails == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 세션이 만료되었습니다.");
-        }
-        academyService.registerAcademy(dto, userDetails.getUserId());
-        return ResponseEntity.ok("학원 등록 성공");
+        Long id = academyService.registerAcademy(dto, userDetails.getUserId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
     @Operation(summary = "특정 학원 정보 조회")
@@ -66,7 +63,7 @@ public class AcademyController {
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateAcademy(
             @PathVariable Long id,
-            @RequestBody AcademyRequestDto dto,
+            @RequestBody AcademyUpdateDto dto,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         academyService.updateAcademy(id, dto, userDetails.getUserId());
@@ -81,5 +78,3 @@ public class AcademyController {
         return ResponseEntity.ok(academyService.searchAcademiesByName(name, pageable));
     }
 
-
-}

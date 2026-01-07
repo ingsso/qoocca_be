@@ -40,7 +40,7 @@ public class AcademyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
-    @Operation(summary = "특정 학원 정보 조회")
+    @Operation(summary = "특정 학원 상세 정보 조회")
     @GetMapping("/{id}")
     public ResponseEntity<AcademyResponseDto> getAcademyDetail(@PathVariable Long id) {
         AcademyResponseDto res = academyService.getAcademyDetail(id);
@@ -77,4 +77,5 @@ public class AcademyController {
                                                                             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)Pageable pageable) {
         return ResponseEntity.ok(academyService.searchAcademiesByName(name, pageable));
     }
+}
 

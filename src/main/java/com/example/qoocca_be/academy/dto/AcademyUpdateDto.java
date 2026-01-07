@@ -9,7 +9,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AcademyUpdateDto {
+public class AcademyUpdateDto implements AcademyRequest {
 
     private String name;
 

@@ -28,7 +28,6 @@ public class UserService {
 
     private void setAgreements(UserEntity user, UserRequestDto.AgreementsRequest agreements) {
         if (agreements == null) {
-            log.info("약관 데이터가 null이므로 기존 값을 유지합니다: {}", user.getAgree());
             return;
         }
 
@@ -46,6 +45,7 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
+    @Transactional
     public LoginResponseDto signup(UserRequestDto req) {
         smsService.checkIsVerified(req.getPhone());
 

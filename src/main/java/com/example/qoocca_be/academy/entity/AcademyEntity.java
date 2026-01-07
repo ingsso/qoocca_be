@@ -122,7 +122,6 @@ public class AcademyEntity {
 
     public void update(AcademyUpdateDto req) {
 
-
         if (req.getName() != null) this.name = req.getName();
         if (req.getPhoneNumber() != null) this.phoneNumber = req.getPhoneNumber();
         if (req.getBriefInfo() != null) this.briefInfo = req.getBriefInfo();

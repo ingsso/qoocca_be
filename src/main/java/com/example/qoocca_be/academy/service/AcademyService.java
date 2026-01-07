@@ -63,20 +63,17 @@ public class AcademyService {
                 .build();
 
         academy.updateAddress(req.getBaseAddress(), req.getDetailAddress());
-
-        if (req.getAgeIds() != null) {
-            academy.updateAges(ageRepository.findAllById(req.getAgeIds()));
-        }
-
-        if (req.getSubjects() != null) {
-            academy.updateSubjects(subjectRepository.findAllById(req.getSubjects()));
-        }
-
-        if (req.getImageUrls() != null) {
-            academy.updateImages(req.getImageUrls());
-        }
+        updateRelationalData(academy, req);
 
         return academyRepository.save(academy).getId();
+    }
+
+    @Transactional(readOnly = true)
+    public AcademyResponseDto getAcademyDetail(Long id) {
+        AcademyEntity academy = academyRepository.findDetailById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
+
+        return AcademyResponseDto.from(academy);
     }
 
     @Transactional(readOnly = true)
@@ -97,14 +94,6 @@ public class AcademyService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public AcademyResponseDto getAcademyDetail(Long id) {
-        AcademyEntity academy = academyRepository.findDetailById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
-
-        return AcademyResponseDto.from(academy);
-    }
-
     @Transactional
     public void updateAcademy(Long id, AcademyUpdateDto req, Long userId) {
         AcademyEntity academy = academyRepository.findById(id)
@@ -115,18 +104,7 @@ public class AcademyService {
         }
 
         academy.update(req);
-
-        if (req.getAgeIds() != null) {
-            academy.updateAges(ageRepository.findAllById(req.getAgeIds()));
-        }
-
-        if (req.getSubjects() != null) {
-            academy.updateSubjects(subjectRepository.findAllById(req.getSubjects()));
-        }
-
-        if (req.getImageUrls() != null) {
-            academy.updateImages(req.getImageUrls());
-        }
+        updateRelationalData(academy, req);
     }
 
     @Transactional(readOnly = true)
@@ -209,6 +187,38 @@ public class AcademyService {
 
 
 
+
+
+    @Transactional
+    public void rejectAcademy(Long academyId) {
+        AcademyEntity academy = academyRepository.findById(academyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
+
+        academy.updateApprovalStatus(ApprovalStatus.REJECTED);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponseDto<AcademySearchResponseDto> getPendingAcademies(Pageable pageable) {
+        Page<AcademyEntity> pendingPage = academyRepository.findAllByApprovalStatus(ApprovalStatus.PENDING, pageable);
+
+        Page<AcademySearchResponseDto> dtoPage = pendingPage.map(AcademySearchResponseDto::from);
+
+        return new PageResponseDto<>(dtoPage);
+    }
+
+    private void updateRelationalData(AcademyEntity academy, AcademyRequest req) {
+        if (req.getAgeIds() != null) {
+            academy.updateAges(ageRepository.findAllById(req.getAgeIds()));
+        }
+
+        if (req.getSubjects() != null) {
+            academy.updateSubjects(subjectRepository.findAllById(req.getSubjects()));
+        }
+
+        if (req.getImageUrls() != null) {
+            academy.updateImages(req.getImageUrls());
+        }
+    }
 
 }
 

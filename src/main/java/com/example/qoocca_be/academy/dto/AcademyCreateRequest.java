@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AcademyCreateRequest {
+public class AcademyCreateRequest implements AcademyRequest {
     @NotBlank(message = "학원 이름은 필수입니다.")
     private String name;
 

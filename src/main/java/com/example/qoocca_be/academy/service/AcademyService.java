@@ -1,9 +1,6 @@
 package com.example.qoocca_be.academy.service;
 
-import com.example.qoocca_be.academy.dto.AcademyCreateRequest;
-import com.example.qoocca_be.academy.dto.AcademyUpdateDto;
-import com.example.qoocca_be.academy.dto.AcademyResponseDto;
-import com.example.qoocca_be.academy.dto.AcademySearchResponseDto;
+import com.example.qoocca_be.academy.dto.*;
 import com.example.qoocca_be.academy.entity.AcademyAgeEntity;
 import com.example.qoocca_be.academy.entity.AcademyEntity;
 import com.example.qoocca_be.academy.entity.AcademySubjectEntity;
@@ -20,13 +17,18 @@ import com.example.qoocca_be.subject.model.SubjectResponseDto;
 import com.example.qoocca_be.subject.repository.SubjectRepository;
 import com.example.qoocca_be.user.entity.UserEntity;
 import com.example.qoocca_be.user.service.UserService;
+import io.jsonwebtoken.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +41,8 @@ public class AcademyService {
     private final AgeRepository ageRepository;
     private final AcademyAgeRepository academyAgeRepository;
     private final SubjectRepository subjectRepository;
+
+
 
     @Transactional
     public Long registerAcademy(AcademyCreateRequest req, Long userId) {
@@ -140,4 +144,71 @@ public class AcademyService {
 
         academy.updateApprovalStatus(ApprovalStatus.APPROVED);
     }
+
+    // ---------------- 파일 업로드 지원 ----------------
+    private final String IMAGE_BASE_URL = "http://localhost:8081/academy/";
+
+    // nginx images 저장 경로 (호스트 기준 절대 경로, docker-compose volume과 매핑)
+    private final String IMAGE_SAVE_PATH = "D:/fintech/login/qoocca_be/nginx/images/";
+
+    @Transactional
+    public Long registerAcademyWithFiles(AcademyCreateWithFilesRequest request, Long userId) throws IOException {
+        UserEntity user = userService.findById(userId);
+
+        AcademyEntity academy = AcademyEntity.builder()
+                .name(request.getName())
+                .baseAddress(request.getBaseAddress())
+                .detailAddress(request.getDetailAddress())
+                .briefInfo(request.getBriefInfo())
+                .detailInfo(request.getDetailInfo())
+                .phoneNumber(request.getPhoneNumber())
+                .blogUrl(request.getBlogUrl())
+                .websiteUrl(request.getWebsiteUrl())
+                .instagramUrl(request.getInstagramUrl())
+                .certificate(request.getCertificate())
+                .user(user)
+                .build();
+
+        academy.updateAddress(request.getBaseAddress(), request.getDetailAddress());
+
+        // DB 먼저 저장해서 ID 확보
+        academyRepository.save(academy);
+
+        // 이미지 처리
+        List<MultipartFile> imageFiles = request.getImageFiles();
+        if (imageFiles != null) {
+            List<String> imageUrls = new ArrayList<>();
+
+            // 학원별 폴더 경로
+            String academyFolderPath = IMAGE_SAVE_PATH + academy.getId() + "/";
+            File academyFolder = new File(academyFolderPath);
+            if (!academyFolder.exists()) academyFolder.mkdirs();
+
+            for (MultipartFile file : imageFiles) {
+                if (file.isEmpty()) continue;
+
+                String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                File saveFile = new File(academyFolderPath + filename);
+                try {
+                    file.transferTo(saveFile);
+                } catch (java.io.IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                imageUrls.add(IMAGE_BASE_URL + academy.getId() + "/" + filename);
+            }
+
+            academy.updateImages(imageUrls);
+        }
+
+        return academy.getId();
+    }
+
+
+
+
+
+
+
 }
+

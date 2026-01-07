@@ -1,6 +1,7 @@
 package com.example.qoocca_be.academy.repository;
 
 import com.example.qoocca_be.academy.entity.AcademyEntity;
+import com.example.qoocca_be.academy.entity.ApprovalStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +18,5 @@ public interface AcademyRepository extends JpaRepository<AcademyEntity, Long> {
     Optional<AcademyEntity> findByUserId(Long userId);
 
     Page<AcademyEntity> findByNameContaining(String name, Pageable pageable);
+    Page<AcademyEntity> findAllByApprovalStatus(ApprovalStatus approvalStatus, Pageable pageable);
 }

@@ -57,4 +57,3 @@ public class SmsService {
         redisDao.deleteValues("SMS_VERIFIED:" + phone);
     }
 }
-

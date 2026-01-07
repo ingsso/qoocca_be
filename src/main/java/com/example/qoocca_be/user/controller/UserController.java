@@ -38,6 +38,14 @@ public class UserController {
         return ResponseEntity.ok(new LoginResponseDto(tokens.getAccessToken(), null));
     }
 
+    @Operation(summary = "계정 연동")
+    @PostMapping("/link-social")
+    public ResponseEntity<?> linkSocial(@RequestBody SocialLinkRequestDto req, HttpServletResponse res) {
+        LoginResponseDto tokens = userService.linkSocialAccount(req);
+        cookieUtils.addRefreshTokenCookie(res, tokens.getRefreshToken());
+        return ResponseEntity.ok(new LoginResponseDto(tokens.getAccessToken(), null));
+    }
+
     @Operation(summary = "로그인")
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto req, HttpServletResponse res) {
@@ -69,14 +77,6 @@ public class UserController {
         authService.logout(accessToken);
         cookieUtils.deleteRefreshTokenCookie(res);
         return ResponseEntity.ok("로그아웃 성공");
-    }
-
-    @Operation(summary = "계정 연동")
-    @PostMapping("/link-social")
-    public ResponseEntity<?> linkSocial(@RequestBody SocialLinkRequestDto req, HttpServletResponse res) {
-        LoginResponseDto tokens = userService.linkSocialAccount(req);
-        cookieUtils.addRefreshTokenCookie(res, tokens.getRefreshToken());
-        return ResponseEntity.ok(new LoginResponseDto(tokens.getAccessToken(), null));
     }
 
     @Operation(summary = "인증번호 전송")

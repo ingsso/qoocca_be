@@ -1,9 +1,6 @@
 package com.example.qoocca_be.academy.controller;
 
-import com.example.qoocca_be.academy.dto.AcademyCreateRequest;
-import com.example.qoocca_be.academy.dto.AcademyUpdateDto;
-import com.example.qoocca_be.academy.dto.AcademyResponseDto;
-import com.example.qoocca_be.academy.dto.AcademySearchResponseDto;
+import com.example.qoocca_be.academy.dto.*;
 import com.example.qoocca_be.academy.service.AcademyService;
 import com.example.qoocca_be.age.model.AgeResponseDto;
 import com.example.qoocca_be.global.common.PageResponseDto;
@@ -21,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @Tag(name = "Academy API", description = "학원 관련 API")
@@ -40,7 +38,21 @@ public class AcademyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
+
+    @Operation(summary="학원 이미지와 함꼐 등록")
+    @PostMapping(value = "/register-with-images", consumes = {"multipart/form-data"})
+    public ResponseEntity<Long> registerAcademyWithFiles(
+            @ModelAttribute AcademyCreateWithFilesRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) throws IOException {
+
+        Long id = academyService.registerAcademyWithFiles(request, userDetails.getUserId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(id);
+    }
+
+
+
     @Operation(summary = "특정 학원 상세 정보 조회")
+
     @GetMapping("/{id}")
     public ResponseEntity<AcademyResponseDto> getAcademyDetail(@PathVariable Long id) {
         AcademyResponseDto res = academyService.getAcademyDetail(id);
@@ -74,8 +86,9 @@ public class AcademyController {
     @Operation(summary = "학원 이름 검색")
     @GetMapping("/search")
     public ResponseEntity<PageResponseDto<AcademySearchResponseDto>> search(@RequestParam String name,
-                                                                            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)Pageable pageable) {
+                                                                            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(academyService.searchAcademiesByName(name, pageable));
     }
 }
 
+}

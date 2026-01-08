@@ -25,8 +25,9 @@ public class UserRequestDto {
         private boolean thirdParty;
         private boolean marketing;
 
-        public boolean isAllRequiredAgreed() {
-            return service && privacy && thirdParty;
-        }
+        public boolean isService() { return service; }
+        public boolean isPrivacy() { return privacy; }
+        public boolean isThirdParty() { return thirdParty; }
+        public boolean isMarketing() { return marketing; }
     }
 }

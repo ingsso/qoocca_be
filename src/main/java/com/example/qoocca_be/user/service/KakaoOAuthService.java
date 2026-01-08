@@ -56,7 +56,9 @@ public class KakaoOAuthService extends SocialOauthService {
         userRepository.save(UserEntity.builder()
                 .kakaoId(socialId)
                 .role("ROLE_USER")
-                .agree(false)
+                .serviceAgree(false)
+                .privacyAgree(false)
+                .thirdPartyAgree(false)
                 .marketingAgree(false)
                 .alarm(true)
                 .build());

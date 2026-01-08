@@ -1,14 +1,13 @@
 package com.example.qoocca_be.academy.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,8 +29,9 @@ public class AcademyCreateRequest implements AcademyRequest {
     private String websiteUrl;
     private String instagramUrl;
 
-    private List<String> imageUrls;
+    private MultipartFile certificateFile;
+    private String certificate;
 
-    @NotBlank(message = "사업자 등록증은 필수입니다.")
-    private String certificate; // 등록 시 필수
+    private List<MultipartFile> imageFiles;
+    private List<String> imageUrls;
 }

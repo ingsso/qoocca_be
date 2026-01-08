@@ -17,7 +17,6 @@ import com.example.qoocca_be.subject.model.SubjectResponseDto;
 import com.example.qoocca_be.subject.repository.SubjectRepository;
 import com.example.qoocca_be.user.entity.UserEntity;
 import com.example.qoocca_be.user.service.UserService;
-import io.jsonwebtoken.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -42,7 +42,8 @@ public class AcademyService {
     private final AcademyAgeRepository academyAgeRepository;
     private final SubjectRepository subjectRepository;
 
-
+    private final String IMAGE_SAVE_PATH = "D:/qoocca-be/nginx/images/";
+    private final String IMAGE_BASE_URL = "http://localhost:8081/academy/";
 
     @Transactional
     public Long registerAcademy(AcademyCreateRequest req, Long userId) {
@@ -58,14 +59,48 @@ public class AcademyService {
                 .blogUrl(req.getBlogUrl())
                 .websiteUrl(req.getWebsiteUrl())
                 .instagramUrl(req.getInstagramUrl())
-                .certificate(req.getCertificate())
                 .user(user)
                 .build();
 
         academy.updateAddress(req.getBaseAddress(), req.getDetailAddress());
         updateRelationalData(academy, req);
 
-        return academyRepository.save(academy).getId();
+        academyRepository.save(academy);
+
+        String academyFolderPath = IMAGE_SAVE_PATH + academy.getId() + "/";
+        File folder = new File(academyFolderPath);
+        if (!folder.exists()) folder.mkdirs();
+
+        if (req.getCertificateFile() != null && !req.getCertificateFile().isEmpty()) {
+            String certFileName = "cert_" + UUID.randomUUID() + "_" + req.getCertificateFile().getOriginalFilename();
+            try {
+                req.getCertificateFile().transferTo(new File(academyFolderPath + certFileName));
+                academy.setCertificate(IMAGE_BASE_URL + academy.getId() + "/" + certFileName);
+            } catch (IOException e) {
+                throw new RuntimeException("사업자 등록증 저장 실패", e);
+            }
+        }
+
+        List<String> finalImageUrls = new ArrayList<>();
+        if (req.getImageFiles() != null && !req.getImageFiles().isEmpty()) {
+            for (MultipartFile file : req.getImageFiles()) {
+                if (file.isEmpty()) continue;
+
+                String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                try {
+                    file.transferTo(new File(academyFolderPath + filename));
+                    finalImageUrls.add(IMAGE_BASE_URL + academy.getId() + "/" + filename);
+                } catch (IOException e) {
+                    throw new RuntimeException("이미지 파일 저장 실패", e);
+                }
+            }
+        }
+
+        if (!finalImageUrls.isEmpty()) {
+            academy.updateImages(finalImageUrls);
+        }
+
+        return academy.getId();
     }
 
     @Transactional(readOnly = true)
@@ -123,72 +158,6 @@ public class AcademyService {
         academy.updateApprovalStatus(ApprovalStatus.APPROVED);
     }
 
-    // ---------------- 파일 업로드 지원 ----------------
-    private final String IMAGE_BASE_URL = "http://localhost:8081/academy/";
-
-    // nginx images 저장 경로 (호스트 기준 절대 경로, docker-compose volume과 매핑)
-    private final String IMAGE_SAVE_PATH = "D:/fintech/login/qoocca_be/nginx/images/";
-
-    @Transactional
-    public Long registerAcademyWithFiles(AcademyCreateWithFilesRequest request, Long userId) throws IOException {
-        UserEntity user = userService.findById(userId);
-
-        AcademyEntity academy = AcademyEntity.builder()
-                .name(request.getName())
-                .baseAddress(request.getBaseAddress())
-                .detailAddress(request.getDetailAddress())
-                .briefInfo(request.getBriefInfo())
-                .detailInfo(request.getDetailInfo())
-                .phoneNumber(request.getPhoneNumber())
-                .blogUrl(request.getBlogUrl())
-                .websiteUrl(request.getWebsiteUrl())
-                .instagramUrl(request.getInstagramUrl())
-                .certificate(request.getCertificate())
-                .user(user)
-                .build();
-
-        academy.updateAddress(request.getBaseAddress(), request.getDetailAddress());
-
-        // DB 먼저 저장해서 ID 확보
-        academyRepository.save(academy);
-
-        // 이미지 처리
-        List<MultipartFile> imageFiles = request.getImageFiles();
-        if (imageFiles != null) {
-            List<String> imageUrls = new ArrayList<>();
-
-            // 학원별 폴더 경로
-            String academyFolderPath = IMAGE_SAVE_PATH + academy.getId() + "/";
-            File academyFolder = new File(academyFolderPath);
-            if (!academyFolder.exists()) academyFolder.mkdirs();
-
-            for (MultipartFile file : imageFiles) {
-                if (file.isEmpty()) continue;
-
-                String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-                File saveFile = new File(academyFolderPath + filename);
-                try {
-                    file.transferTo(saveFile);
-                } catch (java.io.IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-                imageUrls.add(IMAGE_BASE_URL + academy.getId() + "/" + filename);
-            }
-
-            academy.updateImages(imageUrls);
-        }
-
-        return academy.getId();
-    }
-
-
-
-
-
-
-
-
     @Transactional
     public void rejectAcademy(Long academyId) {
         AcademyEntity academy = academyRepository.findById(academyId)
@@ -215,7 +184,7 @@ public class AcademyService {
             academy.updateSubjects(subjectRepository.findAllById(req.getSubjects()));
         }
 
-        if (req.getImageUrls() != null) {
+        if (req.getImageUrls() != null && !req.getImageUrls().isEmpty()) {
             academy.updateImages(req.getImageUrls());
         }
     }

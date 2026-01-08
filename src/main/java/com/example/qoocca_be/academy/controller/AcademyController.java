@@ -30,29 +30,15 @@ public class AcademyController {
     private final AcademyService academyService;
 
     @Operation(summary = "학원 등록")
-    @PostMapping("/register")
+    @PostMapping(value = "/register", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Long> registerAcademy(
-            @Valid @RequestBody AcademyCreateRequest dto,
+            @Valid @ModelAttribute AcademyCreateRequest req,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long id = academyService.registerAcademy(dto, userDetails.getUserId());
+        Long id = academyService.registerAcademy(req, userDetails.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
-
-
-    @Operation(summary="학원 이미지와 함꼐 등록")
-    @PostMapping(value = "/register-with-images", consumes = {"multipart/form-data"})
-    public ResponseEntity<Long> registerAcademyWithFiles(
-            @ModelAttribute AcademyCreateWithFilesRequest request,
-            @AuthenticationPrincipal CustomUserDetails userDetails) throws IOException {
-
-        Long id = academyService.registerAcademyWithFiles(request, userDetails.getUserId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(id);
-    }
-
-
 
     @Operation(summary = "특정 학원 상세 정보 조회")
-
     @GetMapping("/{id}")
     public ResponseEntity<AcademyResponseDto> getAcademyDetail(@PathVariable Long id) {
         AcademyResponseDto res = academyService.getAcademyDetail(id);
@@ -89,6 +75,4 @@ public class AcademyController {
                                                                             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(academyService.searchAcademiesByName(name, pageable));
     }
-}
-
 }

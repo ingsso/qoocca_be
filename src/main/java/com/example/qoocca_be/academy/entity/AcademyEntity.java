@@ -2,7 +2,6 @@ package com.example.qoocca_be.academy.entity;
 
 import com.example.qoocca_be.academy.dto.AcademyUpdateDto;
 import com.example.qoocca_be.age.entity.AgeEntity;
-import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.subject.entity.SubjectEntity;
 import com.example.qoocca_be.user.entity.UserEntity;
 import jakarta.persistence.*;
@@ -79,6 +78,7 @@ public class AcademyEntity {
     @Column(name = "website_url", columnDefinition = "TEXT")
     private String websiteUrl;
 
+    @Setter
     private String certificate;
 
     @CreatedDate
@@ -109,11 +109,6 @@ public class AcademyEntity {
     @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<AcademySubjectEntity> academySubjects = new ArrayList<>();
-
-
-
-
-
 
     public void updateApprovalStatus(ApprovalStatus status) {
         this.approvalStatus = status;

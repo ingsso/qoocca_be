@@ -18,6 +18,7 @@ import com.example.qoocca_be.subject.repository.SubjectRepository;
 import com.example.qoocca_be.user.entity.UserEntity;
 import com.example.qoocca_be.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -42,8 +43,11 @@ public class AcademyService {
     private final AcademyAgeRepository academyAgeRepository;
     private final SubjectRepository subjectRepository;
 
-    private final String IMAGE_SAVE_PATH = "D:/qoocca-be/nginx/images/";
-    private final String IMAGE_BASE_URL = "http://localhost:8081/academy/";
+    @Value("${file.upload.path}")
+    private String IMAGE_SAVE_PATH;
+
+    @Value("${file.upload.base-url}")
+    private String IMAGE_BASE_URL;
 
     @Transactional
     public Long registerAcademy(AcademyCreateRequest req, Long userId) {

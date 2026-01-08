@@ -31,12 +31,9 @@ public class UserService {
             return;
         }
 
-        if (user.getAgree() != null && user.getAgree() && !agreements.isAllRequiredAgreed()) {
-            log.warn("이미 동의한 유저의 권한을 false로 덮어쓰려는 시도를 차단합니다.");
-        } else {
-            user.setAgree(agreements.isAllRequiredAgreed());
-        }
-
+        user.setServiceAgree(agreements.isService());
+        user.setPrivacyAgree(agreements.isPrivacy());
+        user.setThirdPartyAgree(agreements.isThirdParty());
         user.setMarketingAgree(agreements.isMarketing());
     }
 
@@ -97,9 +94,12 @@ public class UserService {
             UserEntity existingUser = existingUserOpt.get();
 
             if (req.agreements() != null) {
+                validateRequiredAgreements(req.agreements());
                 setAgreements(existingUser, req.agreements());
             } else {
-                existingUser.setAgree(true);
+                existingUser.setServiceAgree(true);
+                existingUser.setPrivacyAgree(true);
+                existingUser.setThirdPartyAgree(true);
             }
 
             if ("kakao".equals(req.provider())) existingUser.setKakaoId(req.socialId());
@@ -117,9 +117,7 @@ public class UserService {
             return jwtTokenProvider.generateTokens(existingUser.getId(), existingUser.getRole());
         }
 
-        if (req.agreements() == null || !req.agreements().isAllRequiredAgreed()) {
-            throw new RuntimeException("필수 약관 동의가 필요합니다.");
-        }
+        validateRequiredAgreements(req.agreements());
 
         tempSocialUser.setPhoneNumber(cleanPhone);
         setAgreements(tempSocialUser, req.agreements());
@@ -127,5 +125,14 @@ public class UserService {
 
         smsService.deleteVerifiedState(cleanPhone);
         return jwtTokenProvider.generateTokens(tempSocialUser.getId(), tempSocialUser.getRole());
+    }
+
+    private void validateRequiredAgreements(UserRequestDto.AgreementsRequest agreements) {
+        if (agreements == null ||
+                !agreements.isService() ||
+                !agreements.isPrivacy() ||
+                !agreements.isThirdParty()) {
+            throw new RuntimeException("필수 약관 동의가 누락되었습니다.");
+        }
     }
 }

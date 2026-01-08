@@ -45,9 +45,17 @@ public class UserEntity {
     @Column(name = "user_phone_number", length = 11)
     private String phoneNumber;
 
-    @Column(nullable = false)
     @Builder.Default
-    private Boolean agree = false;
+    @Column(nullable = false)
+    private boolean serviceAgree = false;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean privacyAgree = false;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean thirdPartyAgree = false;
 
     @Column(nullable = false)
     @Builder.Default

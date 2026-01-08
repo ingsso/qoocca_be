@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.List;
 
 @Tag(name = "Academy API", description = "학원 관련 API")
@@ -32,7 +31,7 @@ public class AcademyController {
     @Operation(summary = "학원 등록")
     @PostMapping(value = "/register", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Long> registerAcademy(
-            @Valid @ModelAttribute AcademyCreateRequest req,
+            @Valid @ModelAttribute AcademyCreateRequestDto req,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long id = academyService.registerAcademy(req, userDetails.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(id);

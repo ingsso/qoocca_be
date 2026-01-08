@@ -5,5 +5,4 @@ import java.util.List;
 public interface AcademyRequest {
     List<Long> getAgeIds();
     List<Long> getSubjects();
-    List<String> getImageUrls();
 }

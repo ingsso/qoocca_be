@@ -50,7 +50,7 @@ public class AcademyService {
     private String IMAGE_BASE_URL;
 
     @Transactional
-    public Long registerAcademy(AcademyCreateRequest req, Long userId) {
+    public Long registerAcademy(AcademyCreateRequestDto req, Long userId) {
         UserEntity user = userService.findById(userId);
 
         AcademyEntity academy = AcademyEntity.builder()
@@ -188,8 +188,10 @@ public class AcademyService {
             academy.updateSubjects(subjectRepository.findAllById(req.getSubjects()));
         }
 
-        if (req.getImageUrls() != null && !req.getImageUrls().isEmpty()) {
-            academy.updateImages(req.getImageUrls());
+        if (req instanceof AcademyUpdateDto updateDto) {
+            if (updateDto.getImageUrls() != null) {
+                academy.updateImages(updateDto.getImageUrls());
+            }
         }
     }
 

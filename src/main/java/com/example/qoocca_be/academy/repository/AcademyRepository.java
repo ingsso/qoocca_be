@@ -19,4 +19,7 @@ public interface AcademyRepository extends JpaRepository<AcademyEntity, Long> {
 
     Page<AcademyEntity> findByNameContaining(String name, Pageable pageable);
     Page<AcademyEntity> findAllByApprovalStatus(ApprovalStatus approvalStatus, Pageable pageable);
+
+    boolean existsByUserId(Long userId);
+    boolean existsByUserIdAndApprovalStatus(Long userId, ApprovalStatus approvalStatus);
 }

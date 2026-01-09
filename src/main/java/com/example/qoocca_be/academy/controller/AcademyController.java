@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.attribute.UserPrincipal;
 import java.util.List;
 
 @Tag(name = "Academy API", description = "학원 관련 API")
@@ -35,6 +36,13 @@ public class AcademyController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long id = academyService.registerAcademy(req, userDetails.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
+    }
+
+    @Operation(summary = "학원 승인 여부 확인")
+    @GetMapping("/check-registration")
+    public ResponseEntity<AcademyCheckResponseDto> checkRegistration(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        AcademyCheckResponseDto res = academyService.checkRegistrationStatus(userDetails.getUserId());
+        return ResponseEntity.ok(res);
     }
 
     @Operation(summary = "특정 학원 상세 정보 조회")

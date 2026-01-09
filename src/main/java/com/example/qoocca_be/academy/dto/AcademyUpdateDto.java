@@ -1,6 +1,7 @@
 package com.example.qoocca_be.academy.dto;
 
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -33,6 +34,10 @@ public class AcademyUpdateDto implements AcademyRequest {
     private String instagramUrl;
 
     private List<String> imageUrls;
+
+    private List<MultipartFile> imageFiles;
+
+    private MultipartFile certificateFile;
 
     private String certificate;
 }

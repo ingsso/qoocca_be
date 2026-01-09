@@ -1,10 +1,7 @@
 package com.example.qoocca_be.academy.service;
 
 import com.example.qoocca_be.academy.dto.*;
-import com.example.qoocca_be.academy.entity.AcademyAgeEntity;
-import com.example.qoocca_be.academy.entity.AcademyEntity;
-import com.example.qoocca_be.academy.entity.AcademySubjectEntity;
-import com.example.qoocca_be.academy.entity.ApprovalStatus;
+import com.example.qoocca_be.academy.entity.*;
 import com.example.qoocca_be.academy.repository.AcademyAgeRepository;
 import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.academy.repository.AcademySubjectRepository;
@@ -18,6 +15,7 @@ import com.example.qoocca_be.subject.repository.SubjectRepository;
 import com.example.qoocca_be.user.entity.UserEntity;
 import com.example.qoocca_be.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -42,11 +40,24 @@ public class AcademyService {
     private final AcademyAgeRepository academyAgeRepository;
     private final SubjectRepository subjectRepository;
 
-    private final String IMAGE_SAVE_PATH = "D:/qoocca-be/nginx/images/";
-    private final String IMAGE_BASE_URL = "http://localhost:8081/academy/";
+    @Value("${file.upload.path}")
+    private String IMAGE_SAVE_PATH;
+
+    @Value("${file.upload.base-url}")
+    private String IMAGE_BASE_URL;
+
+    @Transactional(readOnly = true)
+    public AcademyCheckResponseDto checkRegistrationStatus(Long userId) {
+        return academyRepository.findByUserId(userId)
+                .map(academy -> new AcademyCheckResponseDto(
+                        academy.getApprovalStatus() == ApprovalStatus.APPROVED,
+                        academy.getId()
+                ))
+                .orElse(new AcademyCheckResponseDto(false, null));
+    }
 
     @Transactional
-    public Long registerAcademy(AcademyCreateRequest req, Long userId) {
+    public Long registerAcademy(AcademyCreateRequestDto req, Long userId) {
         UserEntity user = userService.findById(userId);
 
         AcademyEntity academy = AcademyEntity.builder()
@@ -140,6 +151,57 @@ public class AcademyService {
 
         academy.update(req);
         updateRelationalData(academy, req);
+
+        String academyFolderPath = IMAGE_SAVE_PATH + academy.getId() + "/";
+
+        List<AcademyImageEntity> oldImages = academy.getAcademyImages();
+        List<AcademyImageEntity> imagesToRemove = new ArrayList<>();
+
+        for (AcademyImageEntity imageEntity : oldImages) {
+            String oldUrl = imageEntity.getImageUrl();
+            if (req.getImageUrls() == null || !req.getImageUrls().contains(oldUrl)) {
+                deletePhysicalFile(oldUrl);
+                imagesToRemove.add(imageEntity);
+            }
+        }
+
+        oldImages.removeAll(imagesToRemove);
+
+        if (req.getImageFiles() != null && !req.getImageFiles().isEmpty()) {
+            File folder = new File(academyFolderPath);
+            if (!folder.exists()) folder.mkdirs();
+
+            for (MultipartFile file : req.getImageFiles()) {
+                if (file.isEmpty()) continue;
+
+                String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                try {
+                    file.transferTo(new File(academyFolderPath + filename));
+                    String newUrl = IMAGE_BASE_URL + academy.getId() + "/" + filename;
+
+                    AcademyImageEntity newImage = AcademyImageEntity.builder()
+                            .imageUrl(newUrl)
+                            .academy(academy)
+                            .build();
+                    oldImages.add(newImage);
+                } catch (IOException e) {
+                    throw new RuntimeException("새 이미지 저장 실패", e);
+                }
+            }
+        }
+    }
+
+    private void deletePhysicalFile(String fileUrl) {
+        try {
+            String relativePath = fileUrl.replace(IMAGE_BASE_URL, "");
+            File fileToDelete = new File(IMAGE_SAVE_PATH + relativePath);
+
+            if (fileToDelete.exists()) {
+                fileToDelete.delete();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -184,8 +246,10 @@ public class AcademyService {
             academy.updateSubjects(subjectRepository.findAllById(req.getSubjects()));
         }
 
-        if (req.getImageUrls() != null && !req.getImageUrls().isEmpty()) {
-            academy.updateImages(req.getImageUrls());
+        if (req instanceof AcademyUpdateDto updateDto) {
+            if (updateDto.getImageUrls() != null) {
+                academy.updateImages(updateDto.getImageUrls());
+            }
         }
     }
 

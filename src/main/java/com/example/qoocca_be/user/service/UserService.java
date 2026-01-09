@@ -8,6 +8,7 @@ import com.example.qoocca_be.user.model.SocialLinkRequestDto;
 import com.example.qoocca_be.user.model.UserRequestDto;
 import com.example.qoocca_be.user.repository.UserRepository;
 import com.example.qoocca_be.global.jwt.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,7 +44,7 @@ public class UserService {
     }
 
     @Transactional
-    public LoginResponseDto signup(UserRequestDto req) {
+    public LoginResponseDto signup(UserRequestDto req, HttpServletResponse res) {
         smsService.checkIsVerified(req.getPhone());
 
         UserEntity userEntity = userRepository.findByPhoneNumber(req.getPhone())
@@ -75,18 +76,18 @@ public class UserService {
         userRepository.save(userEntity);
         smsService.deleteVerifiedState(req.getPhone());
 
-        return jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole());
+        return jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole(), res);
     }
 
     @Transactional
-    public LoginResponseDto linkSocialAccount(SocialLinkRequestDto req) {
+    public LoginResponseDto linkSocialAccount(SocialLinkRequestDto req, HttpServletResponse res) {
         String cleanPhone = req.phone().replaceAll("[^0-9]", "");
         smsService.checkIsVerified(cleanPhone);
 
         UserEntity tempSocialUser = ("kakao".equals(req.provider())
                 ? userRepository.findByKakaoId(req.socialId())
                 : userRepository.findByNaverId(req.socialId()))
-                .orElseThrow(() -> new RuntimeException("소셜 계정을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         Optional<UserEntity> existingUserOpt = userRepository.findByPhoneNumber(cleanPhone);
 
@@ -94,7 +95,6 @@ public class UserService {
             UserEntity existingUser = existingUserOpt.get();
 
             if (req.agreements() != null) {
-                validateRequiredAgreements(req.agreements());
                 setAgreements(existingUser, req.agreements());
             } else {
                 existingUser.setServiceAgree(true);
@@ -105,7 +105,6 @@ public class UserService {
             if ("kakao".equals(req.provider())) existingUser.setKakaoId(req.socialId());
             else if ("naver".equals(req.provider())) existingUser.setNaverId(req.socialId());
 
-            // 기존 유저 정보 저장 강제
             userRepository.save(existingUser);
 
             if (!existingUser.getId().equals(tempSocialUser.getId())) {
@@ -114,7 +113,7 @@ public class UserService {
             }
 
             smsService.deleteVerifiedState(cleanPhone);
-            return jwtTokenProvider.generateTokens(existingUser.getId(), existingUser.getRole());
+            return jwtTokenProvider.generateTokens(existingUser.getId(), existingUser.getRole(), res);
         }
 
         validateRequiredAgreements(req.agreements());
@@ -124,7 +123,7 @@ public class UserService {
         userRepository.save(tempSocialUser);
 
         smsService.deleteVerifiedState(cleanPhone);
-        return jwtTokenProvider.generateTokens(tempSocialUser.getId(), tempSocialUser.getRole());
+        return jwtTokenProvider.generateTokens(tempSocialUser.getId(), tempSocialUser.getRole(), res);
     }
 
     private void validateRequiredAgreements(UserRequestDto.AgreementsRequest agreements) {

@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AcademyCreateRequest implements AcademyRequest {
+public class AcademyCreateRequestDto implements AcademyRequest {
     @NotBlank(message = "학원 이름은 필수입니다.")
     private String name;
 
@@ -30,8 +30,6 @@ public class AcademyCreateRequest implements AcademyRequest {
     private String instagramUrl;
 
     private MultipartFile certificateFile;
-    private String certificate;
 
     private List<MultipartFile> imageFiles;
-    private List<String> imageUrls;
 }

@@ -10,4 +10,10 @@ import lombok.*;
 public class LoginResponseDto {
     private String accessToken;
     private String refreshToken;
+    private String socialId;
+
+    public LoginResponseDto(String accessToken, String refreshToken) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+    }
 }

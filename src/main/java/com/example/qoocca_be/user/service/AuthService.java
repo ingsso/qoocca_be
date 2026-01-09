@@ -35,7 +35,7 @@ public class AuthService {
         return service.login(code, res);
     }
 
-    public LoginResponseDto login(LoginRequestDto req) {
+    public LoginResponseDto login(LoginRequestDto req, HttpServletResponse res) {
         UserEntity userEntity = userRepository.findByEmail(req.getEmail())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -43,7 +43,7 @@ public class AuthService {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
-        return jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole());
+        return jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole(), res);
     }
 
     @Transactional

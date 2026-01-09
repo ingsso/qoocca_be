@@ -87,12 +87,12 @@ public class ClassInfoEntity {
     @ToString.Exclude
     private AcademyEntity academy;
 
-    @OneToOne (fetch = FetchType.LAZY)
+    @ManyToOne (fetch = FetchType.LAZY)
     @JoinColumn(name = "age_id", nullable = false)
     @ToString.Exclude
     private AgeEntity age;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     @ToString.Exclude
     private SubjectEntity subject;

@@ -1,5 +1,6 @@
 package com.example.qoocca_be.global.jwt;
 
+import com.example.qoocca_be.global.utils.CookieUtils;
 import com.example.qoocca_be.user.model.LoginResponseDto;
 import com.example.qoocca_be.user.model.RedisDao;
 import io.jsonwebtoken.Claims;
@@ -7,6 +8,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +22,7 @@ public class JwtTokenProvider {
 
     private final Key key;
     private final RedisDao redisDao;
+    private final CookieUtils cookieUtils;
     private static final String BLACKLIST_PREFIX = "blacklist:";
 
     @Value("${jwt.access-token-expiration}")
@@ -29,17 +32,21 @@ public class JwtTokenProvider {
     private long refreshTokenExpireTime;
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
-                            RedisDao redisDao) {
+                            RedisDao redisDao,
+                            CookieUtils cookieUtils) {
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.redisDao = redisDao;
+        this.cookieUtils = cookieUtils;
     }
 
-    public LoginResponseDto generateTokens(Long userId, String role) {
+    public LoginResponseDto generateTokens(Long userId, String role, HttpServletResponse res) {
         String accessToken = generateAccessToken(userId, role);
         String refreshToken = generateRefreshToken(userId, role);
 
-        return new LoginResponseDto(accessToken, refreshToken);
+        cookieUtils.addRefreshTokenCookie(res, refreshToken);
+
+        return new LoginResponseDto(accessToken, null);
     }
 
     public String generateAccessToken(Long userId, String role){

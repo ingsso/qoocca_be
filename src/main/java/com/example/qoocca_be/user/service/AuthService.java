@@ -73,6 +73,6 @@ public class AuthService {
         String role = jwtTokenProvider.getRoleFromToken(refreshToken);
         String newAccessToken = jwtTokenProvider.generateAccessToken(userId, role);
 
-        return new LoginResponseDto(newAccessToken, null);
+        return new LoginResponseDto(newAccessToken, refreshToken);
     }
 }

@@ -46,7 +46,10 @@ public class JwtTokenProvider {
 
         cookieUtils.addRefreshTokenCookie(res, refreshToken);
 
-        return new LoginResponseDto(accessToken, refreshToken);
+        return LoginResponseDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(null)
+                .build();
     }
 
     public String generateAccessToken(Long userId, String role){

@@ -35,6 +35,7 @@ public class AuthService {
         return service.login(code, res);
     }
 
+    @Transactional(readOnly = true)
     public LoginResponseDto login(LoginRequestDto req, HttpServletResponse res) {
         UserEntity userEntity = userRepository.findByEmail(req.getEmail())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -43,7 +44,13 @@ public class AuthService {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
-        return jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole(), res);
+        LoginResponseDto tokens = jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole(), res);
+
+        return LoginResponseDto.builder()
+                .accessToken(tokens.getAccessToken())
+                .refreshToken(null)
+                .academyId(userEntity.getAcademies().isEmpty() ? null : userEntity.getAcademies().get(0).getId())
+                .build();
     }
 
     @Transactional
@@ -73,6 +80,13 @@ public class AuthService {
         String role = jwtTokenProvider.getRoleFromToken(refreshToken);
         String newAccessToken = jwtTokenProvider.generateAccessToken(userId, role);
 
-        return new LoginResponseDto(newAccessToken, refreshToken);
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        return LoginResponseDto.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(refreshToken)
+                .academyId(user.getAcademies().isEmpty() ? null : user.getAcademies().get(0).getId())
+                .build();
     }
 }

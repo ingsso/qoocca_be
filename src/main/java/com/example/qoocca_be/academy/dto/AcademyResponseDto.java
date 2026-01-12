@@ -21,6 +21,8 @@ public class AcademyResponseDto {
 
     private String name;
 
+    private String approvalStatus;
+
     private String address;
     private String baseAddress;
     private String detailAddress;
@@ -48,6 +50,7 @@ public class AcademyResponseDto {
         return AcademyResponseDto.builder()
                 .id(academy.getId())
                 .name(academy.getName())
+                .approvalStatus(academy.getApprovalStatus().name())
                 .address(academy.getAddress())
                 .baseAddress(academy.getBaseAddress())
                 .detailAddress(academy.getDetailAddress())

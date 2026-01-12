@@ -14,7 +14,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,24 +34,21 @@ public class UserController {
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody UserRequestDto req, HttpServletResponse res) {
         LoginResponseDto tokens = userService.signup(req, res);
-        cookieUtils.addRefreshTokenCookie(res, tokens.getRefreshToken());
-        return ResponseEntity.ok(new LoginResponseDto(tokens.getAccessToken(), null));
+        return ResponseEntity.ok(tokens);
     }
 
     @Operation(summary = "계정 연동")
     @PostMapping("/link-social")
     public ResponseEntity<?> linkSocial(@RequestBody SocialLinkRequestDto dto, HttpServletResponse res) {
         LoginResponseDto tokens = userService.linkSocialAccount(dto, res);
-
-        return ResponseEntity.ok(new LoginResponseDto(tokens.getAccessToken(), null));
+        return ResponseEntity.ok(tokens);
     }
 
     @Operation(summary = "로그인")
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto req, HttpServletResponse res) {
         LoginResponseDto tokens = authService.login(req, res);
-        cookieUtils.addRefreshTokenCookie(res, tokens.getRefreshToken());
-        return ResponseEntity.ok(new LoginResponseDto(tokens.getAccessToken(), null));
+        return ResponseEntity.ok(tokens);
     }
 
     @Operation(summary = "소셜 로그인")
@@ -61,7 +57,8 @@ public class UserController {
                                          @RequestBody Map<String, String> body,
                                          HttpServletResponse res) {
         String code = body.get("code");
-        return ResponseEntity.ok(authService.socialLogin(provider, code, res));
+        LoginResponseDto tokens = authService.socialLogin(provider, code, res);
+        return ResponseEntity.ok(tokens);
     }
 
     @Operation(summary = "Access Token 재발급")

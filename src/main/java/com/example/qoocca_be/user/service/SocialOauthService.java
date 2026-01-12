@@ -49,7 +49,16 @@ public abstract class SocialOauthService {
     private LoginResponseDto generateLoginResponse(UserEntity user, HttpServletResponse res) {
         LoginResponseDto loginRes = jwtTokenProvider.generateTokens(user.getId(), user.getRole(), res);
         cookieUtils.addRefreshTokenCookie(res, loginRes.getRefreshToken());
-        return new LoginResponseDto(loginRes.getAccessToken(), null);
+
+        Long academyId = null;
+        if (user.getAcademies() != null && !user.getAcademies().isEmpty()) {
+            academyId = user.getAcademies().get(0).getId();
+        }
+
+        return LoginResponseDto.builder()
+                .accessToken(loginRes.getAccessToken())
+                .academyId(academyId)
+                .build();
     }
 
     private LoginResponseDto needPhoneAuthResponse(String socialId) {

@@ -1,5 +1,6 @@
 package com.example.qoocca_be.student.entity;
 
+import com.example.qoocca_be.academy.entity.AcademyStudentEntity;
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,6 +9,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @EntityListeners(AuditingEntityListener.class)
 @Getter
@@ -50,14 +53,14 @@ public class StudentEntity {
     private LocalDateTime updatedAt;
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "class_id", nullable = false)
-    @ToString.Exclude
-    private ClassInfoEntity classInfo;
-
     public enum StudentStatus {
         ACTIVE,
         INACTIVE,
         WITHDRAWN
     }
+
+    @OneToMany(mappedBy = "student")
+    private List<AcademyStudentEntity> academyStudents = new ArrayList<>();
+
+
 }

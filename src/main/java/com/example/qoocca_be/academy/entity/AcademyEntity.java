@@ -110,6 +110,14 @@ public class AcademyEntity {
     @Builder.Default
     private List<AcademySubjectEntity> academySubjects = new ArrayList<>();
 
+
+    @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<AcademyStudentEntity> academyStudents = new ArrayList<>();
+
+
+
+
     public void updateApprovalStatus(ApprovalStatus status) {
         this.approvalStatus = status;
     }

@@ -10,5 +10,4 @@ public class StudentCreateRequest {
     @NotBlank
     private String studentName;
 
-    private StudentStatus studentStatus;
 }

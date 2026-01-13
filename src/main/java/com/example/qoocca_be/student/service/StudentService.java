@@ -39,11 +39,9 @@ public class StudentService {
         StudentEntity student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("학생 없음"));
 
-        if (request.getStudentName() != null)
+        if (request.getStudentName() != null) {
             student.setStudentName(request.getStudentName());
-
-        if (request.getStudentStatus() != null)
-            student.setStudentStatus(request.getStudentStatus());
+        }
 
         return StudentResponse.from(student);
     }
@@ -52,6 +50,6 @@ public class StudentService {
         StudentEntity student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("학생 없음"));
 
-        student.setStudentStatus(StudentStatus.WITHDRAWN);
+        studentRepository.delete(student); // 또는 soft delete 컬럼 추가 가능
     }
 }

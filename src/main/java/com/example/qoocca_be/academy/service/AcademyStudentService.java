@@ -6,6 +6,8 @@ import com.example.qoocca_be.academy.entity.AcademyEntity;
 import com.example.qoocca_be.academy.entity.AcademyStudentEntity;
 import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.academy.repository.AcademyStudentRepository;
+import com.example.qoocca_be.classInfo.entity.StudentStatus;
+import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class AcademyStudentService {
     private final AcademyRepository academyRepository;
     private final StudentRepository studentRepository;
     private final AcademyStudentRepository academyStudentRepository;
+    private final ClassInfoStudentRepository classInfoStudentRepository;
 
     public AcademyStudentResponse registerStudent(Long academyId, AcademyStudentCreateRequest request) {
 
@@ -29,13 +32,7 @@ public class AcademyStudentService {
                 .orElseThrow(() -> new IllegalArgumentException("학원 없음"));
 
         StudentEntity student = StudentEntity.builder()
-                .studentName(request.getStudentName())
-                .studentStatus(
-                        request.getStudentStatus() != null
-                                ? request.getStudentStatus()
-                                : StudentEntity.StudentStatus.ACTIVE
-                )
-                .build();
+                .studentName(request.getStudentName()).build();
 
         studentRepository.save(student);
 
@@ -63,5 +60,9 @@ public class AcademyStudentService {
                 .orElseThrow(() -> new IllegalArgumentException("관계 없음"));
 
         academyStudentRepository.delete(relation);
+    }
+
+    public Long getTotalStudentCount(Long academyId) {
+        return classInfoStudentRepository.countUniqueStudentsByAcademyId(academyId, StudentStatus.ENROLLED);
     }
 }

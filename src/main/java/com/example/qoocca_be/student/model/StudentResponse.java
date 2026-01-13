@@ -1,5 +1,6 @@
 package com.example.qoocca_be.student.model;
 
+import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,7 +11,7 @@ public class StudentResponse {
 
     private Long studentId;
     private String studentName;
-    private StudentEntity.StudentStatus studentStatus;
+    private StudentStatus studentStatus;
 
     public static StudentResponse from(StudentEntity entity) {
         return StudentResponse.builder()

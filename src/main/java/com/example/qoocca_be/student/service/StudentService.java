@@ -1,5 +1,6 @@
 package com.example.qoocca_be.student.service;
 
+import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.student.model.StudentCreateRequest;
 import com.example.qoocca_be.student.model.StudentResponse;
@@ -19,11 +20,6 @@ public class StudentService {
 
         StudentEntity student = StudentEntity.builder()
                 .studentName(request.getStudentName())
-                .studentStatus(
-                        request.getStudentStatus() != null
-                                ? request.getStudentStatus()
-                                : StudentEntity.StudentStatus.ACTIVE
-                )
                 .build();
 
         studentRepository.save(student);
@@ -56,6 +52,6 @@ public class StudentService {
         StudentEntity student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("학생 없음"));
 
-        student.setStudentStatus(StudentEntity.StudentStatus.WITHDRAWN);
+        student.setStudentStatus(StudentStatus.WITHDRAWN);
     }
 }

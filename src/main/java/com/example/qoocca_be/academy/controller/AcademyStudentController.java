@@ -29,6 +29,11 @@ public class AcademyStudentController {
         return academyStudentService.getStudents(academyId);
     }
 
+    @GetMapping("/cnt")
+    public Long getStudentCount(@PathVariable Long academyId) {
+        return academyStudentService.getTotalStudentCount(academyId);
+    }
+
     @DeleteMapping("/{studentId}")
     public void delete(
             @PathVariable Long academyId,

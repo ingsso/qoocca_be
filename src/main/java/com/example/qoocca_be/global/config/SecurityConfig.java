@@ -48,6 +48,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/class/**").hasRole("ADMIN")                        
                         .requestMatchers("/api/academy/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
                 )

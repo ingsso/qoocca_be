@@ -36,7 +36,6 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
                 path.startsWith("/api/dashboard") ||
                 path.startsWith("/api/academy/register") ||
                 (path.startsWith("/api/academy/") && !path.contains("/class") && request.getMethod().equals("GET"))) {
-
             filterChain.doFilter(request, response);
             return;
         }

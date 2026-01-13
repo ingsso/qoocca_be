@@ -12,12 +12,4 @@ import java.util.Optional;
 public interface StudentRepository
         extends JpaRepository<StudentEntity, Long> {
 
-    // 수업별 학생 목록 조회
-    List<StudentEntity> findByClassInfo_ClassId(Long classId);
-
-    // 수업 + 학생 단건 조회 (보안/정합성)
-    Optional<StudentEntity> findByStudentIdAndClassInfo_ClassId(
-            Long studentId,
-            Long classId
-    );
 }

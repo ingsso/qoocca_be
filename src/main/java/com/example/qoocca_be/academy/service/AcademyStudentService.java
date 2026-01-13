@@ -30,11 +30,7 @@ public class AcademyStudentService {
 
         StudentEntity student = StudentEntity.builder()
                 .studentName(request.getStudentName())
-                .studentStatus(
-                        request.getStudentStatus() != null
-                                ? request.getStudentStatus()
-                                : StudentEntity.StudentStatus.ACTIVE
-                )
+                //StudentStatus 추가
                 .build();
 
         studentRepository.save(student);

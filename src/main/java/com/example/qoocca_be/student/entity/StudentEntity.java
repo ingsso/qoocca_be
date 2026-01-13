@@ -37,10 +37,6 @@ public class StudentEntity {
     @Column(name = "student_name")
     private String studentName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "student_status")
-    private StudentStatus studentStatus;
-
     /* =========================
      * 생성 / 수정일
      * ========================= */
@@ -52,12 +48,6 @@ public class StudentEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-
-    public enum StudentStatus {
-        ACTIVE,
-        INACTIVE,
-        WITHDRAWN
-    }
 
     @OneToMany(mappedBy = "student")
     private List<AcademyStudentEntity> academyStudents = new ArrayList<>();

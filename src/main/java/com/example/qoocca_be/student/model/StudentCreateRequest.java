@@ -9,5 +9,4 @@ public class StudentCreateRequest {
     @NotBlank
     private String studentName;
 
-    private StudentEntity.StudentStatus studentStatus;
 }

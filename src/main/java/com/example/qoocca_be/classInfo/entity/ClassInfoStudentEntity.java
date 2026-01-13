@@ -31,6 +31,11 @@ public class ClassInfoStudentEntity {
     @JoinColumn(name = "student_id", nullable = false)
     private StudentEntity student;
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private StudentStatus status = StudentStatus.ENROLLED;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

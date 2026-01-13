@@ -1,5 +1,6 @@
 package com.example.qoocca_be.student.model;
 
+import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

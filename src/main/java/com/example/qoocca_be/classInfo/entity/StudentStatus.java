@@ -5,3 +5,4 @@ public enum StudentStatus {
     WITHDRAWN, // 퇴원
     PAUSED     // 휴원
 }
+ 

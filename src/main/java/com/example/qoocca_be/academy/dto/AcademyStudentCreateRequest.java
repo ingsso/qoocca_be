@@ -10,5 +10,4 @@ public class AcademyStudentCreateRequest {
 
     @NotBlank
     private String studentName;
-    private StudentStatus studentStatus;
 }

@@ -59,4 +59,17 @@ public class AttendanceController {
         List<AttendanceMonthResponse> list = attendanceService.getAttendanceByMonth(studentId, year, month);
         return ResponseEntity.ok(list);
     }
+
+    /* =========================
+     * 하교(체크아웃) 등록
+     * PATCH /api/student/{studentId}/attendance/check-out
+     * ========================= */
+    @PatchMapping("/check-out")
+    public ResponseEntity<AttendanceResponse> checkOut(
+            @PathVariable Long studentId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        AttendanceResponse response = attendanceService.updateCheckOut(studentId, date);
+        return ResponseEntity.ok(response);
+    }
 }

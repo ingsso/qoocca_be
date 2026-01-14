@@ -1,6 +1,7 @@
 package com.example.qoocca_be.receipt.entity;
 
 
+import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -61,10 +62,16 @@ public class ReceiptEntity {
     @ToString.Exclude
     private StudentEntity student;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "class_id", nullable = false)
+    @ToString.Exclude
+    private ClassInfoEntity classInfo;
+
     /* =========================
      * enum 정의
      * ========================= */
     public enum ReceiptStatus {
+        PAID,        // 수납 완료
         ISSUED,     // 영수증발행
         CANCELLED  // 취소
     }

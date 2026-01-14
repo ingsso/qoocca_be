@@ -2,11 +2,14 @@ package com.example.qoocca_be.attendance.repository;
 
 import com.example.qoocca_be.attendance.entity.AttendanceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -66,4 +69,22 @@ public interface AttendanceRepository
             @Param("attendanceDate") LocalDate attendanceDate,
             @Param("statuses") Collection<AttendanceEntity.AttendanceStatus> statuses
     );
+
+    @Modifying
+    @Transactional
+    @Query("""
+    INSERT INTO AttendanceEntity (student, classInfo, attendanceDate, status)
+    SELECT cs.student, cs.classInfo, :today, 'ABSENT'
+    FROM ClassInfoStudentEntity cs
+    WHERE cs.status = 'ENROLLED'
+      AND NOT EXISTS (
+          SELECT 1 FROM AttendanceEntity a 
+          WHERE a.student = cs.student 
+            AND a.classInfo = cs.classInfo 
+            AND a.attendanceDate = :today
+      )
+      AND cs.classInfo.endTime < :nowTime
+""")
+    int insertAbsenteesForFinishedClasses(@Param("today") LocalDate today,
+                                          @Param("nowTime") LocalTime nowTime);
 }

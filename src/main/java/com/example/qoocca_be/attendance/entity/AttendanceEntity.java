@@ -40,10 +40,12 @@ public class AttendanceEntity {
     private LocalTime checkIn;
 
     @Column(name = "checkout")
+    @Setter
     private LocalTime checkOut;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
+    @Setter
     private AttendanceStatus status;
 
     /* =========================

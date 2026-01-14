@@ -14,6 +14,8 @@ public interface ClassInfoStudentRepository extends JpaRepository<ClassInfoStude
 
     List<ClassInfoStudentEntity> findByClassInfo_ClassId(Long classId);
 
+    long countByClassInfo_ClassIdAndStatus(Long classId, StudentStatus status);
+
     boolean existsByClassInfo_ClassIdAndStudent_StudentId(Long classId, Long studentId);
 
     Optional<ClassInfoStudentEntity> findByClassInfo_ClassIdAndStudent_StudentId(Long classId, Long studentId);

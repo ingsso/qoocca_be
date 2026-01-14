@@ -32,6 +32,9 @@ public class ReceiptEntity {
     /* =========================
      * 영수증 정보
      * ========================= */
+    @Column(name = "amount")
+    private Long amount;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "receipt_status")
     private ReceiptStatus receiptStatus;

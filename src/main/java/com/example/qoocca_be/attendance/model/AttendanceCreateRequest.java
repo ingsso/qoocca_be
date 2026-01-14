@@ -1,6 +1,7 @@
 package com.example.qoocca_be.attendance.model;
 
 import com.example.qoocca_be.attendance.entity.AttendanceEntity.AttendanceStatus;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +20,10 @@ public class AttendanceCreateRequest {
     @NotNull
     private LocalDate attendanceDate;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime checkIn;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime checkOut;
 
     @NotNull

@@ -1,5 +1,6 @@
 package com.example.qoocca_be.attendance.entity;
 
+import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -63,6 +64,11 @@ public class AttendanceEntity {
     @JoinColumn(name = "student_id", nullable = false)
     @ToString.Exclude
     private StudentEntity student;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "class_id", nullable = false)
+    @ToString.Exclude
+    private ClassInfoEntity classInfo;
 
     /* =========================
      * enum 정의

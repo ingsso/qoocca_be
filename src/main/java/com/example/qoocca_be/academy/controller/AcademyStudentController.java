@@ -2,6 +2,7 @@ package com.example.qoocca_be.academy.controller;
 
 import com.example.qoocca_be.academy.dto.AcademyStudentCreateRequest;
 import com.example.qoocca_be.academy.dto.AcademyStudentResponse;
+import com.example.qoocca_be.academy.dto.DashboardStatsResponse;
 import com.example.qoocca_be.academy.service.AcademyStudentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +28,6 @@ public class AcademyStudentController {
     @GetMapping
     public List<AcademyStudentResponse> getStudents(@PathVariable Long academyId) {
         return academyStudentService.getStudents(academyId);
-    }
-
-    @GetMapping("/cnt")
-    public Long getStudentCount(@PathVariable Long academyId) {
-        return academyStudentService.getTotalStudentCount(academyId);
     }
 
     @DeleteMapping("/{studentId}")

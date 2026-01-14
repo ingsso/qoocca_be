@@ -82,4 +82,9 @@ public class AcademyController {
                                                                             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(academyService.searchAcademiesByName(name, pageable));
     }
+
+    @GetMapping("/{id}/stats")
+    public DashboardStatsResponse getDashboardStats(@PathVariable Long id) {
+        return academyService.getDashboardStats(id);
+    }
 }

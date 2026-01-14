@@ -2,18 +2,26 @@ package com.example.qoocca_be.academy.service;
 
 import com.example.qoocca_be.academy.dto.AcademyStudentCreateRequest;
 import com.example.qoocca_be.academy.dto.AcademyStudentResponse;
+import com.example.qoocca_be.academy.dto.DashboardStatsResponse;
 import com.example.qoocca_be.academy.entity.AcademyEntity;
 import com.example.qoocca_be.academy.entity.AcademyStudentEntity;
 import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.academy.repository.AcademyStudentRepository;
+import com.example.qoocca_be.attendance.entity.AttendanceEntity;
+import com.example.qoocca_be.attendance.repository.AttendanceRepository;
 import com.example.qoocca_be.classInfo.entity.StudentStatus;
+import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
+import com.example.qoocca_be.classInfo.service.ClassInfoService;
+import com.example.qoocca_be.receipt.repository.ReceiptRepository;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,7 +32,6 @@ public class AcademyStudentService {
     private final AcademyRepository academyRepository;
     private final StudentRepository studentRepository;
     private final AcademyStudentRepository academyStudentRepository;
-    private final ClassInfoStudentRepository classInfoStudentRepository;
 
     public AcademyStudentResponse registerStudent(Long academyId, AcademyStudentCreateRequest request) {
 
@@ -60,9 +67,5 @@ public class AcademyStudentService {
                 .orElseThrow(() -> new IllegalArgumentException("관계 없음"));
 
         academyStudentRepository.delete(relation);
-    }
-
-    public Long getTotalStudentCount(Long academyId) {
-        return classInfoStudentRepository.countUniqueStudentsByAcademyId(academyId, StudentStatus.ENROLLED);
     }
 }

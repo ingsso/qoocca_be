@@ -3,6 +3,7 @@ package com.example.qoocca_be.classInfo.controller;
 import com.example.qoocca_be.classInfo.model.ClassGetResponse;
 import com.example.qoocca_be.classInfo.model.ClassPostRequest;
 import com.example.qoocca_be.classInfo.model.ClassPostResponse;
+import com.example.qoocca_be.classInfo.model.ClassSummaryResponse;
 import com.example.qoocca_be.classInfo.service.ClassInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -40,5 +41,12 @@ public class ClassInfoController {
         return ResponseEntity.ok(
                 classInfoService.getClasses(academyId)
         );
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<List<ClassSummaryResponse>> getAcademyClassSummaries(@PathVariable Long academyId) {
+        List<ClassSummaryResponse> summaries = classInfoService.getAcademyDashboard(academyId);
+
+        return ResponseEntity.ok(summaries);
     }
 }

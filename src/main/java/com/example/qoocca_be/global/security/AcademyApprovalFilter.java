@@ -32,15 +32,11 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-//        if (path.startsWith("/api/auth") ||
-//                path.startsWith("/api/dashboard") ||
-//                path.startsWith("/api/academy/register") ||
-//                (path.startsWith("/api/academy/") && !path.contains("/class") && request.getMethod().equals("GET"))) {
-//            filterChain.doFilter(request, response);
-//            return;
-//        }
-
-        if (path.startsWith("/api/")) {
+        if (path.startsWith("/api/auth") ||
+                path.startsWith("/api/ages") ||
+                path.startsWith("/api/subjects") ||
+                path.startsWith("/api/academy/register") ||
+                path.equals("/api/dashboard")) {
             filterChain.doFilter(request, response);
             return;
         }

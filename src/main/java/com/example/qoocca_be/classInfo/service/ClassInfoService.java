@@ -5,9 +5,11 @@ import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.age.entity.AgeEntity;
 import com.example.qoocca_be.age.repository.AgeRepository;
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
+import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.classInfo.model.ClassGetResponse;
 import com.example.qoocca_be.classInfo.model.ClassPostRequest;
 import com.example.qoocca_be.classInfo.model.ClassPostResponse;
+import com.example.qoocca_be.classInfo.model.ClassSummaryResponse;
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.subject.entity.SubjectEntity;
 import com.example.qoocca_be.subject.repository.SubjectRepository;
@@ -15,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -72,5 +75,10 @@ public class ClassInfoService {
         return classInfoRepository.findByAcademy_Id(academyId).stream()
                 .map(ClassGetResponse::fromEntity)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClassSummaryResponse> getAcademyDashboard(Long academyId) {
+        return classInfoRepository.findDashboardSummaries(academyId, LocalDate.now(), StudentStatus.ENROLLED);
     }
 }

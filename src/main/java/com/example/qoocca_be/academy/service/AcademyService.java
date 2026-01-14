@@ -4,12 +4,18 @@ import com.example.qoocca_be.academy.dto.*;
 import com.example.qoocca_be.academy.entity.*;
 import com.example.qoocca_be.academy.repository.AcademyAgeRepository;
 import com.example.qoocca_be.academy.repository.AcademyRepository;
+import com.example.qoocca_be.academy.repository.AcademyStudentRepository;
 import com.example.qoocca_be.academy.repository.AcademySubjectRepository;
 import com.example.qoocca_be.age.model.AgeResponseDto;
 import com.example.qoocca_be.age.repository.AgeRepository;
+import com.example.qoocca_be.attendance.entity.AttendanceEntity;
+import com.example.qoocca_be.attendance.repository.AttendanceRepository;
+import com.example.qoocca_be.classInfo.entity.StudentStatus;
+import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
 import com.example.qoocca_be.global.common.PageResponseDto;
 import com.example.qoocca_be.global.exception.CustomException;
 import com.example.qoocca_be.global.exception.ErrorCode;
+import com.example.qoocca_be.receipt.repository.ReceiptRepository;
 import com.example.qoocca_be.subject.model.SubjectResponseDto;
 import com.example.qoocca_be.subject.repository.SubjectRepository;
 import com.example.qoocca_be.user.entity.UserEntity;
@@ -24,6 +30,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -35,10 +43,14 @@ public class AcademyService {
 
     private final UserService userService;
     private final AcademyRepository academyRepository;
+    private final AcademyStudentRepository academyStudentRepository;
     private final AcademySubjectRepository academySubjectRepository;
     private final AgeRepository ageRepository;
     private final AcademyAgeRepository academyAgeRepository;
     private final SubjectRepository subjectRepository;
+    private final AttendanceRepository attendanceRepository;
+    private final ClassInfoStudentRepository classInfoStudentRepository;
+    private final ReceiptRepository receiptRepository;
 
     @Value("${file.upload.path}")
     private String IMAGE_SAVE_PATH;
@@ -251,6 +263,42 @@ public class AcademyService {
                 academy.updateImages(updateDto.getImageUrls());
             }
         }
+    }
+
+    @Transactional(readOnly = true)
+    public DashboardStatsResponse getDashboardStats(Long academyId) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfMonth = today.withDayOfMonth(1).atStartOfDay();
+        LocalDateTime endOfMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(23, 59, 59);
+        String dayOfWeek = today.getDayOfWeek().name().toLowerCase();
+
+        List<AttendanceEntity.AttendanceStatus> activeStatuses = List.of(
+                AttendanceEntity.AttendanceStatus.PRESENT,
+                AttendanceEntity.AttendanceStatus.LATE,
+                AttendanceEntity.AttendanceStatus.EARLY_LEAVE
+        );
+
+        Long studentCount = classInfoStudentRepository.countUniqueStudentsByAcademy(academyId, StudentStatus.ENROLLED);
+        Long totalTodayCount = classInfoStudentRepository.countExpectedStudentsToday(
+                academyId,
+                dayOfWeek,
+                StudentStatus.ENROLLED
+        );
+        Long presentCount = attendanceRepository.countByAcademyAndDateAndStatusIn(
+                academyId,
+                today,
+                activeStatuses
+        );
+        Long noCardCount = academyStudentRepository.countStudentsWithoutCard(academyId);
+        Long totalMonthlyFee = receiptRepository.sumAmountByAcademyAndPeriod(academyId, startOfMonth, endOfMonth);
+
+        return DashboardStatsResponse.builder()
+                .studentCount(studentCount)
+                .presentCount(presentCount)
+                .totalTodayCount(totalTodayCount)
+                .noCardCount(noCardCount)
+                .totalMonthlyFee(totalMonthlyFee != null ? totalMonthlyFee : 0L)
+                .build();
     }
 
 }

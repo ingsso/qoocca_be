@@ -2,9 +2,12 @@ package com.example.qoocca_be.attendance.repository;
 
 import com.example.qoocca_be.attendance.entity.AttendanceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,9 +47,23 @@ public interface AttendanceRepository
             AttendanceEntity.AttendanceStatus status
     );
 
-    // 날짜 + 상태 (오늘 결석자)
+    // 날짜 + 상태
     List<AttendanceEntity> findByAttendanceDateAndStatus(
             LocalDate attendanceDate,
             AttendanceEntity.AttendanceStatus status
+    );
+
+    @Query("""
+        SELECT COUNT(DISTINCT a.student.studentId)
+        FROM AttendanceEntity a
+        JOIN AcademyStudentEntity ast ON a.student.studentId = ast.student.studentId
+        WHERE ast.academy.id = :academyId
+          AND a.attendanceDate = :attendanceDate
+          AND a.status IN :statuses
+    """)
+    Long countByAcademyAndDateAndStatusIn(
+            @Param("academyId") Long academyId,
+            @Param("attendanceDate") LocalDate attendanceDate,
+            @Param("statuses") Collection<AttendanceEntity.AttendanceStatus> statuses
     );
 }

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReceiptCreateRequest {
+    private Long amount;
     private LocalDateTime receiptDate;
     private ReceiptEntity.ReceiptStatus receiptStatus;
 }

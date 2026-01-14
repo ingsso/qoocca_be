@@ -44,9 +44,12 @@ public class ReceiptService {
             throw new RuntimeException(targetMonth.getMonthValue() + "월 수납 기록이 이미 존재합니다.");
         }
 
+        Long amount = request.getAmount();
+
         // 3. 수납 저장
         ReceiptEntity receipt = ReceiptEntity.builder()
                 .student(student)
+                .amount(amount)
                 .receiptDate(targetDate)
                 .receiptStatus(request.getReceiptStatus() != null ? request.getReceiptStatus() : ReceiptEntity.ReceiptStatus.ISSUED)
                 .build();

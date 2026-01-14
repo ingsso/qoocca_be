@@ -2,6 +2,8 @@ package com.example.qoocca_be.receipt.repository;
 
 import com.example.qoocca_be.receipt.entity.ReceiptEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -43,5 +45,20 @@ public interface ReceiptRepository
     // 상태별 수납
     List<ReceiptEntity> findByReceiptStatus(
             ReceiptEntity.ReceiptStatus status
+    );
+
+    @Query("""
+        SELECT SUM(r.amount) 
+        FROM ReceiptEntity r 
+        JOIN AcademyStudentEntity ast ON r.student.studentId = ast.student.studentId
+        WHERE ast.academy.id = :academyId 
+          AND r.receiptDate >= :start 
+          AND r.receiptDate <= :end
+          AND r.receiptStatus = 'ISSUED'
+    """)
+    Long sumAmountByAcademyAndPeriod(
+            @Param("academyId") Long academyId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
     );
 }

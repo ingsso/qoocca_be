@@ -3,6 +3,7 @@ package com.example.qoocca_be.student.repository;
 import com.example.qoocca_be.student.entity.StudentParentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -50,9 +51,23 @@ public interface StudentParentRepository
     """)
     List<Long> findParentIdsByStudentId(Long studentId);
 
-    /* =========================
-     * 삭제
-     * ========================= */
+
+
+    //학생한명당 부모조회를 하는 N+1 문제 해결하기 위한 메서드
+    //여러학생 ID 에 대해 부모정보를 한번에 조회한다. ParentEntity도 같이 로딩한다.
+
+    @Query("""
+    SELECT sp
+    FROM StudentParentEntity sp
+    JOIN FETCH sp.parent
+    WHERE sp.student.studentId IN :studentIds
+""")
+    List<StudentParentEntity> findAllByStudentIdsWithParent(
+            @Param("studentIds") List<Long> studentIds
+    );
+
+
+
 
     // 학생 기준 전체 부모 연결 삭제 (학생 삭제 시)
     void deleteByStudent_StudentId(Long studentId);

@@ -27,53 +27,56 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
 
+        // 인증/공개 API는 패스
+        if (path.startsWith("/api/auth") ||
+                path.startsWith("/swagger") ||
+                path.startsWith("/v3/api-docs")) {
 
-        /*if (path.startsWith("/api/auth") ||
-                path.startsWith("/api/dashboard") ||
-                path.startsWith("/api/academy/register") ||
-                (path.startsWith("/api/academy/") && !path.contains("/class") && request.getMethod().equals("GET"))) {
-            filterChain.doFilter(request, response);
-            return;
-        }*/
-        if (path.startsWith("/api/")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
 
-            if (authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            // ✅ ADMIN 은 무조건 통과
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            if (isAdmin) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
             Long userId = userDetails.getUserId();
 
             Optional<AcademyEntity> academyOpt = academyRepository.findByUserId(userId);
 
-            if (academyOpt.isPresent()) {
-                AcademyEntity academy = academyOpt.get();
-                if (academy.getApprovalStatus() != ApprovalStatus.APPROVED) {
-                    sendErrorResponse(response, ErrorCode.ACADEMY_NOT_APPROVED);
-                    return;
-                }
-            } else {
+            if (academyOpt.isEmpty()) {
                 sendErrorResponse(response, ErrorCode.ACADEMY_NOT_FOUND);
+                return;
+            }
+
+            AcademyEntity academy = academyOpt.get();
+
+            if (academy.getApprovalStatus() != ApprovalStatus.APPROVED) {
+                sendErrorResponse(response, ErrorCode.ACADEMY_NOT_APPROVED);
                 return;
             }
         }
 
         filterChain.doFilter(request, response);
     }
+
 
     private void sendErrorResponse(HttpServletResponse res, ErrorCode errorCode) throws IOException {
         res.setStatus(errorCode.getStatus());

@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ReceiptCreateRequest {
     private Long amount;
+    private Long classId;
     private LocalDateTime receiptDate;
     private ReceiptEntity.ReceiptStatus receiptStatus;
 }

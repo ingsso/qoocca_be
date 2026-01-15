@@ -14,6 +14,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,9 +65,20 @@ public class UserController {
 
     @Operation(summary = "Access Token 재발급")
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(HttpServletRequest req) {
+    public ResponseEntity<?> refresh(HttpServletRequest req, HttpServletResponse res) {
         String refreshToken = cookieUtils.getRefreshToken(req);
         LoginResponseDto newTokens = authService.refreshAccessToken(refreshToken);
+
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", newTokens.getAccessToken())
+                .path("/")
+                .maxAge(1800)
+                .httpOnly(false)
+                .secure(false)
+                .sameSite("Lax")
+                .build();
+
+        res.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+
         return ResponseEntity.ok(newTokens);
     }
 

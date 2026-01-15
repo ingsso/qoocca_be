@@ -61,4 +61,13 @@ public interface ReceiptRepository
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
+
+    // 특정 클래스의 특정 기간(해당 월) 내의 수납 내역 조회
+    List<ReceiptEntity> findByClassInfo_ClassIdAndReceiptDateBetween(
+            Long classId,
+            LocalDateTime start,
+            LocalDateTime end
+    );
+
+    boolean existsByStudent_StudentIdAndClassInfo_ClassIdAndReceiptDateBetween(Long studentId, Long classId, LocalDateTime start, LocalDateTime end);
 }

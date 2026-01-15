@@ -38,13 +38,14 @@ public class AttendanceService {
 
         ClassInfoEntity targetClass = findMatchingClass(studentId, request.getCheckIn());
 
+        AttendanceEntity.AttendanceStatus finalStatus = determineAttendanceStatus(targetClass, request.getCheckIn());
+
         AttendanceEntity attendance = AttendanceEntity.builder()
                 .student(student)
                 .classInfo(targetClass)
                 .attendanceDate(request.getAttendanceDate())
                 .checkIn(request.getCheckIn())
-                .checkOut(request.getCheckOut())
-                .status(request.getStatus())
+                .status(finalStatus)
                 .build();
 
         AttendanceEntity saved = attendanceRepository.save(attendance);
@@ -62,6 +63,32 @@ public class AttendanceService {
                 .filter(c -> isTimeWithinRange(c, checkIn))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("현재 시간에 해당 학생이 수강하는 수업이 없습니다."));
+    }
+
+    private AttendanceEntity.AttendanceStatus determineAttendanceStatus(ClassInfoEntity targetClass, LocalTime checkIn) {
+        LocalTime startTime = targetClass.getStartTime();
+
+        // targetClass.getStartTime().plusMinutes(5)
+        if (checkIn.isAfter(startTime)) {
+            return AttendanceEntity.AttendanceStatus.LATE;
+        }
+
+        return AttendanceEntity.AttendanceStatus.PRESENT;
+    }
+
+    @Transactional
+    public AttendanceResponse updateCheckOut(Long studentId, LocalDate date) {
+        AttendanceEntity attendance = attendanceRepository
+                .findByStudent_StudentIdAndAttendanceDate(studentId, date)
+                .orElseThrow(() -> new IllegalArgumentException("등원 기록이 없습니다. 먼저 등원 처리를 해주세요."));
+
+        attendance.setCheckOut(LocalTime.now());
+
+         if (attendance.getCheckOut().isBefore(attendance.getClassInfo().getEndTime())) {
+             attendance.setStatus(AttendanceEntity.AttendanceStatus.EARLY_LEAVE);
+         }
+
+        return AttendanceResponse.fromEntity(attendance);
     }
 
     private boolean isClassOnDay(ClassInfoEntity c, String day) {

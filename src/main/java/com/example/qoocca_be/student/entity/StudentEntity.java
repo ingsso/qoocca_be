@@ -38,6 +38,11 @@ public class StudentEntity {
     @Column(name = "student_name")
     private String studentName;
 
+    // ✅ 추가
+    @Column(name = "student_phone")
+    private String studentPhone;
+
+
     /* =========================
      * 생성 / 수정일
      * ========================= */

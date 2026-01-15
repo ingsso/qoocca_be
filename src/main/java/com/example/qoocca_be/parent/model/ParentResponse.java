@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class ParentResponse {
 
     private Long parentId;
+    private String parentName;   // ✅ 추가
     private String cardNum;
     private Boolean cardState;
     private String parentRelationship;
@@ -23,6 +24,7 @@ public class ParentResponse {
     public static ParentResponse from(ParentEntity entity) {
         return ParentResponse.builder()
                 .parentId(entity.getParentId())
+                .parentName(entity.getParentName())   // ✅ 추가
                 .cardNum(entity.getCardNum())
                 .cardState(entity.getCardState())
                 .parentRelationship(entity.getParentRelationship())

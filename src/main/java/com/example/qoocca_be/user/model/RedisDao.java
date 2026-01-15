@@ -9,11 +9,11 @@ import java.time.Duration;
 @Component
 public class RedisDao {
 
-    private final RedisTemplate<String,String> redisTemplate;
-    private final ValueOperations<String,String> values;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ValueOperations<String, Object> values;
 
     public RedisDao(RedisTemplate<String, Object> redisTemplate) {
-        this.redisTemplate = (RedisTemplate<String, String>) (Object) redisTemplate;
+        this.redisTemplate = redisTemplate;
         this.values = this.redisTemplate.opsForValue();
     }
 

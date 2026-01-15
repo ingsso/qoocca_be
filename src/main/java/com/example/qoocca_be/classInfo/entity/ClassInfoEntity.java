@@ -11,8 +11,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @EntityListeners(AuditingEntityListener.class)
 @Getter
@@ -72,7 +70,7 @@ public class ClassInfoEntity {
      * 기타
      * ========================= */
     @Column(name = "price")
-    private String price;
+    private Long price;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)

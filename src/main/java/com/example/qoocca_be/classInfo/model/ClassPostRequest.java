@@ -50,7 +50,7 @@ public class ClassPostRequest {
     private boolean sunday;
 
     @Schema(description = "수업 가격 (원)", example = "600000")
-    private String price;
+    private Long price;
 
     @Schema(description = "연령 ID (age 테이블 PK)", example = "2")
     private Long ageId;

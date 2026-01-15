@@ -8,6 +8,7 @@ import com.example.qoocca_be.user.repository.UserRepository;
 import com.example.qoocca_be.global.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -39,6 +40,7 @@ public class NaverOauthService extends SocialOauthService {
         String naverAccessToken = getNaverAccessToken(code);
 
         Map<String, Object> userInfo = getNaverUserInfo(naverAccessToken);
+        @SuppressWarnings("unchecked")
         Map<String, Object> naverResponse = (Map<String, Object>) userInfo.get("response");
 
         String naverId = String.valueOf(naverResponse.get("id"));
@@ -80,7 +82,12 @@ public class NaverOauthService extends SocialOauthService {
         params.add("code", code);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                tokenUrl,
+                HttpMethod.POST,
+                request,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+        );
 
         return (String) response.getBody().get("access_token");
     }
@@ -91,8 +98,13 @@ public class NaverOauthService extends SocialOauthService {
         headers.setBearerAuth(accessToken);
 
         HttpEntity<?> request = new HttpEntity<>(headers);
-        ResponseEntity<Map> response = restTemplate.exchange(userInfoUrl, HttpMethod.GET, request, Map.class);
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                userInfoUrl,
+                HttpMethod.GET,
+                request,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+        );
 
-        return (Map<String, Object>) response.getBody();
+        return response.getBody();
     }
 }

@@ -1,8 +1,6 @@
 package com.example.qoocca_be.student.entity;
 
 import com.example.qoocca_be.academy.entity.AcademyStudentEntity;
-import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
-import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -51,6 +49,7 @@ public class StudentEntity {
 
 
     @OneToMany(mappedBy = "student")
+    @Builder.Default
     private List<AcademyStudentEntity> academyStudents = new ArrayList<>();
 
 

@@ -2,7 +2,6 @@ package com.example.qoocca_be.receipt.service;
 
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.classInfo.entity.ClassInfoStudentEntity;
-import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
 import com.example.qoocca_be.receipt.entity.ReceiptEntity;
@@ -17,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -149,7 +149,7 @@ public class ReceiptService {
                 return ClassPaymentSummaryResponse.StudentPaymentDetail.builder()
                         .studentId(enroll.getStudent().getStudentId())
                         .studentName(enroll.getStudent().getStudentName())
-                        .amount(Long.valueOf(cls.getPrice())) // price -> 추후 Long으로 바꿀 수 있으면 바꾸기
+                        .amount(cls.getPrice())
                         .status(status)
                         .build();
             }).collect(Collectors.toList());
@@ -168,5 +168,71 @@ public class ReceiptService {
                     .students(studentDetails) // 상세 명단 포함
                     .build();
         }).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<DashboardMainSummaryResponse> getDashboardMainSummary(Long academyId, int year, int month) {
+        // 1. 해당 학원의 모든 클래스 조회
+        List<ClassInfoEntity> classList = classInfoRepository.findByAcademy_Id(academyId);
+
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
+
+        return classList.stream().map(cls -> {
+            // 2. 해당 클래스의 재원생 및 수납 기록 조회
+            List<ClassInfoStudentEntity> enrollments = classInfoStudentRepository.findByClassInfo_ClassId(cls.getClassId());
+            List<ReceiptEntity> receipts = receiptRepository.findByClassInfo_ClassIdAndReceiptDateBetween(
+                    cls.getClassId(), start, end);
+
+            // 3. 대표 상태 결정 (기존 로직 활용)
+            String repStatus = determineRepresentativeStatus(enrollments, receipts);
+
+            return DashboardMainSummaryResponse.builder()
+                    .className(cls.getClassName())
+                    .classTime(cls.getStartTime() + "~" + cls.getEndTime())
+                    .status(repStatus)
+                    .statusLabel(getStatusLabel(repStatus))
+                    .totalAmount(cls.getPrice() * enrollments.size())
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    private String determineRepresentativeStatus(List<ClassInfoStudentEntity> enrollments, List<ReceiptEntity> receipts) {
+        if (enrollments.isEmpty()) return "PAID";
+
+        Map<Long, String> studentStatusMap = receipts.stream()
+                .collect(Collectors.toMap(
+                        r -> r.getStudent().getStudentId(),
+                        r -> r.getReceiptStatus().name(),
+                        (existing, replacement) -> existing // 중복 시 기존값 유지
+                ));
+
+        boolean hasIssued = false;
+        int paidCount = 0;
+
+        for (ClassInfoStudentEntity enrollment : enrollments) {
+            String status = studentStatusMap.getOrDefault(enrollment.getStudent().getStudentId(), "BEFORE_REQUEST");
+
+            switch (status) {
+                case "BEFORE_REQUEST" -> {
+                    return "BEFORE_REQUEST";
+                }
+                case "ISSUED" -> hasIssued = true;
+                case "PAID" -> paidCount++;
+            }
+        }
+
+        if (hasIssued) return "ISSUED";
+        return "PAID";
+    }
+
+    private String getStatusLabel(String status) {
+        return switch (status) {
+            case "BEFORE_REQUEST" -> "요청 전";
+            case "ISSUED" -> "결제 대기";
+            case "PAID" -> "결제 완료";
+            default -> status;
+        };
     }
 }

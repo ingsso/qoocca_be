@@ -8,6 +8,7 @@ import com.example.qoocca_be.user.repository.UserRepository;
 import com.example.qoocca_be.global.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -85,6 +86,6 @@ public class KakaoOAuthService extends SocialOauthService {
         headers.setBearerAuth(accessToken);
 
         HttpEntity<?> request = new HttpEntity<>(headers);
-        return (Map<String, Object>) restTemplate.exchange(userInfoUrl, HttpMethod.GET, request, Map.class).getBody();
+        return restTemplate.exchange(userInfoUrl, HttpMethod.GET, request, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
     }
 }

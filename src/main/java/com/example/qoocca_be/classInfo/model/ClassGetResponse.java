@@ -27,7 +27,7 @@ public class ClassGetResponse {
     private boolean saturday;
     private boolean sunday;
 
-    private String price;
+    private Long price;
     private String ageCode;
     private String subjectName;
 

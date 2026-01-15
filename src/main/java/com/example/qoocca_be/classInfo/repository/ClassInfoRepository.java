@@ -29,11 +29,21 @@ public interface ClassInfoRepository extends JpaRepository<ClassInfoEntity, Long
          AND a.classInfo.classId = c.classId 
          AND a.attendanceDate = :today
     WHERE c.academy.id = :academyId
+      AND (
+          (:dayName = 'MONDAY' AND c.monday = true) OR
+          (:dayName = 'TUESDAY' AND c.tuesday = true) OR
+          (:dayName = 'WEDNESDAY' AND c.wednesday = true) OR
+          (:dayName = 'THURSDAY' AND c.thursday = true) OR
+          (:dayName = 'FRIDAY' AND c.friday = true) OR
+          (:dayName = 'SATURDAY' AND c.saturday = true) OR
+          (:dayName = 'SUNDAY' AND c.sunday = true)
+      )
     GROUP BY c.classId, c.className
 """)
     List<ClassSummaryResponse> findDashboardSummaries(
             @Param("academyId") Long academyId,
             @Param("today") LocalDate today,
+            @Param("dayName") String dayName,
             @Param("status") StudentStatus status
     );
 }

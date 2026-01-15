@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 public class ClassInfoStudentRequestDTO {
 
-    @Schema(description = "등록할 기존 학생 ID", example = "1", required = true)
+    @Schema(description = "등록할 기존 학생 ID", example = "1")
     private Long studentId;
 }

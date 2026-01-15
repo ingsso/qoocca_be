@@ -79,6 +79,14 @@ public class ClassInfoService {
 
     @Transactional(readOnly = true)
     public List<ClassSummaryResponse> getAcademyDashboard(Long academyId) {
-        return classInfoRepository.findDashboardSummaries(academyId, LocalDate.now(), StudentStatus.ENROLLED);
+        LocalDate today = LocalDate.now();
+        String dayName = today.getDayOfWeek().name();
+
+        return classInfoRepository.findDashboardSummaries(
+                academyId,
+                today,
+                dayName,
+                StudentStatus.ENROLLED
+        );
     }
 }

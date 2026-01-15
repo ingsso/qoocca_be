@@ -1,7 +1,6 @@
 package com.example.qoocca_be.classInfo.service;
 
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
-import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.classInfo.model.ClassParentStatsResponseDTO;
 import com.example.qoocca_be.classInfo.model.ClassParentStudentDTO;
 import com.example.qoocca_be.classInfo.repository.ClassParentStatsRepository;
@@ -9,7 +8,6 @@ import com.example.qoocca_be.parent.model.ParentResponse;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.student.entity.StudentParentEntity;
 import com.example.qoocca_be.student.repository.StudentParentRepository;
-import com.example.qoocca_be.student.service.StudentParentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +19,6 @@ import java.util.stream.Collectors;
 public class ClassParentStatsService {
 
     private final ClassParentStatsRepository repository;
-    private final StudentParentService studentParentService;
     private final StudentParentRepository studentParentRepository;
 
     public List<ClassParentStatsResponseDTO> getParentStats(Long academyId) {

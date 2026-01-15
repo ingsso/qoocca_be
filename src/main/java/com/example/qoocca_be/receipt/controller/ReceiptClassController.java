@@ -1,8 +1,10 @@
 package com.example.qoocca_be.receipt.controller;
 
 import com.example.qoocca_be.receipt.model.ClassPaymentSummaryResponse;
+import com.example.qoocca_be.receipt.model.DashboardMainSummaryResponse;
 import com.example.qoocca_be.receipt.service.ReceiptService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,5 +23,14 @@ public class ReceiptClassController {
             @RequestParam int month
     ) {
         return receiptService.getClassReceiptSummary(academyId, year, month);
+    }
+
+    @GetMapping("/{academyId}/receipt/dashboard-main")
+    public ResponseEntity<List<DashboardMainSummaryResponse>> getDashboardMainSummary(
+            @PathVariable Long academyId,
+            @RequestParam int year,
+            @RequestParam int month
+    ) {
+        return ResponseEntity.ok(receiptService.getDashboardMainSummary(academyId, year, month));
     }
 }

@@ -1,6 +1,5 @@
 package com.example.qoocca_be.student.service;
 
-import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.student.model.StudentCreateRequest;
 import com.example.qoocca_be.student.model.StudentResponse;

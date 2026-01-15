@@ -8,4 +8,8 @@ public class AcademyStudentCreateRequest {
 
     @NotBlank
     private String studentName;
+
+    // ✅ 추가
+    @NotBlank
+    private String studentPhone;
 }

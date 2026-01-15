@@ -19,11 +19,13 @@ public class StudentService {
 
         StudentEntity student = StudentEntity.builder()
                 .studentName(request.getStudentName())
+                .studentPhone(request.getStudentPhone()) // ✅ 추가
                 .build();
 
         studentRepository.save(student);
         return StudentResponse.from(student);
     }
+
 
     @Transactional(readOnly = true)
     public StudentResponse get(Long studentId) {
@@ -42,8 +44,13 @@ public class StudentService {
             student.setStudentName(request.getStudentName());
         }
 
+        if (request.getStudentPhone() != null) {          // ✅ 추가
+            student.setStudentPhone(request.getStudentPhone());
+        }
+
         return StudentResponse.from(student);
     }
+
 
     public void delete(Long studentId) {
         StudentEntity student = studentRepository.findById(studentId)

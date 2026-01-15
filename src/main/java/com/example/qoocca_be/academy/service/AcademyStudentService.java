@@ -28,8 +28,11 @@ public class AcademyStudentService {
         AcademyEntity academy = academyRepository.findById(academyId)
                 .orElseThrow(() -> new IllegalArgumentException("학원 없음"));
 
+        // ✅ 전화번호까지 저장
         StudentEntity student = StudentEntity.builder()
-                .studentName(request.getStudentName()).build();
+                .studentName(request.getStudentName())
+                .studentPhone(request.getStudentPhone())
+                .build();
 
         studentRepository.save(student);
 

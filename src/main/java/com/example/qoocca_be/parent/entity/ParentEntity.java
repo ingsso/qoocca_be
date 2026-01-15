@@ -33,6 +33,10 @@ public class ParentEntity {
     /* =========================
      * 부모 정보
      * ========================= */
+
+    @Column(name = "parent_name")   // ✅ 추가
+    private String parentName;
+
     @Column(name = "card_num")
     private String cardNum;
 

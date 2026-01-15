@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ParentUpdateRequest {
 
+    private String parentName;   // ✅ 추가
     private String cardNum;
     private Boolean cardState;
     private String parentRelationship;

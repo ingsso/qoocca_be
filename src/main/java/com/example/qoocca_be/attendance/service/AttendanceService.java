@@ -4,8 +4,10 @@ import com.example.qoocca_be.attendance.entity.AttendanceEntity;
 import com.example.qoocca_be.attendance.model.AttendanceCreateRequest;
 import com.example.qoocca_be.attendance.model.AttendanceMonthResponse;
 import com.example.qoocca_be.attendance.model.AttendanceResponse;
+import com.example.qoocca_be.attendance.model.ClassAttendanceResponse;
 import com.example.qoocca_be.attendance.repository.AttendanceRepository;
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
+import com.example.qoocca_be.classInfo.entity.ClassInfoStudentEntity;
 import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
 import com.example.qoocca_be.student.entity.StudentEntity;
@@ -18,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -134,5 +137,70 @@ public class AttendanceService {
         return list.stream()
                 .map(AttendanceMonthResponse::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClassAttendanceResponse> getTodayAttendanceByAcademy(Long academyId) {
+        LocalDate today = LocalDate.now();
+        String dayOfWeek = today.getDayOfWeek().name().toLowerCase();
+
+        // 1. 해당 학원의 모든 '재원 중'인 학생-수업 매핑 정보 조회
+        // (Repository에 해당 메서드 추가 필요)
+        List<ClassInfoStudentEntity> allEnrollments = classInfoStudentRepository.findAllByAcademyAndStatus(academyId, StudentStatus.ENROLLED);
+
+        // 2. 그 중 '오늘' 수업이 있는 데이터만 필터링
+        List<ClassInfoStudentEntity> todayEnrollments = allEnrollments.stream()
+                .filter(enroll -> isClassOnDay(enroll.getClassInfo(), dayOfWeek))
+                .collect(Collectors.toList());
+
+        // 3. 오늘 자 모든 출결 기록 조회
+        List<AttendanceEntity> todayAttendances = attendanceRepository.findByAttendanceDate(today);
+
+        // 4. 데이터 매핑
+        return todayEnrollments.stream().map(enroll -> {
+            StudentEntity student = enroll.getStudent();
+            ClassInfoEntity classInfo = enroll.getClassInfo();
+
+            Optional<AttendanceEntity> attendance = todayAttendances.stream()
+                    .filter(a -> a.getStudent().getStudentId().equals(student.getStudentId())
+                            && a.getClassInfo().getClassId().equals(classInfo.getClassId()))
+                    .findFirst();
+
+            return ClassAttendanceResponse.builder()
+                    .studentId(student.getStudentId())
+                    .studentName(student.getStudentName())
+                    .className(classInfo.getClassName())
+                    .checkIn(attendance.map(AttendanceEntity::getCheckIn).orElse(null))
+                    .checkOut(attendance.map(AttendanceEntity::getCheckOut).orElse(null))
+                    .status(attendance.map(a -> a.getStatus().name()).orElse("ABSENT"))
+                    .statusLabel(formatStatusLabel(attendance))
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    private String formatStatusLabel(Optional<AttendanceEntity> attendance) {
+        // 1. 출결 기록 자체가 없는 경우 (미등원)
+        if (attendance.isEmpty()) {
+            return "미등원";
+        }
+
+        AttendanceEntity a = attendance.get();
+        LocalTime checkIn = a.getCheckIn();
+        LocalTime checkOut = a.getCheckOut();
+
+        // 2. 등원 기록이 없는 경우 (기록은 생성되었으나 시간 데이터가 없는 예외 케이스 대비)
+        if (checkIn == null) {
+            return "미등원";
+        }
+
+        String checkInStr = checkIn.toString().substring(0, 5); // "13:00:00" -> "13:00" 포맷팅
+
+        // 3. 하원 기록이 있는 경우
+        if (checkOut != null) {
+            return "등원 " + checkInStr + " ~ 하원 " + checkOut.toString().substring(0, 5);
+        }
+
+        // 4. 등원만 하고 하원 대기 중인 경우
+        return "등원 " + checkInStr + " ~ 하원 대기";
     }
 }

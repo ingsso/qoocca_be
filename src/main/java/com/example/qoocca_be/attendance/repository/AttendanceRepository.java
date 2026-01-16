@@ -56,6 +56,9 @@ public interface AttendanceRepository
             AttendanceEntity.AttendanceStatus status
     );
 
+    // 특정 클래스의 특정 날짜 출결 기록 리스트 조회
+    List<AttendanceEntity> findByClassInfo_ClassIdAndAttendanceDate(Long classId, LocalDate attendanceDate);
+
     @Query("""
         SELECT COUNT(DISTINCT a.student.studentId)
         FROM AttendanceEntity a

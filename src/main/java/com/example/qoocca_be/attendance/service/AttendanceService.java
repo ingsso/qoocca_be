@@ -1,14 +1,13 @@
 package com.example.qoocca_be.attendance.service;
 
 import com.example.qoocca_be.attendance.entity.AttendanceEntity;
-import com.example.qoocca_be.attendance.model.AttendanceCreateRequest;
-import com.example.qoocca_be.attendance.model.AttendanceMonthResponse;
-import com.example.qoocca_be.attendance.model.AttendanceResponse;
-import com.example.qoocca_be.attendance.model.ClassAttendanceResponse;
+import com.example.qoocca_be.attendance.model.*;
 import com.example.qoocca_be.attendance.repository.AttendanceRepository;
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.classInfo.entity.ClassInfoStudentEntity;
 import com.example.qoocca_be.classInfo.entity.StudentStatus;
+import com.example.qoocca_be.classInfo.model.ClassSummaryResponse;
+import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.student.repository.StudentRepository;
@@ -31,6 +30,7 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final StudentRepository studentRepository;
     private final ClassInfoStudentRepository classInfoStudentRepository;
+    private final ClassInfoRepository classInfoRepository;
 
     /* =========================
      * 출결 등록
@@ -151,7 +151,7 @@ public class AttendanceService {
         // 2. 그 중 '오늘' 수업이 있는 데이터만 필터링
         List<ClassInfoStudentEntity> todayEnrollments = allEnrollments.stream()
                 .filter(enroll -> isClassOnDay(enroll.getClassInfo(), dayOfWeek))
-                .collect(Collectors.toList());
+                .toList();
 
         // 3. 오늘 자 모든 출결 기록 조회
         List<AttendanceEntity> todayAttendances = attendanceRepository.findByAttendanceDate(today);
@@ -202,5 +202,67 @@ public class AttendanceService {
 
         // 4. 등원만 하고 하원 대기 중인 경우
         return "등원 " + checkInStr + " ~ 하원 대기";
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClassSummaryResponse> getTodayClassSummaries(Long academyId) {
+        LocalDate today = LocalDate.now();
+        String dayOfWeek = today.getDayOfWeek().name().toLowerCase();
+
+        List<ClassInfoEntity> classes = classInfoRepository.findAllByAcademyIdAndDayOfWeek(academyId, dayOfWeek);
+
+        return classes.stream().map(classInfo -> {
+            List<ClassInfoStudentEntity> enrollments = classInfoStudentRepository.findAllByClassInfo_ClassIdAndStatus(
+                    classInfo.getClassId(), StudentStatus.ENROLLED);
+
+            List<AttendanceEntity> attendances = attendanceRepository.findByClassInfo_ClassIdAndAttendanceDate(
+                    classInfo.getClassId(), today);
+
+            int totalStudents = enrollments.size();
+            long presentCount = attendances.stream().filter(a -> "PRESENT".equals(a.getStatus().name())).count();
+            long lateCount = attendances.stream().filter(a -> "LATE".equals(a.getStatus().name())).count();
+            long absentCount = attendances.stream().filter(a -> "ABSENT".equals(a.getStatus().name())).count();
+
+            int notPresentCount = totalStudents - attendances.size();
+
+            return ClassSummaryResponse.builder()
+                    .classId(classInfo.getClassId())
+                    .className(classInfo.getClassName())
+                    .classTime(classInfo.getStartTime() + "~" + classInfo.getEndTime())
+                    .currentCount(totalStudents)
+                    .presentCount(presentCount)
+                    .lateCount(lateCount)
+                    .absentCount(absentCount)
+                    .notPresentCount(notPresentCount)
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentMonthlyStatResponse> getMonthlyStatsByClass(Long classId, int year, int month) {
+        // 1. 해당 월의 시작일과 종료일 계산
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        // 2. 해당 클래스의 모든 수강생 조회
+        List<ClassInfoStudentEntity> enrollments = classInfoStudentRepository.findByClassInfo_ClassId(classId);
+
+        // 3. 학생별로 기간 내 출결 기록을 가져와 통계 계산
+        return enrollments.stream().map(enroll -> {
+            StudentEntity student = enroll.getStudent();
+
+            // 해당 기간 동안 이 학생의 모든 출결 기록 가져오기
+            List<AttendanceEntity> records = attendanceRepository
+                    .findByStudent_StudentIdAndClassInfo_ClassIdAndAttendanceDateBetween(student.getStudentId(), classId, startDate, endDate);
+
+            return StudentMonthlyStatResponse.builder()
+                    .studentId(student.getStudentId())
+                    .studentName(student.getStudentName())
+                    .presentCount(records.stream().filter(r -> r.getStatus() == AttendanceEntity.AttendanceStatus.PRESENT).count())
+                    .lateCount(records.stream().filter(r -> r.getStatus() == AttendanceEntity.AttendanceStatus.LATE).count())
+                    .absentCount(records.stream().filter(r -> r.getStatus() == AttendanceEntity.AttendanceStatus.ABSENT).count())
+                    .build();
+        }).collect(Collectors.toList());
     }
 }

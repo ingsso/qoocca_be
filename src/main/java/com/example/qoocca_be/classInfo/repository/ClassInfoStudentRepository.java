@@ -65,4 +65,6 @@ public interface ClassInfoStudentRepository extends JpaRepository<ClassInfoStude
             @Param("day") String day,
             @Param("status") StudentStatus status
     );
+
+    List<ClassInfoStudentEntity> findAllByClassInfo_ClassIdAndStatus(Long classInfoClassId, StudentStatus status);
 }

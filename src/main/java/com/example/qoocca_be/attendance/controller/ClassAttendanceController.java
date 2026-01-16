@@ -1,7 +1,9 @@
 package com.example.qoocca_be.attendance.controller;
 
 import com.example.qoocca_be.attendance.model.ClassAttendanceResponse;
+import com.example.qoocca_be.attendance.model.StudentMonthlyStatResponse;
 import com.example.qoocca_be.attendance.service.AttendanceService;
+import com.example.qoocca_be.classInfo.model.ClassSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,4 +21,16 @@ public class ClassAttendanceController {
         return ResponseEntity.ok(attendanceService.getTodayAttendanceByAcademy(academyId));
     }
 
+    @GetMapping("/academy/{academyId}/summary")
+    public ResponseEntity<List<ClassSummaryResponse>> getTodayClassSummaries(@PathVariable Long academyId) {
+        return ResponseEntity.ok(attendanceService.getTodayClassSummaries(academyId));
+    }
+
+    @GetMapping("/class/{classId}/monthly-stats")
+    public ResponseEntity<List<StudentMonthlyStatResponse>> getMonthlyStats(
+            @PathVariable Long classId,
+            @RequestParam int year,
+            @RequestParam int month) {
+        return ResponseEntity.ok(attendanceService.getMonthlyStatsByClass(classId, year, month));
+    }
 }

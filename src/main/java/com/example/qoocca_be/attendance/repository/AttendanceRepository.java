@@ -38,6 +38,14 @@ public interface AttendanceRepository
             LocalDate endDate
     );
 
+    // 학생 ID + 클래스 ID + 기간으로 조회
+    List<AttendanceEntity> findByStudent_StudentIdAndClassInfo_ClassIdAndAttendanceDateBetween(
+            Long studentId,
+            Long classId,
+            LocalDate startDate,
+            LocalDate endDate
+    );
+
     /* =========================
      * 관리자 / 선생님 기준
      * ========================= */

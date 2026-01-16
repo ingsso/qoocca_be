@@ -14,6 +14,27 @@ public interface ClassInfoRepository extends JpaRepository<ClassInfoEntity, Long
 
     List<ClassInfoEntity> findByAcademy_Id(Long academyId);
 
+    /**
+     * 특정 학원의 특정 요일에 수업이 있는 클래스 목록 조회
+     */
+    @Query("""
+        SELECT c FROM ClassInfoEntity c 
+        WHERE c.academy.id = :academyId 
+          AND (
+            (:day = 'monday' AND c.monday = true) OR
+            (:day = 'tuesday' AND c.tuesday = true) OR
+            (:day = 'wednesday' AND c.wednesday = true) OR
+            (:day = 'thursday' AND c.thursday = true) OR
+            (:day = 'friday' AND c.friday = true) OR
+            (:day = 'saturday' AND c.saturday = true) OR
+            (:day = 'sunday' AND c.sunday = true)
+          )
+    """)
+    List<ClassInfoEntity> findAllByAcademyIdAndDayOfWeek(
+            @Param("academyId") Long academyId,
+            @Param("day") String day
+    );
+
     @Query("""
     SELECT new com.example.qoocca_be.classInfo.model.ClassSummaryResponse(
         c.classId, 

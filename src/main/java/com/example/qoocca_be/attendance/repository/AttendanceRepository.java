@@ -31,11 +31,17 @@ public interface AttendanceRepository
     // 학생 전체 출결
     List<AttendanceEntity> findByStudent_StudentId(Long studentId);
 
-    // 학생 + 기간
-    List<AttendanceEntity> findByStudent_StudentIdAndAttendanceDateBetween(
-            Long studentId,
-            LocalDate startDate,
-            LocalDate endDate
+    @Query("""
+    SELECT a FROM AttendanceEntity a 
+    WHERE a.student.studentId = :studentId 
+      AND a.classInfo.academy.id = :academyId 
+      AND a.attendanceDate BETWEEN :startDate AND :endDate
+""")
+    List<AttendanceEntity> findByStudentAndAcademyAndDateBetween(
+            @Param("studentId") Long studentId,
+            @Param("academyId") Long academyId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 
     // 학생 ID + 클래스 ID + 기간으로 조회

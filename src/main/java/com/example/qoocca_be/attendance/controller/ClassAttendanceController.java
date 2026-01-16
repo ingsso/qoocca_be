@@ -5,9 +5,11 @@ import com.example.qoocca_be.attendance.model.StudentMonthlyStatResponse;
 import com.example.qoocca_be.attendance.service.AttendanceService;
 import com.example.qoocca_be.classInfo.model.ClassSummaryResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -22,8 +24,12 @@ public class ClassAttendanceController {
     }
 
     @GetMapping("/academy/{academyId}/summary")
-    public ResponseEntity<List<ClassSummaryResponse>> getTodayClassSummaries(@PathVariable Long academyId) {
-        return ResponseEntity.ok(attendanceService.getTodayClassSummaries(academyId));
+    public ResponseEntity<List<ClassSummaryResponse>> getTodayClassSummaries(
+            @PathVariable Long academyId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        LocalDate targetDate = (date != null) ? date : LocalDate.now();
+        return ResponseEntity.ok(attendanceService.getClassSummariesByDate(academyId, targetDate));
     }
 
     @GetMapping("/class/{classId}/monthly-stats")

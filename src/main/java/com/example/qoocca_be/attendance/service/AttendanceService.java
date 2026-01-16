@@ -126,17 +126,52 @@ public class AttendanceService {
     /* =========================
      * 한 달 조회
      * ========================= */
-    public List<AttendanceMonthResponse> getAttendanceByMonth(Long studentId, int year, int month) {
+    @Transactional(readOnly = true)
+    public List<AttendanceMonthResponse> getAttendanceByMonth(Long studentId, Long academyId, int year, int month) {
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
         List<AttendanceEntity> list = attendanceRepository
-                .findByStudent_StudentIdAndAttendanceDateBetween(studentId, startDate, endDate);
+                .findByStudentAndAcademyAndDateBetween(studentId, academyId, startDate, endDate);
 
         return list.stream()
                 .map(AttendanceMonthResponse::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public StudentCalendarResponse getStudentCalendarView(Long studentId, Long academyId, int year, int month) {
+        // 1. 학생 정보 조회
+        StudentEntity student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+
+        // 2. 해당 학원에서 이 학생이 수강 중인 '재원' 상태의 클래스 목록 조회
+        List<ClassInfoStudentEntity> enrollments = classInfoStudentRepository
+                .findAllByAcademyAndStatus(academyId, StudentStatus.ENROLLED);
+
+        List<String> enrolledClassNames = enrollments.stream()
+                .filter(e -> e.getStudent().getStudentId().equals(studentId))
+                .map(e -> e.getClassInfo().getClassName())
+                .toList();
+
+        // 3. 월간 출결 기록 조회 (작성하신 findByStudentAndAcademyAndDateBetween 활용)
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        List<AttendanceEntity> attendanceEntities = attendanceRepository
+                .findByStudentAndAcademyAndDateBetween(studentId, academyId, startDate, endDate);
+
+        List<AttendanceMonthResponse> records = attendanceEntities.stream()
+                .map(AttendanceMonthResponse::fromEntity)
+                .toList();
+
+        return StudentCalendarResponse.builder()
+                .studentName(student.getStudentName())
+                .enrolledClasses(enrolledClassNames)
+                .attendanceRecords(records)
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -205,9 +240,8 @@ public class AttendanceService {
     }
 
     @Transactional(readOnly = true)
-    public List<ClassSummaryResponse> getTodayClassSummaries(Long academyId) {
-        LocalDate today = LocalDate.now();
-        String dayOfWeek = today.getDayOfWeek().name().toLowerCase();
+    public List<ClassSummaryResponse> getClassSummariesByDate(Long academyId, LocalDate targetDate) {
+        String dayOfWeek = targetDate.getDayOfWeek().name();
 
         List<ClassInfoEntity> classes = classInfoRepository.findAllByAcademyIdAndDayOfWeek(academyId, dayOfWeek);
 
@@ -216,7 +250,7 @@ public class AttendanceService {
                     classInfo.getClassId(), StudentStatus.ENROLLED);
 
             List<AttendanceEntity> attendances = attendanceRepository.findByClassInfo_ClassIdAndAttendanceDate(
-                    classInfo.getClassId(), today);
+                    classInfo.getClassId(), targetDate);
 
             int totalStudents = enrollments.size();
             long presentCount = attendances.stream().filter(a -> "PRESENT".equals(a.getStatus().name())).count();

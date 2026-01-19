@@ -1,7 +1,7 @@
 package com.example.qoocca_be.classInfo.service;
 
 import com.example.qoocca_be.classInfo.model.ClassStatsProjection;
-import com.example.qoocca_be.classInfo.model.ClassStatsResponseDTO;
+import com.example.qoocca_be.classInfo.model.response.ClassStatsResponse;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStatsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,12 +14,12 @@ public class ClassInfoStatsService {
 
     private final ClassInfoStatsRepository repository;
 
-    public List<ClassStatsResponseDTO> getClassStats(Long academyId) {
+    public List<ClassStatsResponse> getClassStats(Long academyId) {
 
         List<ClassStatsProjection> stats = repository.findClassStatsByAcademy(academyId);
 
         return stats.stream()
-                .map(ClassStatsResponseDTO::from)
+                .map(ClassStatsResponse::from)
                 .toList();
     }
 }

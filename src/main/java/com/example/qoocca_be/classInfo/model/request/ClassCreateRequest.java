@@ -1,4 +1,4 @@
-package com.example.qoocca_be.classInfo.model;
+package com.example.qoocca_be.classInfo.model.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -7,7 +7,7 @@ import lombok.Data;
 import java.time.LocalTime;
 
 @Data
-public class ClassPostRequest {
+public class ClassCreateRequest {
 
     @Schema(description = "수업명", example = "Alpha 교과국어 초등반")
     private String className;

@@ -14,7 +14,7 @@ import java.time.LocalTime;
 
 @EntityListeners(AuditingEntityListener.class)
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 @ToString
@@ -94,4 +94,32 @@ public class ClassInfoEntity {
     @JoinColumn(name = "subject_id")
     @ToString.Exclude
     private SubjectEntity subject;
+
+    public static ClassInfoEntity createClass(
+            String className,
+            LocalTime startTime,
+            LocalTime endTime,
+            Long price,
+            AcademyEntity academy,
+            AgeEntity age,
+            SubjectEntity subject,
+            boolean monday, boolean tuesday, boolean wednesday,
+            boolean thursday, boolean friday, boolean saturday, boolean sunday
+    ) {
+        if (startTime.isAfter(endTime)) {
+            throw new IllegalArgumentException("수업 종료 시간은 시작 시간보다 빨라야 합니다.");
+        }
+
+        return ClassInfoEntity.builder()
+                .className(className)
+                .startTime(startTime)
+                .endTime(endTime)
+                .price(price)
+                .academy(academy)
+                .age(age)
+                .subject(subject)
+                .monday(monday).tuesday(tuesday).wednesday(wednesday)
+                .thursday(thursday).friday(friday).saturday(saturday).sunday(sunday)
+                .build();
+    }
 }

@@ -6,7 +6,7 @@ import com.example.qoocca_be.attendance.repository.AttendanceRepository;
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.classInfo.entity.ClassInfoStudentEntity;
 import com.example.qoocca_be.classInfo.entity.StudentStatus;
-import com.example.qoocca_be.classInfo.model.ClassSummaryResponse;
+import com.example.qoocca_be.classInfo.model.response.ClassSummaryResponse;
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
 import com.example.qoocca_be.student.entity.StudentEntity;

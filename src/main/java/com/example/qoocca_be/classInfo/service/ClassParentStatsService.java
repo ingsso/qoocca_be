@@ -1,8 +1,8 @@
 package com.example.qoocca_be.classInfo.service;
 
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
-import com.example.qoocca_be.classInfo.model.ClassParentStatsResponseDTO;
-import com.example.qoocca_be.classInfo.model.ClassParentStudentDTO;
+import com.example.qoocca_be.classInfo.model.response.ClassParentStatsResponse;
+import com.example.qoocca_be.classInfo.model.ClassParentStudent;
 import com.example.qoocca_be.classInfo.repository.ClassParentStatsRepository;
 import com.example.qoocca_be.parent.model.ParentResponse;
 import com.example.qoocca_be.student.entity.StudentEntity;
@@ -21,11 +21,11 @@ public class ClassParentStatsService {
     private final ClassParentStatsRepository repository;
     private final StudentParentRepository studentParentRepository;
 
-    public List<ClassParentStatsResponseDTO> getParentStats(Long academyId) {
+    public List<ClassParentStatsResponse> getParentStats(Long academyId) {
 
         List<Object[]> rows = repository.findStudentsByAcademy(academyId, null);
 
-        Map<Long, ClassParentStatsResponseDTO> classMap = new LinkedHashMap<>();
+        Map<Long, ClassParentStatsResponse> classMap = new LinkedHashMap<>();
 
         // 1. 학생 ID 수집
         List<Long> studentIds = rows.stream()
@@ -54,7 +54,7 @@ public class ClassParentStatsService {
 
             classMap.putIfAbsent(
                     classInfo.getClassId(),
-                    new ClassParentStatsResponseDTO(
+                    new ClassParentStatsResponse(
                             classInfo.getClassId(),
                             classInfo.getClassName(),
                             new ArrayList<>()
@@ -64,8 +64,8 @@ public class ClassParentStatsService {
             List<ParentResponse> parents =
                     parentMap.getOrDefault(student.getStudentId(), List.of());
 
-            ClassParentStudentDTO studentDTO =
-                    new ClassParentStudentDTO(
+            ClassParentStudent studentDTO =
+                    new ClassParentStudent(
                             student.getStudentId(),
                             student.getStudentName(),
                             student.getStudentPhone(),

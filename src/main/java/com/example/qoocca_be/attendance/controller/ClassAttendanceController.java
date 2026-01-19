@@ -3,7 +3,7 @@ package com.example.qoocca_be.attendance.controller;
 import com.example.qoocca_be.attendance.model.ClassAttendanceResponse;
 import com.example.qoocca_be.attendance.model.StudentMonthlyStatResponse;
 import com.example.qoocca_be.attendance.service.AttendanceService;
-import com.example.qoocca_be.classInfo.model.ClassSummaryResponse;
+import com.example.qoocca_be.classInfo.model.response.ClassSummaryResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

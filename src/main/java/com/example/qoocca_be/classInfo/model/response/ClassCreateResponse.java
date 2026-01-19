@@ -1,4 +1,4 @@
-package com.example.qoocca_be.classInfo.model;
+package com.example.qoocca_be.classInfo.model.response;
 
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import lombok.AllArgsConstructor;
@@ -10,13 +10,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClassPostResponse {
+public class ClassCreateResponse {
 
     private Long classId;
     private String className;
 
-    public static ClassPostResponse fromEntity(ClassInfoEntity entity) {
-        return ClassPostResponse.builder()
+    public static ClassCreateResponse fromEntity(ClassInfoEntity entity) {
+        return ClassCreateResponse.builder()
                 .classId(entity.getClassId())
                 .className(entity.getClassName())
                 .build();

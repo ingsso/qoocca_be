@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class ClassParentStudentDTO {
+public class ClassParentStudent {
 
     private Long studentId;
     private String studentName;

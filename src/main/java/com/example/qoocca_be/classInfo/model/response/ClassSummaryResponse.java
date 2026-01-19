@@ -1,4 +1,4 @@
-package com.example.qoocca_be.classInfo.model;
+package com.example.qoocca_be.classInfo.model.response;
 
 import lombok.*;
 
@@ -24,7 +24,6 @@ public class ClassSummaryResponse {
         this.presentCount = presentCount != null ? presentCount : 0L;
         this.lateCount = lateCount != null ? lateCount : 0L;
         this.absentCount = absentCount != null ? absentCount : 0L;
-        // 미등원 = 전체 인원 - (출석 + 지각 + 결석)
         this.notPresentCount = currentCount - (int)(this.presentCount + this.lateCount + this.absentCount);
     }
 }

@@ -3,9 +3,9 @@ package com.example.qoocca_be.classInfo.service;
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.classInfo.entity.ClassInfoStudentEntity;
 import com.example.qoocca_be.classInfo.entity.StudentStatus;
-import com.example.qoocca_be.classInfo.model.ClassInfoStudentRequestDTO;
-import com.example.qoocca_be.classInfo.model.ClassInfoStudentResponseDTO;
-import com.example.qoocca_be.classInfo.model.ClassInfoStudentModifyRequest;
+import com.example.qoocca_be.classInfo.model.request.ClassStudentRequest;
+import com.example.qoocca_be.classInfo.model.response.ClassStudentResponse;
+import com.example.qoocca_be.classInfo.model.request.ClassStudentModifyRequest;
 
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
@@ -14,9 +14,6 @@ import com.example.qoocca_be.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.example.qoocca_be.classInfo.model.ClassInfoStudentMoveRequest;
-import com.example.qoocca_be.classInfo.entity.StudentStatus;
 
 
 import java.util.List;
@@ -33,7 +30,7 @@ public class ClassInfoStudentService {
     /**
      * 기존 학생을 클래스에 배정
      */
-    public void register(Long classId, ClassInfoStudentRequestDTO request) {
+    public void register(Long classId, ClassStudentRequest request) {
 
         // 이미 등록되어 있는지 체크
         if (repository.existsByClassInfo_ClassIdAndStudent_StudentId(classId, request.getStudentId())) {
@@ -60,7 +57,7 @@ public class ClassInfoStudentService {
     public void modifyStatus(
             Long classId,
             Long studentId,
-            ClassInfoStudentModifyRequest request
+            ClassStudentModifyRequest request
     ) {
         ClassInfoStudentEntity entity = repository
                 .findByClassInfo_ClassIdAndStudent_StudentId(classId, studentId)
@@ -102,13 +99,11 @@ public class ClassInfoStudentService {
         classInfoStudentRepository.save(newEntity);
     }
 
-
-
     @Transactional(readOnly = true)
-    public List<ClassInfoStudentResponseDTO> getStudents(Long classId) {
+    public List<ClassStudentResponse> getStudents(Long classId) {
         return repository.findByClassInfo_ClassId(classId)
                 .stream()
-                .map(ClassInfoStudentResponseDTO::from)
+                .map(ClassStudentResponse::from)
                 .toList();
     }
 

@@ -1,4 +1,4 @@
-package com.example.qoocca_be.classInfo.model;
+package com.example.qoocca_be.classInfo.model.response;
 
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import lombok.AllArgsConstructor;

@@ -1,4 +1,4 @@
-package com.example.qoocca_be.academy.dto;
+package com.example.qoocca_be.academy.model.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AcademyCreateRequestDto implements AcademyRequest {
+public class AcademyCreateRequest implements AcademyRequest {
     @NotBlank(message = "학원 이름은 필수입니다.")
     private String name;
 

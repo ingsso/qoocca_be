@@ -1,8 +1,8 @@
 package com.example.qoocca_be.academy.service;
 
-import com.example.qoocca_be.academy.dto.AcademyStudentCreateRequest;
-import com.example.qoocca_be.academy.dto.AcademyStudentModifyRequest;
-import com.example.qoocca_be.academy.dto.AcademyStudentResponse;
+import com.example.qoocca_be.academy.model.request.AcademyStudentCreateRequest;
+import com.example.qoocca_be.academy.model.request.AcademyStudentModifyRequest;
+import com.example.qoocca_be.academy.model.response.AcademyStudentResponse;
 import com.example.qoocca_be.academy.entity.AcademyEntity;
 import com.example.qoocca_be.academy.entity.AcademyStudentEntity;
 import com.example.qoocca_be.academy.repository.AcademyRepository;

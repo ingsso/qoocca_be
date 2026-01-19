@@ -1,18 +1,18 @@
 package com.example.qoocca_be.academy.controller;
 
-import com.example.qoocca_be.academy.dto.*;
+import com.example.qoocca_be.academy.model.request.AcademyCreateRequest;
+import com.example.qoocca_be.academy.model.request.AcademyUpdateRequest;
+import com.example.qoocca_be.academy.model.response.AcademyCheckResponse;
+import com.example.qoocca_be.academy.model.response.AcademyResponse;
+import com.example.qoocca_be.academy.model.response.DashboardStatsResponse;
 import com.example.qoocca_be.academy.service.AcademyService;
 import com.example.qoocca_be.age.model.AgeResponseDto;
-import com.example.qoocca_be.global.common.PageResponseDto;
 import com.example.qoocca_be.subject.model.SubjectResponseDto;
 import com.example.qoocca_be.user.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,7 +31,7 @@ public class AcademyController {
     @Operation(summary = "학원 등록")
     @PostMapping(value = "/register", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Long> registerAcademy(
-            @Valid @ModelAttribute AcademyCreateRequestDto req,
+            @Valid @ModelAttribute AcademyCreateRequest req,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long id = academyService.registerAcademy(req, userDetails.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
@@ -39,15 +39,15 @@ public class AcademyController {
 
     @Operation(summary = "학원 승인 여부 확인")
     @GetMapping("/check-registration")
-    public ResponseEntity<AcademyCheckResponseDto> checkRegistration(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        AcademyCheckResponseDto res = academyService.checkRegistrationStatus(userDetails.getUserId());
+    public ResponseEntity<AcademyCheckResponse> checkRegistration(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        AcademyCheckResponse res = academyService.checkRegistrationStatus(userDetails.getUserId());
         return ResponseEntity.ok(res);
     }
 
     @Operation(summary = "특정 학원 상세 정보 조회")
     @GetMapping("/{id}")
-    public ResponseEntity<AcademyResponseDto> getAcademyDetail(@PathVariable Long id) {
-        AcademyResponseDto res = academyService.getAcademyDetail(id);
+    public ResponseEntity<AcademyResponse> getAcademyDetail(@PathVariable Long id) {
+        AcademyResponse res = academyService.getAcademyDetail(id);
         return ResponseEntity.ok(res);
     }
 
@@ -67,7 +67,7 @@ public class AcademyController {
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateAcademy(
             @PathVariable Long id,
-            @RequestBody AcademyUpdateDto dto,
+            @RequestBody AcademyUpdateRequest dto,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         academyService.updateAcademy(id, dto, userDetails.getUserId());
@@ -75,13 +75,7 @@ public class AcademyController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "학원 이름 검색")
-    @GetMapping("/search")
-    public ResponseEntity<PageResponseDto<AcademySearchResponseDto>> search(@RequestParam String name,
-                                                                            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(academyService.searchAcademiesByName(name, pageable));
-    }
-
+    @Operation(summary = "학원 운영 현황")
     @GetMapping("/{id}/stats")
     public DashboardStatsResponse getDashboardStats(@PathVariable Long id) {
         return academyService.getDashboardStats(id);

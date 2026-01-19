@@ -1,4 +1,4 @@
-package com.example.qoocca_be.academy.dto;
+package com.example.qoocca_be.academy.model.request;
 
 import java.util.List;
 

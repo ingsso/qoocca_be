@@ -1,6 +1,6 @@
 package com.example.qoocca_be.academy.entity;
 
-import com.example.qoocca_be.academy.dto.AcademyUpdateDto;
+import com.example.qoocca_be.academy.model.request.AcademyUpdateRequest;
 import com.example.qoocca_be.age.entity.AgeEntity;
 import com.example.qoocca_be.subject.entity.SubjectEntity;
 import com.example.qoocca_be.user.entity.UserEntity;
@@ -110,20 +110,15 @@ public class AcademyEntity {
     @Builder.Default
     private List<AcademySubjectEntity> academySubjects = new ArrayList<>();
 
-
     @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<AcademyStudentEntity> academyStudents = new ArrayList<>();
-
-
-
 
     public void updateApprovalStatus(ApprovalStatus status) {
         this.approvalStatus = status;
     }
 
-
-    public void update(AcademyUpdateDto req) {
+    public void update(AcademyUpdateRequest req) {
 
         if (req.getName() != null) this.name = req.getName();
         if (req.getPhoneNumber() != null) this.phoneNumber = req.getPhoneNumber();

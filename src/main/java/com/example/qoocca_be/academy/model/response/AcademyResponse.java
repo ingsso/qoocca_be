@@ -1,4 +1,4 @@
-package com.example.qoocca_be.academy.dto;
+package com.example.qoocca_be.academy.model.response;
 
 import com.example.qoocca_be.academy.entity.AcademyEntity;
 import com.example.qoocca_be.age.model.AgeResponseDto;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AcademyResponseDto {
+public class AcademyResponse {
 
     private Long id;
 
@@ -46,8 +46,8 @@ public class AcademyResponseDto {
     private List<AgeResponseDto> ages;
     private List<SubjectResponseDto> subjects;
 
-    public static AcademyResponseDto from(AcademyEntity academy) {
-        return AcademyResponseDto.builder()
+    public static AcademyResponse from(AcademyEntity academy) {
+        return AcademyResponse.builder()
                 .id(academy.getId())
                 .name(academy.getName())
                 .approvalStatus(academy.getApprovalStatus().name())

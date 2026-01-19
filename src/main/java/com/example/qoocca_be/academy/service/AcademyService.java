@@ -1,7 +1,13 @@
 package com.example.qoocca_be.academy.service;
 
-import com.example.qoocca_be.academy.dto.*;
 import com.example.qoocca_be.academy.entity.*;
+import com.example.qoocca_be.academy.model.request.AcademyCreateRequest;
+import com.example.qoocca_be.academy.model.request.AcademyRequest;
+import com.example.qoocca_be.academy.model.request.AcademyUpdateRequest;
+import com.example.qoocca_be.academy.model.response.AcademyCheckResponse;
+import com.example.qoocca_be.academy.model.response.AcademyResponse;
+import com.example.qoocca_be.academy.model.response.AcademySearchResponse;
+import com.example.qoocca_be.academy.model.response.DashboardStatsResponse;
 import com.example.qoocca_be.academy.repository.AcademyAgeRepository;
 import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.academy.repository.AcademyStudentRepository;
@@ -59,17 +65,21 @@ public class AcademyService {
     private String IMAGE_BASE_URL;
 
     @Transactional(readOnly = true)
-    public AcademyCheckResponseDto checkRegistrationStatus(Long userId) {
+    public AcademyCheckResponse checkRegistrationStatus(Long userId) {
         return academyRepository.findByUserId(userId)
-                .map(academy -> new AcademyCheckResponseDto(
+                .map(academy -> new AcademyCheckResponse(
                         academy.getApprovalStatus() == ApprovalStatus.APPROVED,
                         academy.getId()
                 ))
-                .orElse(new AcademyCheckResponseDto(false, null));
+                .orElse(new AcademyCheckResponse(false, null));
     }
 
+    /**
+     * 신규 학원 등록 로직
+     * 1. 학원 정보 저장 -> 2. 폴더 생성 -> 3. 파일 저장 -> 4. 이미지/연관 데이터 매핑
+     */
     @Transactional
-    public Long registerAcademy(AcademyCreateRequestDto req, Long userId) {
+    public Long registerAcademy(AcademyCreateRequest req, Long userId) {
         UserEntity user = userService.findById(userId);
 
         AcademyEntity academy = AcademyEntity.builder()
@@ -126,12 +136,52 @@ public class AcademyService {
         return academy.getId();
     }
 
+    /**
+     * 대시보드 통계 데이터 집계
+     * 여러 Repository를 조회하여 현재 운영 현황 수치를 산출함
+     */
     @Transactional(readOnly = true)
-    public AcademyResponseDto getAcademyDetail(Long id) {
+    public DashboardStatsResponse getDashboardStats(Long academyId) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfMonth = today.withDayOfMonth(1).atStartOfDay();
+        LocalDateTime endOfMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(23, 59, 59);
+        String dayOfWeek = today.getDayOfWeek().name().toLowerCase();
+
+        List<AttendanceEntity.AttendanceStatus> activeStatuses = List.of(
+                AttendanceEntity.AttendanceStatus.PRESENT,
+                AttendanceEntity.AttendanceStatus.LATE,
+                AttendanceEntity.AttendanceStatus.EARLY_LEAVE
+        );
+
+        Long studentCount = classInfoStudentRepository.countUniqueStudentsByAcademy(academyId, StudentStatus.ENROLLED);
+        Long totalTodayCount = classInfoStudentRepository.countExpectedStudentsToday(
+                academyId,
+                dayOfWeek,
+                StudentStatus.ENROLLED
+        );
+        Long presentCount = attendanceRepository.countByAcademyAndDateAndStatusIn(
+                academyId,
+                today,
+                activeStatuses
+        );
+        Long noCardCount = academyStudentRepository.countStudentsWithoutCard(academyId);
+        Long totalMonthlyFee = receiptRepository.sumAmountByAcademyAndPeriod(academyId, startOfMonth, endOfMonth);
+
+        return DashboardStatsResponse.builder()
+                .studentCount(studentCount)
+                .presentCount(presentCount)
+                .totalTodayCount(totalTodayCount)
+                .noCardCount(noCardCount)
+                .totalMonthlyFee(totalMonthlyFee != null ? totalMonthlyFee : 0L)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public AcademyResponse getAcademyDetail(Long id) {
         AcademyEntity academy = academyRepository.findDetailById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
-        return AcademyResponseDto.from(academy);
+        return AcademyResponse.from(academy);
     }
 
     @Transactional(readOnly = true)
@@ -153,7 +203,7 @@ public class AcademyService {
     }
 
     @Transactional
-    public void updateAcademy(Long id, AcademyUpdateDto req, Long userId) {
+    public void updateAcademy(Long id, AcademyUpdateRequest req, Long userId) {
         AcademyEntity academy = academyRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
@@ -216,14 +266,6 @@ public class AcademyService {
         }
     }
 
-    @Transactional(readOnly = true)
-    public PageResponseDto<AcademySearchResponseDto> searchAcademiesByName(String name, Pageable pageable) {
-        Page<AcademyEntity> academyPage = academyRepository.findByNameContaining(name, pageable);
-        Page<AcademySearchResponseDto> dtoPage = academyPage.map(AcademySearchResponseDto::from);
-
-        return new PageResponseDto<>(dtoPage);
-    }
-
     @Transactional
     public void approveAcademy(Long academyId) {
         AcademyEntity academy = academyRepository.findById(academyId)
@@ -241,10 +283,10 @@ public class AcademyService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDto<AcademySearchResponseDto> getPendingAcademies(Pageable pageable) {
+    public PageResponseDto<AcademySearchResponse> getPendingAcademies(Pageable pageable) {
         Page<AcademyEntity> pendingPage = academyRepository.findAllByApprovalStatus(ApprovalStatus.PENDING, pageable);
 
-        Page<AcademySearchResponseDto> dtoPage = pendingPage.map(AcademySearchResponseDto::from);
+        Page<AcademySearchResponse> dtoPage = pendingPage.map(AcademySearchResponse::from);
 
         return new PageResponseDto<>(dtoPage);
     }
@@ -258,47 +300,11 @@ public class AcademyService {
             academy.updateSubjects(subjectRepository.findAllById(req.getSubjects()));
         }
 
-        if (req instanceof AcademyUpdateDto updateDto) {
+        if (req instanceof AcademyUpdateRequest updateDto) {
             if (updateDto.getImageUrls() != null) {
                 academy.updateImages(updateDto.getImageUrls());
             }
         }
-    }
-
-    @Transactional(readOnly = true)
-    public DashboardStatsResponse getDashboardStats(Long academyId) {
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfMonth = today.withDayOfMonth(1).atStartOfDay();
-        LocalDateTime endOfMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(23, 59, 59);
-        String dayOfWeek = today.getDayOfWeek().name().toLowerCase();
-
-        List<AttendanceEntity.AttendanceStatus> activeStatuses = List.of(
-                AttendanceEntity.AttendanceStatus.PRESENT,
-                AttendanceEntity.AttendanceStatus.LATE,
-                AttendanceEntity.AttendanceStatus.EARLY_LEAVE
-        );
-
-        Long studentCount = classInfoStudentRepository.countUniqueStudentsByAcademy(academyId, StudentStatus.ENROLLED);
-        Long totalTodayCount = classInfoStudentRepository.countExpectedStudentsToday(
-                academyId,
-                dayOfWeek,
-                StudentStatus.ENROLLED
-        );
-        Long presentCount = attendanceRepository.countByAcademyAndDateAndStatusIn(
-                academyId,
-                today,
-                activeStatuses
-        );
-        Long noCardCount = academyStudentRepository.countStudentsWithoutCard(academyId);
-        Long totalMonthlyFee = receiptRepository.sumAmountByAcademyAndPeriod(academyId, startOfMonth, endOfMonth);
-
-        return DashboardStatsResponse.builder()
-                .studentCount(studentCount)
-                .presentCount(presentCount)
-                .totalTodayCount(totalTodayCount)
-                .noCardCount(noCardCount)
-                .totalMonthlyFee(totalMonthlyFee != null ? totalMonthlyFee : 0L)
-                .build();
     }
 
 }

@@ -1,4 +1,4 @@
-package com.example.qoocca_be.academy.dto;
+package com.example.qoocca_be.academy.model.response;
 
 import com.example.qoocca_be.student.entity.StudentEntity;
 import lombok.Builder;

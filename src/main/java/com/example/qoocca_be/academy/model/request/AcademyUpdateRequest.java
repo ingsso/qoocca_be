@@ -1,4 +1,4 @@
-package com.example.qoocca_be.academy.dto;
+package com.example.qoocca_be.academy.model.request;
 
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,7 +10,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AcademyUpdateDto implements AcademyRequest {
+public class AcademyUpdateRequest implements AcademyRequest {
 
     private String name;
 

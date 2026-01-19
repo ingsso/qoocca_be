@@ -40,8 +40,10 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 인증/공개 API는 패스
+        // 1. 완전 공개 API 및 기초 정보 조회 API 패스
         if (path.startsWith("/api/auth") ||
+                path.startsWith("/api/ages") ||
+                path.startsWith("/api/subjects") ||
                 path.startsWith("/swagger") ||
                 path.startsWith("/v3/api-docs")) {
 
@@ -49,6 +51,11 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
             return;
         }
 
+        // 2. 학원 등록 API 자체도 패스해야 함 (학원이 없어도 접근 가능해야 하므로)
+        if (path.equals("/api/academy/register")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.isAuthenticated()

@@ -20,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -62,6 +63,18 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
             if (hasRole(authentication, "ROLE_ADMIN")) {
                 filterChain.doFilter(request, response);
                 return;
+            }
+
+            if (request.getMethod().equals("GET") && pathMatcher.match("/api/academy/{id}", request.getRequestURI())) {
+                Map<String, String> variables = pathMatcher.extractUriTemplateVariables("/api/academy/{id}", request.getRequestURI());
+                Long requestedAcademyId = Long.parseLong(variables.get("id"));
+
+                // 사용자의 학원 ID를 조회하여 요청된 ID와 일치하는지 확인
+                Optional<AcademyEntity> myAcademy = academyRepository.findByUserId(userDetails.getUserId());
+                if (myAcademy.isPresent() && myAcademy.get().getId().equals(requestedAcademyId)) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
             }
 
             // JWT에 상태를 담았다면 여기서 바로 userDetails.getApprovalStatus() 체크 가능

@@ -1,8 +1,8 @@
 package com.example.qoocca_be.academy.model.response;
 
 import com.example.qoocca_be.academy.entity.AcademyEntity;
-import com.example.qoocca_be.age.model.AgeResponseDto;
-import com.example.qoocca_be.subject.model.SubjectResponseDto;
+import com.example.qoocca_be.age.model.AgeResponse;
+import com.example.qoocca_be.subject.model.SubjectResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -43,8 +43,8 @@ public class AcademyResponse {
     private String certificate;
 
     private List<String> imageUrls;
-    private List<AgeResponseDto> ages;
-    private List<SubjectResponseDto> subjects;
+    private List<AgeResponse> ages;
+    private List<SubjectResponse> subjects;
 
     public static AcademyResponse from(AcademyEntity academy) {
         return AcademyResponse.builder()

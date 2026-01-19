@@ -12,7 +12,7 @@ import com.example.qoocca_be.academy.repository.AcademyAgeRepository;
 import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.academy.repository.AcademyStudentRepository;
 import com.example.qoocca_be.academy.repository.AcademySubjectRepository;
-import com.example.qoocca_be.age.model.AgeResponseDto;
+import com.example.qoocca_be.age.model.AgeResponse;
 import com.example.qoocca_be.age.repository.AgeRepository;
 import com.example.qoocca_be.attendance.entity.AttendanceEntity;
 import com.example.qoocca_be.attendance.repository.AttendanceRepository;
@@ -22,7 +22,7 @@ import com.example.qoocca_be.global.common.PageResponseDto;
 import com.example.qoocca_be.global.exception.CustomException;
 import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.receipt.repository.ReceiptRepository;
-import com.example.qoocca_be.subject.model.SubjectResponseDto;
+import com.example.qoocca_be.subject.model.SubjectResponse;
 import com.example.qoocca_be.subject.repository.SubjectRepository;
 import com.example.qoocca_be.user.entity.UserEntity;
 import com.example.qoocca_be.user.service.UserService;
@@ -185,7 +185,7 @@ public class AcademyService {
     }
 
     @Transactional(readOnly = true)
-    public List<SubjectResponseDto> getAcademySubjects(Long academyId) {
+    public List<SubjectResponse> getAcademySubjects(Long academyId) {
         List<AcademySubjectEntity> mappings = academySubjectRepository.findAllByAcademyId(academyId);
 
         return mappings.stream()
@@ -194,7 +194,7 @@ public class AcademyService {
     }
 
     @Transactional(readOnly = true)
-    public List<AgeResponseDto> getAcademyAges(Long academyId) {
+    public List<AgeResponse> getAcademyAges(Long academyId) {
         List<AcademyAgeEntity> mappings = academyAgeRepository.findAllByAcademyId(academyId);
 
         return mappings.stream()

@@ -1,6 +1,6 @@
 package com.example.qoocca_be.subject.controller;
 
-import com.example.qoocca_be.subject.model.SubjectResponseDto;
+import com.example.qoocca_be.subject.model.SubjectResponse;
 import com.example.qoocca_be.subject.service.SubjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +22,7 @@ public class SubjectController {
 
     @Operation(summary = "과목 조회")
     @GetMapping
-    public ResponseEntity<List<SubjectResponseDto>> getAllSubjects() {
+    public ResponseEntity<List<SubjectResponse>> getAllSubjects() {
         return ResponseEntity.ok(subjectService.getAllSubjects());
     }
 }

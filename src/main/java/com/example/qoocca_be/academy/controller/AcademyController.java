@@ -6,8 +6,8 @@ import com.example.qoocca_be.academy.model.response.AcademyCheckResponse;
 import com.example.qoocca_be.academy.model.response.AcademyResponse;
 import com.example.qoocca_be.academy.model.response.DashboardStatsResponse;
 import com.example.qoocca_be.academy.service.AcademyService;
-import com.example.qoocca_be.age.model.AgeResponseDto;
-import com.example.qoocca_be.subject.model.SubjectResponseDto;
+import com.example.qoocca_be.age.model.AgeResponse;
+import com.example.qoocca_be.subject.model.SubjectResponse;
 import com.example.qoocca_be.user.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,13 +53,13 @@ public class AcademyController {
 
     @Operation(summary = "특정 학원의 과목 조회")
     @GetMapping("/{id}/subjects")
-    public ResponseEntity<List<SubjectResponseDto>> getSubjects(@PathVariable Long id) {
+    public ResponseEntity<List<SubjectResponse>> getSubjects(@PathVariable Long id) {
         return ResponseEntity.ok(academyService.getAcademySubjects(id));
     }
 
     @Operation(summary = "특정 학원의 나이 조회")
     @GetMapping("/{id}/ages")
-    public ResponseEntity<List<AgeResponseDto>> getAges(@PathVariable Long id) {
+    public ResponseEntity<List<AgeResponse>> getAges(@PathVariable Long id) {
         return ResponseEntity.ok(academyService.getAcademyAges(id));
     }
 

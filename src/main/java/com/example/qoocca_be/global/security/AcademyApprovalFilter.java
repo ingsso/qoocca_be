@@ -34,6 +34,12 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
+        // ✅ 학생 이동 API 예외 처리 (추가)
+        if (path.matches("^/api/academy/\\d+/class/\\d+/student/\\d+/move$")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // 인증/공개 API는 패스
         if (path.startsWith("/api/auth") ||
                 path.startsWith("/swagger") ||

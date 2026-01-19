@@ -68,6 +68,7 @@ public class ClassParentStatsService {
                     new ClassParentStudentDTO(
                             student.getStudentId(),
                             student.getStudentName(),
+                            student.getStudentPhone(),
                             parents
                     );
 

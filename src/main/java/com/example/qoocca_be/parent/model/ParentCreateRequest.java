@@ -16,7 +16,7 @@ public class ParentCreateRequest {
     @NotBlank
     private String parentName;   // ✅ 추가
 
-    @NotBlank
+
     private String cardNum;
 
     @NotNull

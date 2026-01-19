@@ -48,14 +48,14 @@ public interface ReceiptRepository
     );
 
     @Query("""
-        SELECT SUM(r.amount) 
-        FROM ReceiptEntity r 
-        JOIN AcademyStudentEntity ast ON r.student.studentId = ast.student.studentId
-        WHERE ast.academy.id = :academyId 
-          AND r.receiptDate >= :start 
-          AND r.receiptDate <= :end
-          AND r.receiptStatus = 'ISSUED'
-    """)
+    SELECT SUM(r.amount) 
+    FROM ReceiptEntity r 
+    JOIN AcademyStudentEntity ast ON r.student.studentId = ast.student.studentId
+    WHERE ast.academy.id = :academyId 
+      AND r.receiptDate >= :start 
+      AND r.receiptDate < :end
+      AND r.receiptStatus = 'PAID'
+""")
     Long sumAmountByAcademyAndPeriod(
             @Param("academyId") Long academyId,
             @Param("start") LocalDateTime start,

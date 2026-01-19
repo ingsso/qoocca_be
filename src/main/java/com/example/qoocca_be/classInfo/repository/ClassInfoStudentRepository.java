@@ -24,6 +24,15 @@ public interface ClassInfoStudentRepository extends JpaRepository<ClassInfoStude
             "WHERE c.classInfo.academy.id = :academyId AND c.status = :status")
     long countUniqueStudentsByAcademy(@Param("academyId") Long academyId, @Param("status") StudentStatus status);
 
+    @Query("SELECT cse FROM ClassInfoStudentEntity cse " +
+            "JOIN FETCH cse.classInfo c " +
+            "JOIN FETCH cse.student s " +
+            "WHERE c.academy.id = :academyId AND cse.status = :status")
+    List<ClassInfoStudentEntity> findAllByAcademyAndStatus(
+            @Param("academyId") Long academyId,
+            @Param("status") StudentStatus status
+    );
+
     @Query("""
         SELECT cse.classInfo 
         FROM ClassInfoStudentEntity cse 
@@ -56,4 +65,6 @@ public interface ClassInfoStudentRepository extends JpaRepository<ClassInfoStude
             @Param("day") String day,
             @Param("status") StudentStatus status
     );
+
+    List<ClassInfoStudentEntity> findAllByClassInfo_ClassIdAndStatus(Long classInfoClassId, StudentStatus status);
 }

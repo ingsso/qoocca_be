@@ -2,31 +2,41 @@ package com.example.qoocca_be.attendance.model;
 
 import com.example.qoocca_be.attendance.entity.AttendanceEntity;
 import com.example.qoocca_be.attendance.entity.AttendanceEntity.AttendanceStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@Setter
 @Builder
 public class AttendanceMonthResponse {
-
-    private LocalDate attendanceDate;
+    private LocalDate date;
+    private Long classId;
+    private String className;
+    private String status;
+    private String statusLabel;
     private LocalTime checkIn;
     private LocalTime checkOut;
-    private AttendanceStatus status;
 
     public static AttendanceMonthResponse fromEntity(AttendanceEntity entity) {
         return AttendanceMonthResponse.builder()
-                .attendanceDate(entity.getAttendanceDate())
+                .date(entity.getAttendanceDate())
+                .classId(entity.getClassInfo().getClassId())
+                .className(entity.getClassInfo().getClassName())
+                .status(entity.getStatus().name())
+                .statusLabel(formatStatusLabel(entity.getStatus()))
                 .checkIn(entity.getCheckIn())
                 .checkOut(entity.getCheckOut())
-                .status(entity.getStatus())
                 .build();
+    }
+
+    private static String formatStatusLabel(AttendanceEntity.AttendanceStatus status) {
+        return switch (status) {
+            case PRESENT -> "출석";
+            case LATE -> "지각";
+            case ABSENT -> "결석";
+            case EARLY_LEAVE -> "조퇴";
+        };
     }
 }

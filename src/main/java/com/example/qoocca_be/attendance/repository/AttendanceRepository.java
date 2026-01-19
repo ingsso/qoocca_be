@@ -31,9 +31,23 @@ public interface AttendanceRepository
     // 학생 전체 출결
     List<AttendanceEntity> findByStudent_StudentId(Long studentId);
 
-    // 학생 + 기간
-    List<AttendanceEntity> findByStudent_StudentIdAndAttendanceDateBetween(
+    @Query("""
+    SELECT a FROM AttendanceEntity a 
+    WHERE a.student.studentId = :studentId 
+      AND a.classInfo.academy.id = :academyId 
+      AND a.attendanceDate BETWEEN :startDate AND :endDate
+""")
+    List<AttendanceEntity> findByStudentAndAcademyAndDateBetween(
+            @Param("studentId") Long studentId,
+            @Param("academyId") Long academyId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    // 학생 ID + 클래스 ID + 기간으로 조회
+    List<AttendanceEntity> findByStudent_StudentIdAndClassInfo_ClassIdAndAttendanceDateBetween(
             Long studentId,
+            Long classId,
             LocalDate startDate,
             LocalDate endDate
     );
@@ -55,6 +69,9 @@ public interface AttendanceRepository
             LocalDate attendanceDate,
             AttendanceEntity.AttendanceStatus status
     );
+
+    // 특정 클래스의 특정 날짜 출결 기록 리스트 조회
+    List<AttendanceEntity> findByClassInfo_ClassIdAndAttendanceDate(Long classId, LocalDate attendanceDate);
 
     @Query("""
         SELECT COUNT(DISTINCT a.student.studentId)

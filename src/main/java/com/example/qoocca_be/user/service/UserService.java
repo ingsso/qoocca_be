@@ -3,9 +3,9 @@ package com.example.qoocca_be.user.service;
 import com.example.qoocca_be.global.exception.CustomException;
 import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.user.entity.UserEntity;
-import com.example.qoocca_be.user.model.LoginResponseDto;
-import com.example.qoocca_be.user.model.SocialLinkRequestDto;
-import com.example.qoocca_be.user.model.UserRequestDto;
+import com.example.qoocca_be.user.model.LoginResponse;
+import com.example.qoocca_be.user.model.SocialLinkRequest;
+import com.example.qoocca_be.user.model.UserRequest;
 import com.example.qoocca_be.user.repository.UserRepository;
 import com.example.qoocca_be.global.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,7 +27,7 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final SmsService smsService;
 
-    private void setAgreements(UserEntity user, UserRequestDto.AgreementsRequest agreements) {
+    private void setAgreements(UserEntity user, UserRequest.AgreementsRequest agreements) {
         if (agreements == null) {
             return;
         }
@@ -44,7 +44,7 @@ public class UserService {
     }
 
     @Transactional
-    public LoginResponseDto signup(UserRequestDto req, HttpServletResponse res) {
+    public LoginResponse signup(UserRequest req, HttpServletResponse res) {
         smsService.checkIsVerified(req.getPhone());
 
         UserEntity userEntity = userRepository.findByPhoneNumber(req.getPhone())
@@ -80,7 +80,7 @@ public class UserService {
     }
 
     @Transactional
-    public LoginResponseDto linkSocialAccount(SocialLinkRequestDto req, HttpServletResponse res) {
+    public LoginResponse linkSocialAccount(SocialLinkRequest req, HttpServletResponse res) {
         String cleanPhone = req.phone().replaceAll("[^0-9]", "");
         smsService.checkIsVerified(cleanPhone);
 
@@ -126,7 +126,7 @@ public class UserService {
         return jwtTokenProvider.generateTokens(tempSocialUser.getId(), tempSocialUser.getRole(), res);
     }
 
-    private void validateRequiredAgreements(UserRequestDto.AgreementsRequest agreements) {
+    private void validateRequiredAgreements(UserRequest.AgreementsRequest agreements) {
         if (agreements == null ||
                 !agreements.isService() ||
                 !agreements.isPrivacy() ||

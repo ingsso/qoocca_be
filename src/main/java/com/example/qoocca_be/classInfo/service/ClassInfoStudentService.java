@@ -3,20 +3,19 @@ package com.example.qoocca_be.classInfo.service;
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.classInfo.entity.ClassInfoStudentEntity;
 import com.example.qoocca_be.classInfo.entity.StudentStatus;
-import com.example.qoocca_be.classInfo.model.ClassInfoStudentRequestDTO;
-import com.example.qoocca_be.classInfo.model.ClassInfoStudentResponseDTO;
-import com.example.qoocca_be.classInfo.model.ClassInfoStudentModifyRequest;
+import com.example.qoocca_be.classInfo.model.request.ClassStudentRequest;
+import com.example.qoocca_be.classInfo.model.response.ClassStudentResponse;
+import com.example.qoocca_be.classInfo.model.request.ClassStudentModifyRequest;
 
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
+import com.example.qoocca_be.global.exception.CustomException;
+import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.example.qoocca_be.classInfo.model.ClassInfoStudentMoveRequest;
-import com.example.qoocca_be.classInfo.entity.StudentStatus;
 
 
 import java.util.List;
@@ -33,7 +32,7 @@ public class ClassInfoStudentService {
     /**
      * 기존 학생을 클래스에 배정
      */
-    public void register(Long classId, ClassInfoStudentRequestDTO request) {
+    public void register(Long classId, ClassStudentRequest request) {
 
         // 이미 등록되어 있는지 체크
         if (repository.existsByClassInfo_ClassIdAndStudent_StudentId(classId, request.getStudentId())) {
@@ -42,11 +41,11 @@ public class ClassInfoStudentService {
 
         // 클래스 존재 확인
         ClassInfoEntity classInfo = classInfoRepository.findById(classId)
-                .orElseThrow(() -> new IllegalArgumentException("클래스를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND));
 
         // 학생 존재 확인
         StudentEntity student = studentRepository.findById(request.getStudentId())
-                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         // 기존 학생이므로 신규 생성 X, 바로 클래스-학생 매핑 테이블에 등록
         ClassInfoStudentEntity entity = ClassInfoStudentEntity.builder()
@@ -60,11 +59,11 @@ public class ClassInfoStudentService {
     public void modifyStatus(
             Long classId,
             Long studentId,
-            ClassInfoStudentModifyRequest request
+            ClassStudentModifyRequest request
     ) {
         ClassInfoStudentEntity entity = repository
                 .findByClassInfo_ClassIdAndStudent_StudentId(classId, studentId)
-                .orElseThrow(() -> new IllegalArgumentException("수강 정보가 존재하지 않습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.ENROLLMENT_NOT_FOUND));
 
         entity.setStatus(request.getStatus());
         // JPA Dirty Checking으로 자동 update
@@ -102,20 +101,18 @@ public class ClassInfoStudentService {
         classInfoStudentRepository.save(newEntity);
     }
 
-
-
     @Transactional(readOnly = true)
-    public List<ClassInfoStudentResponseDTO> getStudents(Long classId) {
+    public List<ClassStudentResponse> getStudents(Long classId) {
         return repository.findByClassInfo_ClassId(classId)
                 .stream()
-                .map(ClassInfoStudentResponseDTO::from)
+                .map(ClassStudentResponse::from)
                 .toList();
     }
 
     public void remove(Long classId, Long studentId) {
         ClassInfoStudentEntity entity = repository
                 .findByClassInfo_ClassIdAndStudent_StudentId(classId, studentId)
-                .orElseThrow(() -> new IllegalArgumentException("수강 정보가 존재하지 않습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.ENROLLMENT_NOT_FOUND));
 
         repository.delete(entity);
     }

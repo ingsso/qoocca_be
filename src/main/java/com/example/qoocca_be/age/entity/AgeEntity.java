@@ -1,6 +1,6 @@
 package com.example.qoocca_be.age.entity;
 
-import com.example.qoocca_be.age.model.AgeResponseDto;
+import com.example.qoocca_be.age.model.AgeResponse;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -35,8 +35,8 @@ public class AgeEntity {
     @Column(name = "updated_at", columnDefinition = "datetime(6)")
     private LocalDateTime updatedAt;
 
-    public AgeResponseDto toResponseDto() {
-        return AgeResponseDto.builder()
+    public AgeResponse toResponseDto() {
+        return AgeResponse.builder()
                 .id(this.id)
                 .ageCode(this.ageCode)
                 .build();

@@ -81,5 +81,23 @@ public class AttendanceEntity {
         LATE,       // 지각
         EARLY_LEAVE // 조퇴
     }
+
+    public void calculateStatus(LocalTime startTime) {
+        // 필요 시 startTime.plusMinutes(5) 처럼 유예 시간을 둘 수도 있음
+        if (this.checkIn.isAfter(startTime)) {
+            this.status = AttendanceStatus.LATE;
+        } else {
+            this.status = AttendanceStatus.PRESENT;
+        }
+    }
+
+    public void processCheckOut(LocalTime endTime) {
+        this.checkOut = LocalTime.now();
+
+        // 조퇴 판별: 수업 종료 시간보다 일찍 나갔을 경우
+        if (this.checkOut.isBefore(endTime)) {
+            this.status = AttendanceStatus.EARLY_LEAVE;
+        }
+    }
 }
 

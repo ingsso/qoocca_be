@@ -2,7 +2,7 @@ package com.example.qoocca_be.classInfo.repository;
 
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.classInfo.entity.StudentStatus;
-import com.example.qoocca_be.classInfo.model.ClassSummaryResponse;
+import com.example.qoocca_be.classInfo.model.response.ClassSummaryResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +13,13 @@ import java.util.List;
 public interface ClassInfoRepository extends JpaRepository<ClassInfoEntity, Long> {
 
     List<ClassInfoEntity> findByAcademy_Id(Long academyId);
+
+    // Age, Subject 정보를 한 번에 조회
+    @Query("SELECT c FROM ClassInfoEntity c " +
+            "JOIN FETCH c.age " +
+            "JOIN FETCH c.subject " +
+            "WHERE c.academy.id = :academyId")
+    List<ClassInfoEntity> findByAcademy_IdWithDetails(@Param("academyId") Long academyId);
 
     /**
      * 특정 학원의 특정 요일에 수업이 있는 클래스 목록 조회
@@ -36,7 +43,7 @@ public interface ClassInfoRepository extends JpaRepository<ClassInfoEntity, Long
     );
 
     @Query("""
-    SELECT new com.example.qoocca_be.classInfo.model.ClassSummaryResponse(
+    SELECT new com.example.qoocca_be.classInfo.model.response.ClassSummaryResponse(
         c.classId, 
         c.className, 
         CAST(COUNT(DISTINCT cs.student.studentId) AS int),

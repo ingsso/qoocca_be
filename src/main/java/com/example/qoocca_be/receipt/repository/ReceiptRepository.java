@@ -26,6 +26,17 @@ public interface ReceiptRepository
             LocalDateTime end
     );
 
+    @Query("SELECT r FROM ReceiptEntity r " +
+            "JOIN FETCH r.student " +
+            "JOIN FETCH r.classInfo " +
+            "WHERE r.classInfo.academy.id = :academyId " +
+            "AND r.receiptDate BETWEEN :start AND :end")
+    List<ReceiptEntity> findAllByAcademyAndDateBetween(
+            @Param("academyId") Long academyId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
     boolean existsByStudent_StudentIdAndReceiptDateBetween(
             Long studentId,
             LocalDateTime start,

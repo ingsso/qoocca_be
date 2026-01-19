@@ -4,7 +4,7 @@ import com.example.qoocca_be.global.jwt.JwtTokenProvider;
 import com.example.qoocca_be.global.utils.CookieUtils;
 import com.example.qoocca_be.user.entity.OauthProvider;
 import com.example.qoocca_be.user.entity.UserEntity;
-import com.example.qoocca_be.user.model.LoginResponseDto;
+import com.example.qoocca_be.user.model.LoginResponse;
 import com.example.qoocca_be.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +29,9 @@ public abstract class SocialOauthService {
     }
 
     public abstract OauthProvider getProvider();
-    public abstract LoginResponseDto login(String code, HttpServletResponse response);
+    public abstract LoginResponse login(String code, HttpServletResponse response);
 
-    protected LoginResponseDto processSocialLogin(String socialId, HttpServletResponse response) {
+    protected LoginResponse processSocialLogin(String socialId, HttpServletResponse response) {
         Optional<UserEntity> userOpt = findUserBySocialId(socialId);
 
         if (userOpt.isPresent()) {
@@ -46,8 +46,8 @@ public abstract class SocialOauthService {
         }
     }
 
-    private LoginResponseDto generateLoginResponse(UserEntity user, HttpServletResponse res) {
-        LoginResponseDto loginRes = jwtTokenProvider.generateTokens(user.getId(), user.getRole(), res);
+    private LoginResponse generateLoginResponse(UserEntity user, HttpServletResponse res) {
+        LoginResponse loginRes = jwtTokenProvider.generateTokens(user.getId(), user.getRole(), res);
         cookieUtils.addRefreshTokenCookie(res, loginRes.getRefreshToken());
 
         Long academyId = null;
@@ -55,14 +55,14 @@ public abstract class SocialOauthService {
             academyId = user.getAcademies().get(0).getId();
         }
 
-        return LoginResponseDto.builder()
+        return LoginResponse.builder()
                 .accessToken(loginRes.getAccessToken())
                 .academyId(academyId)
                 .build();
     }
 
-    private LoginResponseDto needPhoneAuthResponse(String socialId) {
-        return LoginResponseDto.builder()
+    private LoginResponse needPhoneAuthResponse(String socialId) {
+        return LoginResponse.builder()
                 .accessToken("NEED_PHONE_AUTH")
                 .socialId(socialId)
                 .build();

@@ -1,7 +1,7 @@
 package com.example.qoocca_be.global.jwt;
 
 import com.example.qoocca_be.global.utils.CookieUtils;
-import com.example.qoocca_be.user.model.LoginResponseDto;
+import com.example.qoocca_be.user.model.LoginResponse;
 import com.example.qoocca_be.user.model.RedisDao;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -40,13 +40,13 @@ public class JwtTokenProvider {
         this.cookieUtils = cookieUtils;
     }
 
-    public LoginResponseDto generateTokens(Long userId, String role, HttpServletResponse res) {
+    public LoginResponse generateTokens(Long userId, String role, HttpServletResponse res) {
         String accessToken = generateAccessToken(userId, role);
         String refreshToken = generateRefreshToken(userId, role);
 
         cookieUtils.addRefreshTokenCookie(res, refreshToken);
 
-        return LoginResponseDto.builder()
+        return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(null)
                 .build();

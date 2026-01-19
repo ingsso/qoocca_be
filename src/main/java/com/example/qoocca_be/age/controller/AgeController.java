@@ -1,6 +1,6 @@
 package com.example.qoocca_be.age.controller;
 
-import com.example.qoocca_be.age.model.AgeResponseDto;
+import com.example.qoocca_be.age.model.AgeResponse;
 import com.example.qoocca_be.age.service.AgeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +22,7 @@ public class AgeController {
 
     @Operation(summary = "연령 조회")
     @GetMapping
-    public ResponseEntity<List<AgeResponseDto>> getAllAges() {
+    public ResponseEntity<List<AgeResponse>> getAllAges() {
         return ResponseEntity.ok(ageService.getAllAges());
     }
 }

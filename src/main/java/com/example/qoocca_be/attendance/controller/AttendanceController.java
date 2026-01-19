@@ -1,10 +1,12 @@
 package com.example.qoocca_be.attendance.controller;
 
 import com.example.qoocca_be.attendance.model.AttendanceCreateRequest;
-import com.example.qoocca_be.attendance.model.AttendanceMonthResponse;
 import com.example.qoocca_be.attendance.model.AttendanceResponse;
 import com.example.qoocca_be.attendance.model.StudentCalendarResponse;
 import com.example.qoocca_be.attendance.service.AttendanceService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -12,60 +14,50 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
+@Tag(name = "Attendance API", description = "학생 출결 등록 및 조회 API")
 @RestController
 @RequiredArgsConstructor
 public class AttendanceController {
 
     private final AttendanceService attendanceService;
 
-    /* =========================
-     * 출결 등록
-     * POST /api/student/{studentId}/attendance
-     * ========================= */
+    @Operation(summary = "출결(등원) 등록", description = "학생의 등원 시간을 기록하고 출결 상태(정상, 지각)를 자동 계산합니다.")
     @PostMapping("/api/student/{studentId}/attendance")
     public ResponseEntity<AttendanceResponse> createAttendance(
-            @PathVariable Long studentId,
+            @Parameter(description = "학생 ID", example = "1") @PathVariable Long studentId,
             @Valid @RequestBody AttendanceCreateRequest request
     ) {
         AttendanceResponse response = attendanceService.createAttendance(studentId, request);
         return ResponseEntity.ok(response);
     }
 
-    /* =========================
-     * 단일 날짜 조회
-     * GET /api/student/{studentId}/attendance?date=2026-01-05
-     * ========================= */
+    @Operation(summary = "단일 날짜 출결 조회", description = "특정 날짜의 학생 출결 상세 기록을 조회합니다.")
     @GetMapping("/api/student/{studentId}/attendance")
     public ResponseEntity<AttendanceResponse> getAttendanceByDate(
-            @PathVariable Long studentId,
+            @Parameter(description = "학생 ID", example = "1") @PathVariable Long studentId,
+            @Parameter(description = "조회 날짜 (yyyy-MM-dd)", example = "2026-01-19")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         AttendanceResponse response = attendanceService.getAttendanceByDate(studentId, date);
         return ResponseEntity.ok(response);
     }
 
-    /* =========================
-     * 한 달 조회
-     * GET /api/student/{studentId}/attendance/month?year=2026&month=1
-     * ========================= */
+    @Operation(summary = "월간 출결 캘린더 조회", description = "특정 월의 수강 클래스 정보와 일별 출결 기록을 한꺼번에 조회합니다.")
     @GetMapping("/api/attendance/{studentId}/calendar-view")
     public ResponseEntity<StudentCalendarResponse> getCalendarView(
-            @PathVariable Long studentId,
-            @RequestParam Long academyId,
-            @RequestParam int year,
-            @RequestParam int month) {
+            @Parameter(description = "학생 ID", example = "1") @PathVariable Long studentId,
+            @Parameter(description = "학원 ID", example = "1") @RequestParam Long academyId,
+            @Parameter(description = "조회 연도", example = "2026") @RequestParam int year,
+            @Parameter(description = "조회 월", example = "1") @RequestParam int month) {
         return ResponseEntity.ok(attendanceService.getStudentCalendarView(studentId, academyId, year, month));
     }
 
-    /* =========================
-     * 하교(체크아웃) 등록
-     * PATCH /api/student/{studentId}/attendance/check-out
-     * ========================= */
+    @Operation(summary = "하원(체크아웃) 처리", description = "기존 등원 기록에 하원 시간을 업데이트합니다.")
     @PatchMapping("/api/student/{studentId}/attendance/check-out")
     public ResponseEntity<AttendanceResponse> checkOut(
-            @PathVariable Long studentId,
+            @Parameter(description = "학생 ID", example = "1") @PathVariable Long studentId,
+            @Parameter(description = "하원 날짜 (yyyy-MM-dd)", example = "2026-01-19")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         AttendanceResponse response = attendanceService.updateCheckOut(studentId, date);

@@ -1,6 +1,6 @@
 package com.example.qoocca_be.admin.controller;
 
-import com.example.qoocca_be.academy.dto.AcademySearchResponseDto;
+import com.example.qoocca_be.academy.model.response.AcademySearchResponse;
 import com.example.qoocca_be.academy.service.AcademyService;
 import com.example.qoocca_be.global.common.PageResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +36,7 @@ public class AdminAcademyController {
 
     @Operation(summary = "승인 대기 중인 학원 리스트 조회")
     @GetMapping("/pending")
-    public ResponseEntity<PageResponseDto<AcademySearchResponseDto>> getPendingAcademies(
+    public ResponseEntity<PageResponseDto<AcademySearchResponse>> getPendingAcademies(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
 
         return ResponseEntity.ok(academyService.getPendingAcademies(pageable));

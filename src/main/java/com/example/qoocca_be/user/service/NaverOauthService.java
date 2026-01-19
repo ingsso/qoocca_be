@@ -3,7 +3,7 @@ package com.example.qoocca_be.user.service;
 import com.example.qoocca_be.global.utils.CookieUtils;
 import com.example.qoocca_be.user.entity.OauthProvider;
 import com.example.qoocca_be.user.entity.UserEntity;
-import com.example.qoocca_be.user.model.LoginResponseDto;
+import com.example.qoocca_be.user.model.LoginResponse;
 import com.example.qoocca_be.user.repository.UserRepository;
 import com.example.qoocca_be.global.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
@@ -36,7 +36,7 @@ public class NaverOauthService extends SocialOauthService {
     }
 
     @Override
-    public LoginResponseDto login(String code, HttpServletResponse response) {
+    public LoginResponse login(String code, HttpServletResponse response) {
         String naverAccessToken = getNaverAccessToken(code);
 
         Map<String, Object> userInfo = getNaverUserInfo(naverAccessToken);

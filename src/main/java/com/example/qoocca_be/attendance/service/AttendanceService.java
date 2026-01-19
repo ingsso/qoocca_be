@@ -6,9 +6,11 @@ import com.example.qoocca_be.attendance.repository.AttendanceRepository;
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.classInfo.entity.ClassInfoStudentEntity;
 import com.example.qoocca_be.classInfo.entity.StudentStatus;
-import com.example.qoocca_be.classInfo.model.ClassSummaryResponse;
+import com.example.qoocca_be.classInfo.model.response.ClassSummaryResponse;
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
+import com.example.qoocca_be.global.exception.CustomException;
+import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,22 +39,26 @@ public class AttendanceService {
      * ========================= */
     public AttendanceResponse createAttendance(Long studentId, AttendanceCreateRequest request) {
         StudentEntity student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         ClassInfoEntity targetClass = findMatchingClass(studentId, request.getCheckIn());
 
-        AttendanceEntity.AttendanceStatus finalStatus = determineAttendanceStatus(targetClass, request.getCheckIn());
+        // 중복 등원 체크
+        if (attendanceRepository.existsByStudent_StudentIdAndClassInfo_ClassIdAndAttendanceDate(
+                studentId, targetClass.getClassId(), request.getAttendanceDate())) {
+            throw new CustomException(ErrorCode.ATTENDANCE_ALREADY_EXISTS);
+        }
 
         AttendanceEntity attendance = AttendanceEntity.builder()
                 .student(student)
                 .classInfo(targetClass)
                 .attendanceDate(request.getAttendanceDate())
                 .checkIn(request.getCheckIn())
-                .status(finalStatus)
                 .build();
 
-        AttendanceEntity saved = attendanceRepository.save(attendance);
+        attendance.calculateStatus(targetClass.getStartTime());
 
+        AttendanceEntity saved = attendanceRepository.save(attendance);
         return AttendanceResponse.fromEntity(saved);
     }
 
@@ -65,31 +71,16 @@ public class AttendanceService {
                 .filter(c -> isClassOnDay(c, dayOfWeek))
                 .filter(c -> isTimeWithinRange(c, checkIn))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("현재 시간에 해당 학생이 수강하는 수업이 없습니다."));
-    }
-
-    private AttendanceEntity.AttendanceStatus determineAttendanceStatus(ClassInfoEntity targetClass, LocalTime checkIn) {
-        LocalTime startTime = targetClass.getStartTime();
-
-        // targetClass.getStartTime().plusMinutes(5)
-        if (checkIn.isAfter(startTime)) {
-            return AttendanceEntity.AttendanceStatus.LATE;
-        }
-
-        return AttendanceEntity.AttendanceStatus.PRESENT;
+                .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND_FOR_TIME));
     }
 
     @Transactional
     public AttendanceResponse updateCheckOut(Long studentId, LocalDate date) {
         AttendanceEntity attendance = attendanceRepository
                 .findByStudent_StudentIdAndAttendanceDate(studentId, date)
-                .orElseThrow(() -> new IllegalArgumentException("등원 기록이 없습니다. 먼저 등원 처리를 해주세요."));
+                .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
 
-        attendance.setCheckOut(LocalTime.now());
-
-         if (attendance.getCheckOut().isBefore(attendance.getClassInfo().getEndTime())) {
-             attendance.setStatus(AttendanceEntity.AttendanceStatus.EARLY_LEAVE);
-         }
+        attendance.processCheckOut(attendance.getClassInfo().getEndTime());
 
         return AttendanceResponse.fromEntity(attendance);
     }
@@ -118,7 +109,7 @@ public class AttendanceService {
     public AttendanceResponse getAttendanceByDate(Long studentId, LocalDate date) {
         AttendanceEntity attendance = attendanceRepository
                 .findByStudent_StudentIdAndAttendanceDate(studentId, date)
-                .orElseThrow(() -> new IllegalArgumentException("해당 날짜 출결을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
 
         return AttendanceResponse.fromEntity(attendance);
     }
@@ -127,7 +118,7 @@ public class AttendanceService {
      * 한 달 조회
      * ========================= */
     @Transactional(readOnly = true)
-    public List<AttendanceMonthResponse> getAttendanceByMonth(Long studentId, Long academyId, int year, int month) {
+    public List<AttendanceResponse> getAttendanceByMonth(Long studentId, Long academyId, int year, int month) {
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
@@ -136,7 +127,7 @@ public class AttendanceService {
                 .findByStudentAndAcademyAndDateBetween(studentId, academyId, startDate, endDate);
 
         return list.stream()
-                .map(AttendanceMonthResponse::fromEntity)
+                .map(AttendanceResponse::fromEntity)
                 .collect(Collectors.toList());
     }
 
@@ -144,7 +135,7 @@ public class AttendanceService {
     public StudentCalendarResponse getStudentCalendarView(Long studentId, Long academyId, int year, int month) {
         // 1. 학생 정보 조회
         StudentEntity student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         // 2. 해당 학원에서 이 학생이 수강 중인 '재원' 상태의 클래스 목록 조회
         List<ClassInfoStudentEntity> enrollments = classInfoStudentRepository
@@ -163,8 +154,8 @@ public class AttendanceService {
         List<AttendanceEntity> attendanceEntities = attendanceRepository
                 .findByStudentAndAcademyAndDateBetween(studentId, academyId, startDate, endDate);
 
-        List<AttendanceMonthResponse> records = attendanceEntities.stream()
-                .map(AttendanceMonthResponse::fromEntity)
+        List<AttendanceResponse> records = attendanceEntities.stream()
+                .map(AttendanceResponse::fromEntity)
                 .toList();
 
         return StudentCalendarResponse.builder()
@@ -179,19 +170,13 @@ public class AttendanceService {
         LocalDate today = LocalDate.now();
         String dayOfWeek = today.getDayOfWeek().name().toLowerCase();
 
-        // 1. 해당 학원의 모든 '재원 중'인 학생-수업 매핑 정보 조회
-        // (Repository에 해당 메서드 추가 필요)
-        List<ClassInfoStudentEntity> allEnrollments = classInfoStudentRepository.findAllByAcademyAndStatus(academyId, StudentStatus.ENROLLED);
-
-        // 2. 그 중 '오늘' 수업이 있는 데이터만 필터링
-        List<ClassInfoStudentEntity> todayEnrollments = allEnrollments.stream()
+        List<ClassInfoStudentEntity> todayEnrollments = classInfoStudentRepository
+                .findAllByAcademyAndStatus(academyId, StudentStatus.ENROLLED).stream()
                 .filter(enroll -> isClassOnDay(enroll.getClassInfo(), dayOfWeek))
                 .toList();
 
-        // 3. 오늘 자 모든 출결 기록 조회
-        List<AttendanceEntity> todayAttendances = attendanceRepository.findByAttendanceDate(today);
+        List<AttendanceEntity> todayAttendances = attendanceRepository.findByAttendanceDateWithDetails(today);
 
-        // 4. 데이터 매핑
         return todayEnrollments.stream().map(enroll -> {
             StudentEntity student = enroll.getStudent();
             ClassInfoEntity classInfo = enroll.getClassInfo();
@@ -245,19 +230,22 @@ public class AttendanceService {
 
         List<ClassInfoEntity> classes = classInfoRepository.findAllByAcademyIdAndDayOfWeek(academyId, dayOfWeek);
 
+        List<AttendanceEntity> allAttendances = attendanceRepository.findByAttendanceDateWithDetails(targetDate);
+
         return classes.stream().map(classInfo -> {
             List<ClassInfoStudentEntity> enrollments = classInfoStudentRepository.findAllByClassInfo_ClassIdAndStatus(
                     classInfo.getClassId(), StudentStatus.ENROLLED);
 
-            List<AttendanceEntity> attendances = attendanceRepository.findByClassInfo_ClassIdAndAttendanceDate(
-                    classInfo.getClassId(), targetDate);
+            List<AttendanceEntity> classAttendances = allAttendances.stream()
+                    .filter(a -> a.getClassInfo().getClassId().equals(classInfo.getClassId()))
+                    .toList();
 
             int totalStudents = enrollments.size();
-            long presentCount = attendances.stream().filter(a -> "PRESENT".equals(a.getStatus().name())).count();
-            long lateCount = attendances.stream().filter(a -> "LATE".equals(a.getStatus().name())).count();
-            long absentCount = attendances.stream().filter(a -> "ABSENT".equals(a.getStatus().name())).count();
+            long presentCount = classAttendances.stream().filter(a -> "PRESENT".equals(a.getStatus().name())).count();
+            long lateCount = classAttendances.stream().filter(a -> "LATE".equals(a.getStatus().name())).count();
+            long absentCount = classAttendances.stream().filter(a -> "ABSENT".equals(a.getStatus().name())).count();
 
-            int notPresentCount = totalStudents - attendances.size();
+            int notPresentCount = totalStudents - classAttendances.size();
 
             return ClassSummaryResponse.builder()
                     .classId(classInfo.getClassId())

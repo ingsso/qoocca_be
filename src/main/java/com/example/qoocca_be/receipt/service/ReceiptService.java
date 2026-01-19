@@ -2,10 +2,14 @@ package com.example.qoocca_be.receipt.service;
 
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
 import com.example.qoocca_be.classInfo.entity.ClassInfoStudentEntity;
+import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
+import com.example.qoocca_be.global.exception.CustomException;
+import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.receipt.entity.ReceiptEntity;
 import com.example.qoocca_be.receipt.model.*;
+import com.example.qoocca_be.receipt.model.response.*;
 import com.example.qoocca_be.receipt.repository.ReceiptRepository;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.student.repository.StudentRepository;
@@ -36,39 +40,20 @@ public class ReceiptService {
     public ReceiptCreateResponse createReceipt(Long studentId, ReceiptCreateRequest request) {
         // 1. 학생 존재 확인
         StudentEntity student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("학생을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         ClassInfoEntity classInfo = classInfoRepository.findById(request.getClassId())
-                .orElseThrow(() -> new RuntimeException("클래스 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND));
 
-        // 2. 중복 수납 체크 (해당 월에 이미 데이터가 있는지)
-        // 만약 request에 날짜가 없으면 현재 시간 기준으로 체크
-        LocalDateTime targetDate = (request.getReceiptDate() != null) ? request.getReceiptDate() : LocalDateTime.now();
-        YearMonth targetMonth = YearMonth.from(targetDate);
 
-        LocalDateTime start = targetMonth.atDay(1).atStartOfDay();
-        LocalDateTime end = targetMonth.atEndOfMonth().atTime(23, 59, 59);
-
-        boolean isAlreadyPaid = receiptRepository.existsByStudent_StudentIdAndClassInfo_ClassIdAndReceiptDateBetween(
-                studentId, request.getClassId(), start, end);
-
-        if (isAlreadyPaid) {
-            throw new RuntimeException(targetMonth.getMonthValue() + "월 수납 기록이 이미 존재합니다.");
+        if (isAlreadyProcessedInMonth(studentId, request.getClassId(), request.getReceiptDate())) {
+            throw new CustomException(ErrorCode.DUPLICATE_RECEIPT_IN_MONTH);
         }
 
-        Long amount = request.getAmount();
+        ReceiptEntity receipt = ReceiptEntity.createReceipt(
+                student, classInfo, request.getAmount(), request.getReceiptDate(), request.getReceiptStatus());
 
-        // 3. 수납 저장
-        ReceiptEntity receipt = ReceiptEntity.builder()
-                .student(student)
-                .classInfo(classInfo)
-                .amount(amount)
-                .receiptDate(targetDate)
-                .receiptStatus(request.getReceiptStatus() != null ? request.getReceiptStatus() : ReceiptEntity.ReceiptStatus.ISSUED)
-                .build();
-
-        ReceiptEntity saved = receiptRepository.save(receipt);
-        return ReceiptCreateResponse.fromEntity(saved);
+        return ReceiptCreateResponse.fromEntity(receiptRepository.save(receipt));
     }
 
     /* =========================
@@ -102,10 +87,10 @@ public class ReceiptService {
      * ========================= */
     public ReceiptUpdateResponse updateReceiptStatus(Long studentId, Long receiptId, ReceiptUpdateRequest request) {
         ReceiptEntity receipt = receiptRepository.findById(receiptId)
-                .orElseThrow(() -> new RuntimeException("영수증을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.RECEIPT_NOT_FOUND));
 
         if (!receipt.getStudent().getStudentId().equals(studentId)) {
-            throw new RuntimeException("해당 학생의 영수증이 아닙니다.");
+            throw new CustomException(ErrorCode.RECEIPT_ACCESS_DENIED);
         }
 
         if (request.getReceiptStatus() != null) {
@@ -120,31 +105,15 @@ public class ReceiptService {
      * ========================= */
     @Transactional(readOnly = true)
     public List<ClassPaymentSummaryResponse> getClassReceiptSummary(Long academyId, int year, int month) {
-        // 1. 해당 학원의 모든 클래스 조회
-        List<ClassInfoEntity> classList = classInfoRepository.findByAcademy_Id(academyId);
+        // [공통 데이터 준비]
+        ReceiptDataContainer data = prepareReceiptData(academyId, year, month);
 
-        // 2. 조회 기간 설정 (해당 월의 시작과 끝)
-        YearMonth ym = YearMonth.of(year, month);
-        LocalDateTime start = ym.atDay(1).atStartOfDay();
-        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
+        return data.classList.stream().map(cls -> {
+            List<ClassInfoStudentEntity> enrollments = data.enrollmentsByClass.getOrDefault(cls.getClassId(), List.of());
 
-        return classList.stream().map(cls -> {
-            // 3. 클래스별 전체 학생 수 조회
-            List<ClassInfoStudentEntity> enrollments = classInfoStudentRepository.findByClassInfo_ClassId(cls.getClassId());
-
-            // 4. 해당 월의 이 클래스 수납 내역 전체 조회
-            List<ReceiptEntity> receipts = receiptRepository.findByClassInfo_ClassIdAndReceiptDateBetween(
-                    cls.getClassId(), start, end);
-
-            // 5. 상태별 카운트 계산
             List<ClassPaymentSummaryResponse.StudentPaymentDetail> studentDetails = enrollments.stream().map(enroll -> {
-                // 해당 학생의 수납 레코드가 있는지 확인
-                Optional<ReceiptEntity> receipt = receipts.stream()
-                        .filter(r -> r.getStudent().getStudentId().equals(enroll.getStudent().getStudentId()))
-                        .findFirst();
-
-                String status = receipt.map(r -> r.getReceiptStatus().name())
-                        .orElse("BEFORE_REQUEST");
+                ReceiptEntity receipt = data.receiptMap.get(cls.getClassId() + "-" + enroll.getStudent().getStudentId());
+                String status = (receipt != null) ? receipt.getReceiptStatus().name() : "BEFORE_REQUEST";
 
                 return ClassPaymentSummaryResponse.StudentPaymentDetail.builder()
                         .studentId(enroll.getStudent().getStudentId())
@@ -152,9 +121,8 @@ public class ReceiptService {
                         .amount(cls.getPrice())
                         .status(status)
                         .build();
-            }).collect(Collectors.toList());
+            }).toList();
 
-            // 5. 집계 계산 (상태별 카운트)
             long completed = studentDetails.stream().filter(s -> s.getStatus().equals("PAID")).count();
             long pending = studentDetails.stream().filter(s -> s.getStatus().equals("ISSUED")).count();
             long before = studentDetails.size() - (completed + pending);
@@ -165,74 +133,73 @@ public class ReceiptService {
                     .beforeRequest(before)
                     .paymentPending(pending)
                     .paymentCompleted(completed)
-                    .students(studentDetails) // 상세 명단 포함
+                    .students(studentDetails)
                     .build();
         }).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<DashboardMainSummaryResponse> getDashboardMainSummary(Long academyId, int year, int month) {
-        // 1. 해당 학원의 모든 클래스 조회
-        List<ClassInfoEntity> classList = classInfoRepository.findByAcademy_Id(academyId);
+        ReceiptDataContainer data = prepareReceiptData(academyId, year, month);
 
-        YearMonth ym = YearMonth.of(year, month);
-        LocalDateTime start = ym.atDay(1).atStartOfDay();
-        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
+        return data.classList.stream().map(cls -> {
+            List<ClassInfoStudentEntity> enrollments = data.enrollmentsByClass.getOrDefault(cls.getClassId(), List.of());
 
-        return classList.stream().map(cls -> {
-            // 2. 해당 클래스의 재원생 및 수납 기록 조회
-            List<ClassInfoStudentEntity> enrollments = classInfoStudentRepository.findByClassInfo_ClassId(cls.getClassId());
-            List<ReceiptEntity> receipts = receiptRepository.findByClassInfo_ClassIdAndReceiptDateBetween(
-                    cls.getClassId(), start, end);
-
-            // 3. 대표 상태 결정 (기존 로직 활용)
-            String repStatus = determineRepresentativeStatus(enrollments, receipts);
+            ReceiptEntity.ReceiptStatus repStatus = calculateRepresentativeStatus(cls.getClassId(), enrollments, data.receiptMap);
 
             return DashboardMainSummaryResponse.builder()
                     .className(cls.getClassName())
                     .classTime(cls.getStartTime() + "~" + cls.getEndTime())
-                    .status(repStatus)
-                    .statusLabel(getStatusLabel(repStatus))
+                    .status(repStatus.name())
+                    .statusLabel(repStatus.getLabel())
                     .totalAmount(cls.getPrice() * enrollments.size())
                     .build();
         }).collect(Collectors.toList());
     }
 
-    private String determineRepresentativeStatus(List<ClassInfoStudentEntity> enrollments, List<ReceiptEntity> receipts) {
-        if (enrollments.isEmpty()) return "PAID";
-
-        Map<Long, String> studentStatusMap = receipts.stream()
-                .collect(Collectors.toMap(
-                        r -> r.getStudent().getStudentId(),
-                        r -> r.getReceiptStatus().name(),
-                        (existing, replacement) -> existing // 중복 시 기존값 유지
-                ));
-
-        boolean hasIssued = false;
-        int paidCount = 0;
-
-        for (ClassInfoStudentEntity enrollment : enrollments) {
-            String status = studentStatusMap.getOrDefault(enrollment.getStudent().getStudentId(), "BEFORE_REQUEST");
-
-            switch (status) {
-                case "BEFORE_REQUEST" -> {
-                    return "BEFORE_REQUEST";
-                }
-                case "ISSUED" -> hasIssued = true;
-                case "PAID" -> paidCount++;
-            }
-        }
-
-        if (hasIssued) return "ISSUED";
-        return "PAID";
+    private boolean isAlreadyProcessedInMonth(Long studentId, Long classId, LocalDateTime date) {
+        YearMonth ym = YearMonth.from(date != null ? date : LocalDateTime.now());
+        return receiptRepository.existsByStudent_StudentIdAndClassInfo_ClassIdAndReceiptDateBetween(
+                studentId, classId, ym.atDay(1).atStartOfDay(), ym.atEndOfMonth().atTime(23, 59, 59));
     }
 
-    private String getStatusLabel(String status) {
-        return switch (status) {
-            case "BEFORE_REQUEST" -> "요청 전";
-            case "ISSUED" -> "결제 대기";
-            case "PAID" -> "결제 완료";
-            default -> status;
-        };
+    private ReceiptDataContainer prepareReceiptData(Long academyId, int year, int month) {
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
+
+        List<ClassInfoEntity> classList = classInfoRepository.findByAcademy_Id(academyId);
+        List<ClassInfoStudentEntity> allEnrollments = classInfoStudentRepository.findAllByAcademyAndStatus(academyId, StudentStatus.ENROLLED);
+        List<ReceiptEntity> allReceipts = receiptRepository.findAllByAcademyAndDateBetween(academyId, start, end);
+
+        Map<Long, List<ClassInfoStudentEntity>> enrollmentsByClass = allEnrollments.stream()
+                .collect(Collectors.groupingBy(e -> e.getClassInfo().getClassId()));
+
+        Map<String, ReceiptEntity> receiptMap = allReceipts.stream()
+                .collect(Collectors.toMap(
+                        r -> r.getClassInfo().getClassId() + "-" + r.getStudent().getStudentId(),
+                        r -> r,
+                        (existing, replacement) -> existing
+                ));
+
+        return new ReceiptDataContainer(classList, enrollmentsByClass, receiptMap);
+    }
+
+    private record ReceiptDataContainer(
+            List<ClassInfoEntity> classList,
+            Map<Long, List<ClassInfoStudentEntity>> enrollmentsByClass,
+            Map<String, ReceiptEntity> receiptMap
+    ) {}
+
+    private ReceiptEntity.ReceiptStatus calculateRepresentativeStatus(Long classId, List<ClassInfoStudentEntity> enrollments, Map<String, ReceiptEntity> receiptMap) {
+        if (enrollments.isEmpty()) return ReceiptEntity.ReceiptStatus.PAID;
+
+        boolean hasIssued = false;
+        for (ClassInfoStudentEntity enroll : enrollments) {
+            ReceiptEntity r = receiptMap.get(classId + "-" + enroll.getStudent().getStudentId());
+            if (r == null) return ReceiptEntity.ReceiptStatus.BEFORE_REQUEST; // 하나라도 요청 전이면 전체 '요청 전'
+            if (r.getReceiptStatus() == ReceiptEntity.ReceiptStatus.ISSUED) hasIssued = true;
+        }
+        return hasIssued ? ReceiptEntity.ReceiptStatus.ISSUED : ReceiptEntity.ReceiptStatus.PAID;
     }
 }

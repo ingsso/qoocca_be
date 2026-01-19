@@ -14,5 +14,5 @@ import java.util.List;
 public class StudentCalendarResponse {
     private String studentName;
     private List<String> enrolledClasses;
-    private List<AttendanceMonthResponse> attendanceRecords;
+    private List<AttendanceResponse> attendanceRecords;
 }

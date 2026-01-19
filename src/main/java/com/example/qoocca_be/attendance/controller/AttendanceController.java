@@ -1,7 +1,6 @@
 package com.example.qoocca_be.attendance.controller;
 
 import com.example.qoocca_be.attendance.model.AttendanceCreateRequest;
-import com.example.qoocca_be.attendance.model.AttendanceMonthResponse;
 import com.example.qoocca_be.attendance.model.AttendanceResponse;
 import com.example.qoocca_be.attendance.model.StudentCalendarResponse;
 import com.example.qoocca_be.attendance.service.AttendanceService;
@@ -12,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor

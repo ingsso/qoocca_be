@@ -1,6 +1,7 @@
 package com.example.qoocca_be.attendance.repository;
 
 import com.example.qoocca_be.attendance.entity.AttendanceEntity;
+import com.example.qoocca_be.classInfo.entity.ClassInfoStudentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -31,6 +32,7 @@ public interface AttendanceRepository
     // 학생 전체 출결
     List<AttendanceEntity> findByStudent_StudentId(Long studentId);
 
+    // 특정 학원에서 특정 학생의 일정 기간(예: 이번 달) 출결 데이터를 조회
     @Query("""
     SELECT a FROM AttendanceEntity a 
     WHERE a.student.studentId = :studentId 
@@ -73,6 +75,8 @@ public interface AttendanceRepository
     // 특정 클래스의 특정 날짜 출결 기록 리스트 조회
     List<AttendanceEntity> findByClassInfo_ClassIdAndAttendanceDate(Long classId, LocalDate attendanceDate);
 
+    // 학원의 특정 날짜에 특정 상태들(예: 출석+지각)에 해당하는 고유 학생 수를 카운트
+    // 대시보드 통계용으로 사용
     @Query("""
         SELECT COUNT(DISTINCT a.student.studentId)
         FROM AttendanceEntity a
@@ -87,11 +91,12 @@ public interface AttendanceRepository
             @Param("statuses") Collection<AttendanceEntity.AttendanceStatus> statuses
     );
 
+    // 자동 결석 처리 로직
     @Modifying
     @Transactional
     @Query("""
-    INSERT INTO AttendanceEntity (student, classInfo, attendanceDate, status)
-    SELECT cs.student, cs.classInfo, :today, 'ABSENT'
+    INSERT INTO AttendanceEntity (student, classInfo, attendanceDate, status, createdAt, updatedAt)
+    SELECT cs.student, cs.classInfo, :today, 'ABSENT', NOW(), NOW()
     FROM ClassInfoStudentEntity cs
     WHERE cs.status = 'ENROLLED'
       AND NOT EXISTS (
@@ -104,4 +109,16 @@ public interface AttendanceRepository
 """)
     int insertAbsenteesForFinishedClasses(@Param("today") LocalDate today,
                                           @Param("nowTime") LocalTime nowTime);
+
+    // 출결 정보 조회 시 연관된 학생(student)과 클래스(classInfo) 정보를 한 번에 가져옴
+    @Query("SELECT a FROM AttendanceEntity a " +
+            "JOIN FETCH a.student " +
+            "JOIN FETCH a.classInfo " +
+            "WHERE a.attendanceDate = :attendanceDate")
+    List<AttendanceEntity> findByAttendanceDateWithDetails(@Param("attendanceDate") LocalDate attendanceDate);
+
+
+    // 특정 학생이 오늘 해당 수업에 대해 출결 처리 여부
+    boolean existsByStudent_StudentIdAndClassInfo_ClassIdAndAttendanceDate(
+            Long studentId, Long classId, LocalDate attendanceDate);
 }

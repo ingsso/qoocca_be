@@ -39,10 +39,13 @@ public class StudentParentService {
         StudentEntity student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다. id=" + studentId));
 
+        String cardNum = request.getCardNum();
+        boolean hasCard = (cardNum != null && !cardNum.isBlank());
+
         ParentEntity parent = ParentEntity.builder()
-                .parentName(request.getParentName())      // ✅ 추가
-                .cardNum(request.getCardNum())
-                .cardState(request.getCardState())
+                .parentName(request.getParentName())
+                .cardNum(hasCard ? cardNum : null)
+                .cardState(hasCard) // ✅ 프론트 값 무시하고 서버에서 결정
                 .parentRelationship(request.getParentRelationship())
                 .parentPhone(request.getParentPhone())
                 .isPay(request.getIsPay())
@@ -61,6 +64,7 @@ public class StudentParentService {
         return ParentResponse.from(parent);
     }
 
+
     public ParentResponse updateParent(Long studentId, Long parentId, ParentUpdateRequest request) {
 
         StudentParentEntity sp = studentParentRepository
@@ -70,7 +74,14 @@ public class StudentParentService {
         ParentEntity parent = sp.getParent();
 
         if (request.getParentName() != null) parent.setParentName(request.getParentName());   // ✅ 추가
-        if (request.getCardNum() != null) parent.setCardNum(request.getCardNum());
+        if (request.getCardNum() != null) {
+            String cardNum = request.getCardNum();
+            boolean hasCard = !cardNum.isBlank();
+
+            parent.setCardNum(hasCard ? cardNum : null);
+            parent.setCardState(hasCard);
+        }
+
         if (request.getCardState() != null) parent.setCardState(request.getCardState());
         if (request.getParentRelationship() != null) parent.setParentRelationship(request.getParentRelationship());
         if (request.getParentPhone() != null) parent.setParentPhone(request.getParentPhone());

@@ -3,6 +3,8 @@ package com.example.qoocca_be.classInfo.controller;
 import com.example.qoocca_be.classInfo.model.ClassInfoStudentRequestDTO;
 import com.example.qoocca_be.classInfo.model.ClassInfoStudentResponseDTO;
 import com.example.qoocca_be.classInfo.service.ClassInfoStudentService;
+import com.example.qoocca_be.classInfo.model.ClassInfoStudentModifyRequest;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,17 @@ public class ClassInfoStudentController {
         service.register(classId, request);
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping("/{studentId}")
+    public ResponseEntity<Void> modifyStatus(
+            @PathVariable Long classId,
+            @PathVariable Long studentId,
+            @RequestBody ClassInfoStudentModifyRequest request
+    ) {
+        service.modifyStatus(classId, studentId, request);
+        return ResponseEntity.ok().build();
+    }
+
 
     @GetMapping
     public ResponseEntity<List<ClassInfoStudentResponseDTO>> getStudents(

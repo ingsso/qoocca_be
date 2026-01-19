@@ -5,12 +5,18 @@ import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.age.entity.AgeEntity;
 import com.example.qoocca_be.age.repository.AgeRepository;
 import com.example.qoocca_be.classInfo.entity.ClassInfoEntity;
+import com.example.qoocca_be.classInfo.entity.ClassInfoStudentEntity;
 import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.classInfo.model.ClassGetResponse;
 import com.example.qoocca_be.classInfo.model.ClassPostRequest;
 import com.example.qoocca_be.classInfo.model.ClassPostResponse;
 import com.example.qoocca_be.classInfo.model.ClassSummaryResponse;
+import com.example.qoocca_be.classInfo.model.ClassInfoStudentMoveRequest;
+import com.example.qoocca_be.classInfo.entity.StudentStatus;
+
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
+import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
+import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.subject.entity.SubjectEntity;
 import com.example.qoocca_be.subject.repository.SubjectRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +35,7 @@ public class ClassInfoService {
     private final AcademyRepository academyRepository;
     private final AgeRepository ageRepository;
     private final SubjectRepository subjectRepository;
+
 
     /* =========================
      * 클래스 등록
@@ -65,6 +72,8 @@ public class ClassInfoService {
 
         return ClassPostResponse.fromEntity(entity);
     }
+
+
 
     /* =========================
      * 클래스 목록 조회

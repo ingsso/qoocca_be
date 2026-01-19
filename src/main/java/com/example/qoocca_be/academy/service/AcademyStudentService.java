@@ -1,6 +1,7 @@
 package com.example.qoocca_be.academy.service;
 
 import com.example.qoocca_be.academy.dto.AcademyStudentCreateRequest;
+import com.example.qoocca_be.academy.dto.AcademyStudentModifyRequest;
 import com.example.qoocca_be.academy.dto.AcademyStudentResponse;
 import com.example.qoocca_be.academy.entity.AcademyEntity;
 import com.example.qoocca_be.academy.entity.AcademyStudentEntity;
@@ -45,6 +46,27 @@ public class AcademyStudentService {
 
         return AcademyStudentResponse.from(student);
     }
+
+    public AcademyStudentResponse modifyStudent(
+            Long academyId,
+            Long studentId,
+            AcademyStudentModifyRequest request
+    ) {
+
+        AcademyStudentEntity relation = academyStudentRepository
+                .findByAcademy_IdAndStudent_StudentId(academyId, studentId)
+                .orElseThrow(() -> new IllegalArgumentException("학생이 학원에 등록되어 있지 않습니다."));
+
+        StudentEntity student = relation.getStudent();
+
+        student.setStudentName(request.getStudentName());
+        student.setStudentPhone(request.getStudentPhone());
+
+        // dirty checking 으로 자동 update
+
+        return AcademyStudentResponse.from(student);
+    }
+
 
     @Transactional(readOnly = true)
     public List<AcademyStudentResponse> getStudents(Long academyId) {

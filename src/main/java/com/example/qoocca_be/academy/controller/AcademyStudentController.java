@@ -1,6 +1,7 @@
 package com.example.qoocca_be.academy.controller;
 
 import com.example.qoocca_be.academy.dto.AcademyStudentCreateRequest;
+import com.example.qoocca_be.academy.dto.AcademyStudentModifyRequest;
 import com.example.qoocca_be.academy.dto.AcademyStudentResponse;
 import com.example.qoocca_be.academy.service.AcademyStudentService;
 import jakarta.validation.Valid;
@@ -23,6 +24,16 @@ public class AcademyStudentController {
     ) {
         return academyStudentService.registerStudent(academyId, request);
     }
+
+    @PutMapping("/{studentId}")
+    public AcademyStudentResponse modifyStudent(
+            @PathVariable Long academyId,
+            @PathVariable Long studentId,
+            @RequestBody @Valid AcademyStudentModifyRequest request
+    ) {
+        return academyStudentService.modifyStudent(academyId, studentId, request);
+    }
+
 
     @GetMapping
     public List<AcademyStudentResponse> getStudents(@PathVariable Long academyId) {

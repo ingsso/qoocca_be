@@ -12,5 +12,6 @@ public class ClassParentStudentDTO {
 
     private Long studentId;
     private String studentName;
+    private String studentPhone;
     private List<ParentResponse> parents;
 }

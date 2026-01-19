@@ -5,8 +5,8 @@ import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.global.jwt.JwtTokenProvider;
 import com.example.qoocca_be.user.entity.OauthProvider;
 import com.example.qoocca_be.user.entity.UserEntity;
-import com.example.qoocca_be.user.model.LoginRequestDto;
-import com.example.qoocca_be.user.model.LoginResponseDto;
+import com.example.qoocca_be.user.model.LoginRequest;
+import com.example.qoocca_be.user.model.LoginResponse;
 import com.example.qoocca_be.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final List<SocialOauthService> socialOauthServices;
 
-    public LoginResponseDto socialLogin(String providerStr, String code, HttpServletResponse res) {
+    public LoginResponse socialLogin(String providerStr, String code, HttpServletResponse res) {
         OauthProvider provider = OauthProvider.fromString(providerStr);
 
         SocialOauthService service = socialOauthServices.stream()
@@ -36,7 +36,7 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public LoginResponseDto login(LoginRequestDto req, HttpServletResponse res) {
+    public LoginResponse login(LoginRequest req, HttpServletResponse res) {
         UserEntity userEntity = userRepository.findByEmail(req.getEmail())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -44,9 +44,9 @@ public class AuthService {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
-        LoginResponseDto tokens = jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole(), res);
+        LoginResponse tokens = jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole(), res);
 
-        return LoginResponseDto.builder()
+        return LoginResponse.builder()
                 .accessToken(tokens.getAccessToken())
                 .refreshToken(null)
                 .academyId(userEntity.getAcademies().isEmpty() ? null : userEntity.getAcademies().get(0).getId())
@@ -63,7 +63,7 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public LoginResponseDto refreshAccessToken(String refreshToken) {
+    public LoginResponse refreshAccessToken(String refreshToken) {
         if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
@@ -83,7 +83,7 @@ public class AuthService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        return LoginResponseDto.builder()
+        return LoginResponse.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(refreshToken)
                 .academyId(user.getAcademies().isEmpty() ? null : user.getAcademies().get(0).getId())

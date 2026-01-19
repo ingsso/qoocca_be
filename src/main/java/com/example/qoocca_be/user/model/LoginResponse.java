@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginResponseDto {
+public class LoginResponse {
     private String accessToken;
     private Long academyId;
     private String refreshToken;

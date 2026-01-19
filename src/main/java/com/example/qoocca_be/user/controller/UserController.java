@@ -1,10 +1,10 @@
 package com.example.qoocca_be.user.controller;
 
 import com.example.qoocca_be.global.utils.CookieUtils;
-import com.example.qoocca_be.user.model.LoginRequestDto;
-import com.example.qoocca_be.user.model.LoginResponseDto;
-import com.example.qoocca_be.user.model.SocialLinkRequestDto;
-import com.example.qoocca_be.user.model.UserRequestDto;
+import com.example.qoocca_be.user.model.LoginRequest;
+import com.example.qoocca_be.user.model.LoginResponse;
+import com.example.qoocca_be.user.model.SocialLinkRequest;
+import com.example.qoocca_be.user.model.UserRequest;
 import com.example.qoocca_be.user.service.AuthService;
 import com.example.qoocca_be.user.service.SmsService;
 import com.example.qoocca_be.user.service.UserService;
@@ -34,22 +34,22 @@ public class UserController {
 
     @Operation(summary = "회원가입")
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody UserRequestDto req, HttpServletResponse res) {
-        LoginResponseDto tokens = userService.signup(req, res);
+    public ResponseEntity<?> signup(@Valid @RequestBody UserRequest req, HttpServletResponse res) {
+        LoginResponse tokens = userService.signup(req, res);
         return ResponseEntity.ok(tokens);
     }
 
     @Operation(summary = "계정 연동")
     @PostMapping("/link-social")
-    public ResponseEntity<?> linkSocial(@RequestBody SocialLinkRequestDto dto, HttpServletResponse res) {
-        LoginResponseDto tokens = userService.linkSocialAccount(dto, res);
+    public ResponseEntity<?> linkSocial(@RequestBody SocialLinkRequest dto, HttpServletResponse res) {
+        LoginResponse tokens = userService.linkSocialAccount(dto, res);
         return ResponseEntity.ok(tokens);
     }
 
     @Operation(summary = "로그인")
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto req, HttpServletResponse res) {
-        LoginResponseDto tokens = authService.login(req, res);
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req, HttpServletResponse res) {
+        LoginResponse tokens = authService.login(req, res);
         return ResponseEntity.ok(tokens);
     }
 
@@ -59,7 +59,7 @@ public class UserController {
                                          @RequestBody Map<String, String> body,
                                          HttpServletResponse res) {
         String code = body.get("code");
-        LoginResponseDto tokens = authService.socialLogin(provider, code, res);
+        LoginResponse tokens = authService.socialLogin(provider, code, res);
         return ResponseEntity.ok(tokens);
     }
 
@@ -67,7 +67,7 @@ public class UserController {
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest req, HttpServletResponse res) {
         String refreshToken = cookieUtils.getRefreshToken(req);
-        LoginResponseDto newTokens = authService.refreshAccessToken(refreshToken);
+        LoginResponse newTokens = authService.refreshAccessToken(refreshToken);
 
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", newTokens.getAccessToken())
                 .path("/")

@@ -1,4 +1,4 @@
-package com.example.qoocca_be.receipt.model;
+package com.example.qoocca_be.receipt.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

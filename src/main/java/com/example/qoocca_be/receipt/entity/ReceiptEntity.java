@@ -70,9 +70,27 @@ public class ReceiptEntity {
     /* =========================
      * enum 정의
      * ========================= */
+    @Getter
     public enum ReceiptStatus {
-        PAID,        // 수납 완료
-        ISSUED,     // 영수증발행
-        CANCELLED  // 취소
+        BEFORE_REQUEST("요청 전"),
+        CANCELLED("수납 취소"),
+        ISSUED("결제 대기"),
+        PAID("결제 완료");
+
+        private final String label;
+
+        ReceiptStatus(String label) {
+            this.label = label;
+        }
+    }
+
+    public static ReceiptEntity createReceipt(StudentEntity student, ClassInfoEntity classInfo, Long amount, LocalDateTime date, ReceiptStatus status) {
+        return ReceiptEntity.builder()
+                .student(student)
+                .classInfo(classInfo)
+                .amount(amount)
+                .receiptDate(date != null ? date : LocalDateTime.now())
+                .receiptStatus(status != null ? status : ReceiptStatus.ISSUED)
+                .build();
     }
 }

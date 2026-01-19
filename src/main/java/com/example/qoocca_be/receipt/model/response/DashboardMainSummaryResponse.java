@@ -1,15 +1,16 @@
-package com.example.qoocca_be.receipt.model;
+package com.example.qoocca_be.receipt.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 @Builder
-public class ClassReceiptSummaryResponse {
+@AllArgsConstructor
+public class DashboardMainSummaryResponse {
     private String className;
     private String classTime;
-    private String receiptStatus;
+    private String status;
+    private String statusLabel;
     private Long totalAmount;
 }

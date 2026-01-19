@@ -1,4 +1,4 @@
-package com.example.qoocca_be.receipt.model;
+package com.example.qoocca_be.receipt.model.response;
 
 import com.example.qoocca_be.receipt.entity.ReceiptEntity;
 import lombok.AllArgsConstructor;
@@ -12,14 +12,14 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReceiptResponse {
+public class ReceiptCreateResponse {
     private Long receiptId;
     private Long studentId;
     private LocalDateTime receiptDate;
     private String receiptStatus;
 
-    public static ReceiptResponse fromEntity(ReceiptEntity entity) {
-        return ReceiptResponse.builder()
+    public static ReceiptCreateResponse fromEntity(ReceiptEntity entity) {
+        return ReceiptCreateResponse.builder()
                 .receiptId(entity.getReceiptId())
                 .studentId(entity.getStudent().getStudentId())
                 .receiptDate(entity.getReceiptDate())

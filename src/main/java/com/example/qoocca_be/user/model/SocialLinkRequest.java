@@ -1,8 +1,8 @@
 package com.example.qoocca_be.user.model;
 
-public record SocialLinkRequestDto(
+public record SocialLinkRequest(
         String phone,
         String socialId,
         String provider,
-        UserRequestDto.AgreementsRequest agreements
+        UserRequest.AgreementsRequest agreements
 ) {}

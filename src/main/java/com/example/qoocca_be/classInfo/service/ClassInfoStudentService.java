@@ -9,6 +9,8 @@ import com.example.qoocca_be.classInfo.model.request.ClassStudentModifyRequest;
 
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
+import com.example.qoocca_be.global.exception.CustomException;
+import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,11 +41,11 @@ public class ClassInfoStudentService {
 
         // 클래스 존재 확인
         ClassInfoEntity classInfo = classInfoRepository.findById(classId)
-                .orElseThrow(() -> new IllegalArgumentException("클래스를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND));
 
         // 학생 존재 확인
         StudentEntity student = studentRepository.findById(request.getStudentId())
-                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         // 기존 학생이므로 신규 생성 X, 바로 클래스-학생 매핑 테이블에 등록
         ClassInfoStudentEntity entity = ClassInfoStudentEntity.builder()
@@ -61,7 +63,7 @@ public class ClassInfoStudentService {
     ) {
         ClassInfoStudentEntity entity = repository
                 .findByClassInfo_ClassIdAndStudent_StudentId(classId, studentId)
-                .orElseThrow(() -> new IllegalArgumentException("수강 정보가 존재하지 않습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.ENROLLMENT_NOT_FOUND));
 
         entity.setStatus(request.getStatus());
         // JPA Dirty Checking으로 자동 update
@@ -110,7 +112,7 @@ public class ClassInfoStudentService {
     public void remove(Long classId, Long studentId) {
         ClassInfoStudentEntity entity = repository
                 .findByClassInfo_ClassIdAndStudent_StudentId(classId, studentId)
-                .orElseThrow(() -> new IllegalArgumentException("수강 정보가 존재하지 않습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.ENROLLMENT_NOT_FOUND));
 
         repository.delete(entity);
     }

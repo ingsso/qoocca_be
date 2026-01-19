@@ -9,6 +9,8 @@ import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.classInfo.model.response.ClassSummaryResponse;
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
+import com.example.qoocca_be.global.exception.CustomException;
+import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.student.entity.StudentEntity;
 import com.example.qoocca_be.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,14 +39,14 @@ public class AttendanceService {
      * ========================= */
     public AttendanceResponse createAttendance(Long studentId, AttendanceCreateRequest request) {
         StudentEntity student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         ClassInfoEntity targetClass = findMatchingClass(studentId, request.getCheckIn());
 
         // 중복 등원 체크
         if (attendanceRepository.existsByStudent_StudentIdAndClassInfo_ClassIdAndAttendanceDate(
                 studentId, targetClass.getClassId(), request.getAttendanceDate())) {
-            throw new IllegalStateException("이미 오늘 해당 수업의 출결 기록이 존재합니다.");
+            throw new CustomException(ErrorCode.ATTENDANCE_ALREADY_EXISTS);
         }
 
         AttendanceEntity attendance = AttendanceEntity.builder()
@@ -69,14 +71,14 @@ public class AttendanceService {
                 .filter(c -> isClassOnDay(c, dayOfWeek))
                 .filter(c -> isTimeWithinRange(c, checkIn))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("현재 시간에 해당 학생이 수강하는 수업이 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND_FOR_TIME));
     }
 
     @Transactional
     public AttendanceResponse updateCheckOut(Long studentId, LocalDate date) {
         AttendanceEntity attendance = attendanceRepository
                 .findByStudent_StudentIdAndAttendanceDate(studentId, date)
-                .orElseThrow(() -> new IllegalArgumentException("등원 기록이 없습니다. 먼저 등원 처리를 해주세요."));
+                .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
 
         attendance.processCheckOut(attendance.getClassInfo().getEndTime());
 
@@ -107,7 +109,7 @@ public class AttendanceService {
     public AttendanceResponse getAttendanceByDate(Long studentId, LocalDate date) {
         AttendanceEntity attendance = attendanceRepository
                 .findByStudent_StudentIdAndAttendanceDate(studentId, date)
-                .orElseThrow(() -> new IllegalArgumentException("해당 날짜 출결을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
 
         return AttendanceResponse.fromEntity(attendance);
     }
@@ -133,7 +135,7 @@ public class AttendanceService {
     public StudentCalendarResponse getStudentCalendarView(Long studentId, Long academyId, int year, int month) {
         // 1. 학생 정보 조회
         StudentEntity student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         // 2. 해당 학원에서 이 학생이 수강 중인 '재원' 상태의 클래스 목록 조회
         List<ClassInfoStudentEntity> enrollments = classInfoStudentRepository

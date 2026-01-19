@@ -5,6 +5,8 @@ import com.example.qoocca_be.classInfo.entity.ClassInfoStudentEntity;
 import com.example.qoocca_be.classInfo.entity.StudentStatus;
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
 import com.example.qoocca_be.classInfo.repository.ClassInfoStudentRepository;
+import com.example.qoocca_be.global.exception.CustomException;
+import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.receipt.entity.ReceiptEntity;
 import com.example.qoocca_be.receipt.model.*;
 import com.example.qoocca_be.receipt.model.response.*;
@@ -38,14 +40,14 @@ public class ReceiptService {
     public ReceiptCreateResponse createReceipt(Long studentId, ReceiptCreateRequest request) {
         // 1. 학생 존재 확인
         StudentEntity student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("학생을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         ClassInfoEntity classInfo = classInfoRepository.findById(request.getClassId())
-                .orElseThrow(() -> new RuntimeException("클래스 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND));
 
 
         if (isAlreadyProcessedInMonth(studentId, request.getClassId(), request.getReceiptDate())) {
-            throw new IllegalStateException("해당 월의 수납 기록이 이미 존재합니다.");
+            throw new CustomException(ErrorCode.DUPLICATE_RECEIPT_IN_MONTH);
         }
 
         ReceiptEntity receipt = ReceiptEntity.createReceipt(
@@ -85,10 +87,10 @@ public class ReceiptService {
      * ========================= */
     public ReceiptUpdateResponse updateReceiptStatus(Long studentId, Long receiptId, ReceiptUpdateRequest request) {
         ReceiptEntity receipt = receiptRepository.findById(receiptId)
-                .orElseThrow(() -> new RuntimeException("영수증을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.RECEIPT_NOT_FOUND));
 
         if (!receipt.getStudent().getStudentId().equals(studentId)) {
-            throw new RuntimeException("해당 학생의 영수증이 아닙니다.");
+            throw new CustomException(ErrorCode.RECEIPT_ACCESS_DENIED);
         }
 
         if (request.getReceiptStatus() != null) {

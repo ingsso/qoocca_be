@@ -12,6 +12,8 @@ import com.example.qoocca_be.classInfo.model.response.ClassCreateResponse;
 import com.example.qoocca_be.classInfo.model.response.ClassSummaryResponse;
 
 import com.example.qoocca_be.classInfo.repository.ClassInfoRepository;
+import com.example.qoocca_be.global.exception.CustomException;
+import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.subject.entity.SubjectEntity;
 import com.example.qoocca_be.subject.repository.SubjectRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,13 +40,13 @@ public class ClassInfoService {
     public ClassCreateResponse createClass(Long academyId, ClassCreateRequest request) {
 
         AcademyEntity academy = academyRepository.findById(academyId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 학원입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
         AgeEntity age = ageRepository.findById(request.getAgeId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 연령대입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.AGE_NOT_FOUND));
 
         SubjectEntity subject = subjectRepository.findById(request.getSubjectId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 과목입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.SUBJECT_NOT_FOUND));
 
         ClassInfoEntity entity = ClassInfoEntity.createClass(
                 request.getClassName(), request.getStartTime(), request.getEndTime(),

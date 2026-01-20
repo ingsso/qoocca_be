@@ -4,10 +4,7 @@ import com.example.qoocca_be.academy.entity.*;
 import com.example.qoocca_be.academy.model.request.AcademyCreateRequest;
 import com.example.qoocca_be.academy.model.request.AcademyRequest;
 import com.example.qoocca_be.academy.model.request.AcademyUpdateRequest;
-import com.example.qoocca_be.academy.model.response.AcademyCheckResponse;
-import com.example.qoocca_be.academy.model.response.AcademyResponse;
-import com.example.qoocca_be.academy.model.response.AcademySearchResponse;
-import com.example.qoocca_be.academy.model.response.DashboardStatsResponse;
+import com.example.qoocca_be.academy.model.response.*;
 import com.example.qoocca_be.academy.repository.AcademyAgeRepository;
 import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.academy.repository.AcademyStudentRepository;
@@ -66,13 +63,25 @@ public class AcademyService {
 
     @Transactional(readOnly = true)
     public AcademyCheckResponse checkRegistrationStatus(Long userId) {
-        return academyRepository.findByUserId(userId)
-                .map(academy -> new AcademyCheckResponse(
-                        academy.getApprovalStatus() == ApprovalStatus.APPROVED,
-                        academy.getId()
-                ))
-                .orElse(new AcademyCheckResponse(false, null));
+
+        List<AcademyEntity> academies = academyRepository.findAllByUserId(userId);
+
+        if (academies.isEmpty()) {
+            return new AcademyCheckResponse(false, null);
+        }
+
+        // 승인된 학원 우선
+        AcademyEntity approvedAcademy = academies.stream()
+                .filter(a -> a.getApprovalStatus() == ApprovalStatus.APPROVED)
+                .findFirst()
+                .orElse(academies.get(0));
+
+        return new AcademyCheckResponse(
+                approvedAcademy.getApprovalStatus() == ApprovalStatus.APPROVED,
+                approvedAcademy.getId()
+        );
     }
+
 
     /**
      * 신규 학원 등록 로직
@@ -290,6 +299,18 @@ public class AcademyService {
 
         return new PageResponseDto<>(dtoPage);
     }
+
+    @Transactional(readOnly = true)
+    public List<AcademyInfo> getMyAcademies(Long userId) {
+        return academyRepository.findAllByUserId(userId).stream()
+                .map(a -> AcademyInfo.builder()
+                        .id(a.getId())
+                        .name(a.getName())
+                        .approvalStatus(a.getApprovalStatus().name())
+                        .build())
+                .toList();
+    }
+
 
     private void updateRelationalData(AcademyEntity academy, AcademyRequest req) {
         if (req.getAgeIds() != null) {

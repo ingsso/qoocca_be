@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface AcademyRepository extends JpaRepository<AcademyEntity, Long> {
@@ -15,7 +16,7 @@ public interface AcademyRepository extends JpaRepository<AcademyEntity, Long> {
             "left join fetch a.academyImages " +
             "where a.id = :id")
     Optional<AcademyEntity> findDetailById(@Param("id") Long id);
-    Optional<AcademyEntity> findByUserId(Long userId);
+    List<AcademyEntity> findAllByUserId(Long userId);
 
     Page<AcademyEntity> findAllByApprovalStatus(ApprovalStatus approvalStatus, Pageable pageable);
 }

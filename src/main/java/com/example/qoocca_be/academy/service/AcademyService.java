@@ -70,6 +70,12 @@ public class AcademyService {
             return new AcademyCheckResponse(false, null);
         }
 
+        boolean isApproved = academies.stream()
+                .anyMatch(a -> a.getApprovalStatus() == ApprovalStatus.APPROVED);
+
+        Long academyId = academies.get(academies.size() - 1).getId();
+
+        return new AcademyCheckResponse(isApproved, academyId);
         // 승인된 학원 우선
         AcademyEntity approvedAcademy = academies.stream()
                 .filter(a -> a.getApprovalStatus() == ApprovalStatus.APPROVED)
@@ -183,6 +189,17 @@ public class AcademyService {
                 .noCardCount(noCardCount)
                 .totalMonthlyFee(totalMonthlyFee != null ? totalMonthlyFee : 0L)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AcademyListResponse> getMyAcademies(Long userId) {
+        return academyRepository.findAllByUserId(userId).stream()
+                .map(academy -> AcademyListResponse.builder()
+                        .academyId(academy.getId())
+                        .name(academy.getName())
+                        .approvalStatus(academy.getApprovalStatus())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)

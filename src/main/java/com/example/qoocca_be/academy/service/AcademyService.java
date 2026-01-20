@@ -70,12 +70,6 @@ public class AcademyService {
             return new AcademyCheckResponse(false, null);
         }
 
-        boolean isApproved = academies.stream()
-                .anyMatch(a -> a.getApprovalStatus() == ApprovalStatus.APPROVED);
-
-        Long academyId = academies.get(academies.size() - 1).getId();
-
-        return new AcademyCheckResponse(isApproved, academyId);
         // 승인된 학원 우선
         AcademyEntity approvedAcademy = academies.stream()
                 .filter(a -> a.getApprovalStatus() == ApprovalStatus.APPROVED)
@@ -87,7 +81,6 @@ public class AcademyService {
                 approvedAcademy.getId()
         );
     }
-
 
     /**
      * 신규 학원 등록 로직
@@ -315,17 +308,6 @@ public class AcademyService {
         Page<AcademySearchResponse> dtoPage = pendingPage.map(AcademySearchResponse::from);
 
         return new PageResponseDto<>(dtoPage);
-    }
-
-    @Transactional(readOnly = true)
-    public List<AcademyInfo> getMyAcademies(Long userId) {
-        return academyRepository.findAllByUserId(userId).stream()
-                .map(a -> AcademyInfo.builder()
-                        .id(a.getId())
-                        .name(a.getName())
-                        .approvalStatus(a.getApprovalStatus().name())
-                        .build())
-                .toList();
     }
 
 

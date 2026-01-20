@@ -1,5 +1,7 @@
 package com.example.qoocca_be.user.service;
 
+import com.example.qoocca_be.academy.entity.AcademyEntity;
+import com.example.qoocca_be.academy.model.response.AcademyListResponse;
 import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.global.exception.CustomException;
 import com.example.qoocca_be.global.exception.ErrorCode;
@@ -29,8 +31,6 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final SmsService smsService;
-    private final AcademyRepository academyRepository;
-
 
     private void setAgreements(UserEntity user, UserRequest.AgreementsRequest agreements) {
         if (agreements == null) {
@@ -163,16 +163,16 @@ public class UserService {
         List<AcademyEntity> academies =
                 academyRepository.findAllByUserId(user.getId());
 
-        List<AcademyInfo> academyInfos = academies.stream()
-                .map(a -> AcademyInfo.builder()
-                        .id(a.getId())
+        List<AcademyListResponse> academyInfos = academies.stream()
+                .map(a -> AcademyListResponse.builder()
+                        .academyId(a.getId())
                         .name(a.getName())
-                        .approvalStatus(a.getApprovalStatus().name())
+                        .approvalStatus(a.getApprovalStatus())
                         .build())
                 .toList();
 
         Long academyId = academyInfos.size() == 1
-                ? academyInfos.get(0).getId()
+                ? academyInfos.get(0).getAcademyId()
                 : null;
 
         tokenResponse.setAcademies(academyInfos);

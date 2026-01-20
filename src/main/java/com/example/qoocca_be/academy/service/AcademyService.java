@@ -63,6 +63,7 @@ public class AcademyService {
 
     @Transactional(readOnly = true)
     public AcademyCheckResponse checkRegistrationStatus(Long userId) {
+
         List<AcademyEntity> academies = academyRepository.findAllByUserId(userId);
 
         if (academies.isEmpty()) {
@@ -75,7 +76,18 @@ public class AcademyService {
         Long academyId = academies.get(academies.size() - 1).getId();
 
         return new AcademyCheckResponse(isApproved, academyId);
+        // 승인된 학원 우선
+        AcademyEntity approvedAcademy = academies.stream()
+                .filter(a -> a.getApprovalStatus() == ApprovalStatus.APPROVED)
+                .findFirst()
+                .orElse(academies.get(0));
+
+        return new AcademyCheckResponse(
+                approvedAcademy.getApprovalStatus() == ApprovalStatus.APPROVED,
+                approvedAcademy.getId()
+        );
     }
+
 
     /**
      * 신규 학원 등록 로직
@@ -304,6 +316,18 @@ public class AcademyService {
 
         return new PageResponseDto<>(dtoPage);
     }
+
+    @Transactional(readOnly = true)
+    public List<AcademyInfo> getMyAcademies(Long userId) {
+        return academyRepository.findAllByUserId(userId).stream()
+                .map(a -> AcademyInfo.builder()
+                        .id(a.getId())
+                        .name(a.getName())
+                        .approvalStatus(a.getApprovalStatus().name())
+                        .build())
+                .toList();
+    }
+
 
     private void updateRelationalData(AcademyEntity academy, AcademyRequest req) {
         if (req.getAgeIds() != null) {

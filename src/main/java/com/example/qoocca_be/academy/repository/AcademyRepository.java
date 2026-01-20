@@ -16,7 +16,6 @@ public interface AcademyRepository extends JpaRepository<AcademyEntity, Long> {
             "left join fetch a.academyImages " +
             "where a.id = :id")
     Optional<AcademyEntity> findDetailById(@Param("id") Long id);
-    // 유저가 가진 모든 학원 리스트 조회
     List<AcademyEntity> findAllByUserId(Long userId);
 
     Page<AcademyEntity> findAllByApprovalStatus(ApprovalStatus approvalStatus, Pageable pageable);

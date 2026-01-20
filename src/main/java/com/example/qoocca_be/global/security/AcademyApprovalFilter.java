@@ -21,16 +21,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class AcademyApprovalFilter extends OncePerRequestFilter {
+
     private final AcademyRepository academyRepository;
     private final ObjectMapper objectMapper;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    // 필터를 적용하지 않을 경로를 명확히 정의
     private static final List<String> EXCLUDE_URLS = List.of(
             "/api/auth/**",
             "/api/ages/**",
@@ -40,12 +39,18 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
             "/api/academy/academy-list",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/api/academy/*/class/*/student/*/move" // 패턴 매칭 지원
+            "/api/academy/*/class/*/student/*/move"
     );
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+
+        // 학원 목록 조회는 항상 허용 (모달 때문에)
+        if (path.equals("/api/academy") && request.getMethod().equals("GET")) {
+            return true;
+        }
+
         return EXCLUDE_URLS.stream()
                 .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
@@ -105,11 +110,13 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
     }
 
     private boolean isAuthenticatedUser(Authentication auth) {
-        return auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof CustomUserDetails;
+        return auth != null && auth.isAuthenticated()
+                && auth.getPrincipal() instanceof CustomUserDetails;
     }
 
     private boolean hasRole(Authentication auth, String role) {
-        return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(role));
     }
 
     private void sendErrorResponse(HttpServletResponse res, ErrorCode errorCode) throws IOException {

@@ -37,6 +37,7 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
             "/api/subjects/**",
             "/api/academy/register",
             "/api/academy/complete",
+            "/api/academy/academy-list",
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/api/academy/*/class/*/student/*/move" // 패턴 매칭 지원

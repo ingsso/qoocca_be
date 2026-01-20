@@ -4,10 +4,7 @@ import com.example.qoocca_be.academy.entity.*;
 import com.example.qoocca_be.academy.model.request.AcademyCreateRequest;
 import com.example.qoocca_be.academy.model.request.AcademyRequest;
 import com.example.qoocca_be.academy.model.request.AcademyUpdateRequest;
-import com.example.qoocca_be.academy.model.response.AcademyCheckResponse;
-import com.example.qoocca_be.academy.model.response.AcademyResponse;
-import com.example.qoocca_be.academy.model.response.AcademySearchResponse;
-import com.example.qoocca_be.academy.model.response.DashboardStatsResponse;
+import com.example.qoocca_be.academy.model.response.*;
 import com.example.qoocca_be.academy.repository.AcademyAgeRepository;
 import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.academy.repository.AcademyStudentRepository;
@@ -180,6 +177,17 @@ public class AcademyService {
                 .noCardCount(noCardCount)
                 .totalMonthlyFee(totalMonthlyFee != null ? totalMonthlyFee : 0L)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AcademyListResponse> getMyAcademies(Long userId) {
+        return academyRepository.findAllByUserId(userId).stream()
+                .map(academy -> AcademyListResponse.builder()
+                        .academyId(academy.getId())
+                        .name(academy.getName())
+                        .approvalStatus(academy.getApprovalStatus())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)

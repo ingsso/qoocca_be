@@ -66,12 +66,18 @@ public class AcademyService {
 
     @Transactional(readOnly = true)
     public AcademyCheckResponse checkRegistrationStatus(Long userId) {
-        return academyRepository.findByUserId(userId)
-                .map(academy -> new AcademyCheckResponse(
-                        academy.getApprovalStatus() == ApprovalStatus.APPROVED,
-                        academy.getId()
-                ))
-                .orElse(new AcademyCheckResponse(false, null));
+        List<AcademyEntity> academies = academyRepository.findAllByUserId(userId);
+
+        if (academies.isEmpty()) {
+            return new AcademyCheckResponse(false, null);
+        }
+
+        boolean isApproved = academies.stream()
+                .anyMatch(a -> a.getApprovalStatus() == ApprovalStatus.APPROVED);
+
+        Long academyId = academies.get(academies.size() - 1).getId();
+
+        return new AcademyCheckResponse(isApproved, academyId);
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.example.qoocca_be.user.service;
 
+import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.global.exception.CustomException;
 import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.user.entity.UserEntity;
@@ -23,6 +24,7 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final AcademyRepository academyRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final SmsService smsService;
@@ -76,7 +78,10 @@ public class UserService {
         userRepository.save(userEntity);
         smsService.deleteVerifiedState(req.getPhone());
 
-        return jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole(), res);
+        LoginResponse response = jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole(), res);
+
+        addAcademyIdToResponse(response, userEntity.getId());
+        return response;
     }
 
     @Transactional
@@ -121,9 +126,20 @@ public class UserService {
         tempSocialUser.setPhoneNumber(cleanPhone);
         setAgreements(tempSocialUser, req.agreements());
         userRepository.save(tempSocialUser);
-
         smsService.deleteVerifiedState(cleanPhone);
-        return jwtTokenProvider.generateTokens(tempSocialUser.getId(), tempSocialUser.getRole(), res);
+
+        LoginResponse response = jwtTokenProvider.generateTokens(tempSocialUser.getId(), tempSocialUser.getRole(), res);
+
+        addAcademyIdToResponse(response, tempSocialUser.getId());
+        return response;
+    }
+
+    private void addAcademyIdToResponse(LoginResponse response, Long userId) {
+        academyRepository.findAllByUserId(userId).stream()
+                .findFirst()
+                .ifPresent(academy -> {
+                    response.setAcademyId(academy.getId());
+                });
     }
 
     private void validateRequiredAgreements(UserRequest.AgreementsRequest agreements) {

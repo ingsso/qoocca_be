@@ -36,6 +36,7 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
             "/api/ages/**",
             "/api/subjects/**",
             "/api/academy/register",
+            "/api/academy/complete",
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/api/academy/*/class/*/student/*/move" // 패턴 매칭 지원
@@ -55,42 +56,48 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // 인증된 사용자이고, 일반 사용자(ROLE_USER 등)인 경우에만 체크
-        if (isAuthenticatedUser(authentication)) {
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        if (!isAuthenticatedUser(authentication)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            // ROLE_ADMIN 은 승인 여부와 상관없이 프리패스
-            if (hasRole(authentication, "ROLE_ADMIN")) {
-                filterChain.doFilter(request, response);
-                return;
-            }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-            if (request.getMethod().equals("GET") && pathMatcher.match("/api/academy/{id}", request.getRequestURI())) {
-                Map<String, String> variables = pathMatcher.extractUriTemplateVariables("/api/academy/{id}", request.getRequestURI());
-                Long requestedAcademyId = Long.parseLong(variables.get("id"));
+        if (hasRole(authentication, "ROLE_ADMIN")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-                // 사용자의 학원 ID를 조회하여 요청된 ID와 일치하는지 확인
-                Optional<AcademyEntity> myAcademy = academyRepository.findByUserId(userDetails.getUserId());
-                if (myAcademy.isPresent() && myAcademy.get().getId().equals(requestedAcademyId)) {
+        String requestUri = request.getRequestURI();
+        List<AcademyEntity> myAcademies = academyRepository.findAllByUserId(userDetails.getUserId());
+
+        if (request.getMethod().equals("GET") && pathMatcher.match("/api/academy/{id}", requestUri)) {
+            Map<String, String> variables = pathMatcher.extractUriTemplateVariables("/api/academy/{id}", requestUri);
+            String idStr = variables.get("id");
+
+            if (idStr != null) {
+                Long requestedAcademyId = Long.parseLong(idStr);
+                boolean isMine = myAcademies.stream()
+                        .anyMatch(a -> a.getId().equals(requestedAcademyId));
+
+                if (isMine) {
                     filterChain.doFilter(request, response);
                     return;
                 }
             }
+        }
 
-            // JWT에 상태를 담았다면 여기서 바로 userDetails.getApprovalStatus() 체크 가능
-            AcademyEntity academy = academyRepository.findByUserId(userDetails.getUserId())
-                    .orElseThrow(() -> {
-                        // 학원 정보가 없는 경우에 대한 명확한 에러 처리
-                        try {
-                            sendErrorResponse(response, ErrorCode.ACADEMY_NOT_FOUND);
-                        } catch (IOException e) { e.printStackTrace(); }
-                        return null;
-                    });
+        if (myAcademies.isEmpty()) {
+            sendErrorResponse(response, ErrorCode.ACADEMY_NOT_FOUND);
+            return;
+        }
 
-            if (academy != null && academy.getApprovalStatus() != ApprovalStatus.APPROVED) {
-                sendErrorResponse(response, ErrorCode.ACADEMY_NOT_APPROVED);
-                return;
-            }
+        boolean hasApprovedAcademy = myAcademies.stream()
+                .anyMatch(a -> a.getApprovalStatus() == ApprovalStatus.APPROVED);
+
+        if (!hasApprovedAcademy) {
+            sendErrorResponse(response, ErrorCode.ACADEMY_NOT_APPROVED);
+            return;
         }
 
         filterChain.doFilter(request, response);

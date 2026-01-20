@@ -3,6 +3,7 @@ package com.example.qoocca_be.academy.controller;
 import com.example.qoocca_be.academy.model.request.AcademyCreateRequest;
 import com.example.qoocca_be.academy.model.request.AcademyUpdateRequest;
 import com.example.qoocca_be.academy.model.response.AcademyCheckResponse;
+import com.example.qoocca_be.academy.model.response.AcademyInfo;
 import com.example.qoocca_be.academy.model.response.AcademyResponse;
 import com.example.qoocca_be.academy.model.response.DashboardStatsResponse;
 import com.example.qoocca_be.academy.service.AcademyService;
@@ -80,4 +81,15 @@ public class AcademyController {
     public DashboardStatsResponse getDashboardStats(@PathVariable Long id) {
         return academyService.getDashboardStats(id);
     }
+
+    @Operation(summary = "내 학원 목록 조회")
+    @GetMapping
+    public ResponseEntity<List<AcademyInfo>> getMyAcademies(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        List<AcademyInfo> academies =
+                academyService.getMyAcademies(userDetails.getUserId());
+        return ResponseEntity.ok(academies);
+    }
+
 }

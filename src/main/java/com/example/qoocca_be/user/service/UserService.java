@@ -1,5 +1,8 @@
 package com.example.qoocca_be.user.service;
 
+import com.example.qoocca_be.academy.entity.AcademyEntity;
+import com.example.qoocca_be.academy.model.response.AcademyInfo;
+import com.example.qoocca_be.academy.repository.AcademyRepository;
 import com.example.qoocca_be.global.exception.CustomException;
 import com.example.qoocca_be.global.exception.ErrorCode;
 import com.example.qoocca_be.user.entity.UserEntity;
@@ -15,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -26,6 +30,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final SmsService smsService;
+    private final AcademyRepository academyRepository;
+
 
     private void setAgreements(UserEntity user, UserRequest.AgreementsRequest agreements) {
         if (agreements == null) {
@@ -76,7 +82,8 @@ public class UserService {
         userRepository.save(userEntity);
         smsService.deleteVerifiedState(req.getPhone());
 
-        return jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole(), res);
+        return buildLoginResponse(userEntity, res);
+
     }
 
     @Transactional
@@ -113,7 +120,8 @@ public class UserService {
             }
 
             smsService.deleteVerifiedState(cleanPhone);
-            return jwtTokenProvider.generateTokens(existingUser.getId(), existingUser.getRole(), res);
+            return buildLoginResponse(existingUser, res);
+
         }
 
         validateRequiredAgreements(req.agreements());
@@ -123,7 +131,8 @@ public class UserService {
         userRepository.save(tempSocialUser);
 
         smsService.deleteVerifiedState(cleanPhone);
-        return jwtTokenProvider.generateTokens(tempSocialUser.getId(), tempSocialUser.getRole(), res);
+        return buildLoginResponse(tempSocialUser, res);
+
     }
 
     private void validateRequiredAgreements(UserRequest.AgreementsRequest agreements) {
@@ -134,4 +143,31 @@ public class UserService {
             throw new RuntimeException("필수 약관 동의가 누락되었습니다.");
         }
     }
+
+    private LoginResponse buildLoginResponse(UserEntity user, HttpServletResponse res) {
+
+        LoginResponse tokenResponse =
+                jwtTokenProvider.generateTokens(user.getId(), user.getRole(), res);
+
+        List<AcademyEntity> academies =
+                academyRepository.findAllByUserId(user.getId());
+
+        List<AcademyInfo> academyInfos = academies.stream()
+                .map(a -> AcademyInfo.builder()
+                        .id(a.getId())
+                        .name(a.getName())
+                        .approvalStatus(a.getApprovalStatus().name())
+                        .build())
+                .toList();
+
+        Long academyId = academyInfos.size() == 1
+                ? academyInfos.get(0).getId()
+                : null;
+
+        tokenResponse.setAcademies(academyInfos);
+        tokenResponse.setAcademyId(academyId);
+
+        return tokenResponse;
+    }
+
 }

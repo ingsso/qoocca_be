@@ -19,7 +19,7 @@ import java.util.List;
 @Builder
 @ToString
 @Entity
-@Table(name = "teachers_parent")
+@Table(name = "parent")
 public class ParentEntity {
 
     /* =========================

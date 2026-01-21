@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "teachers_classInfo_student")
+@Table(name = "class_info_student")
 public class ClassInfoStudentEntity {
 
     @Id

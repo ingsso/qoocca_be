@@ -1,0 +1,166 @@
+package com.qoocca.teachers.db.academy.entity;
+
+import com.qoocca.teachers.db.age.entity.AgeEntity;
+import com.qoocca.teachers.db.subject.entity.SubjectEntity;
+import com.qoocca.teachers.db.user.entity.UserEntity;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@EntityListeners(AuditingEntityListener.class)
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@DynamicUpdate
+@Table(name = "academy")
+public class AcademyEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "academy_id")
+    private Long id;
+
+    @Column(nullable = false, length = 191)
+    private String address;
+
+    @Column(nullable = false, name = "base_address")
+    private String baseAddress;
+
+    @Column(name = "detail_address")
+    private String detailAddress;
+
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin")
+    private String name;
+
+    @Column(name = "blog_url", columnDefinition = "TEXT")
+    private String blogUrl;
+
+    @Column(name = "brief_info", columnDefinition = "TEXT")
+    private String briefInfo;
+
+    @Column(name = "cost_info", columnDefinition = "TEXT")
+    private String costInfo;
+
+    @Column(name = "detail_info", columnDefinition = "TEXT")
+    private String detailInfo;
+
+    @Column(name = "experience_class", columnDefinition = "TEXT")
+    private String experienceClass;
+
+    @Column(name = "instagram_url", columnDefinition = "TEXT")
+    private String instagramUrl;
+
+    @Column(name = "level_test")
+    private String levelTest;
+
+    @Column(name = "operating_hours")
+    private String operatingHours;
+
+    @Column(name = "parking_info")
+    private String parkingInfo;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "shuttle_info")
+    private String shuttleInfo;
+
+    @Column(name = "website_url", columnDefinition = "TEXT")
+    private String websiteUrl;
+
+    @Setter
+    private String certificate;
+
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
+
+    @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<AcademyImageEntity> academyImages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<AcademyAgeEntity> academyAges = new ArrayList<>();
+
+    @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<AcademySubjectEntity> academySubjects = new ArrayList<>();
+
+    @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<AcademyStudentEntity> academyStudents = new ArrayList<>();
+
+    public void updateApprovalStatus(ApprovalStatus status) {
+        this.approvalStatus = status;
+    }
+
+    public void updateInfo(String name, String phoneNumber, String briefInfo, String detailInfo) {
+        if (name != null) this.name = name;
+        if (phoneNumber != null) this.phoneNumber = phoneNumber;
+        if (briefInfo != null) this.briefInfo = briefInfo;
+        if (detailInfo != null) this.detailInfo = detailInfo;
+    }
+
+    public void updateFullAddress(String baseAddress, String detailAddress) {
+        if (baseAddress != null || detailAddress != null) {
+            String newBase = (baseAddress != null) ? baseAddress : this.baseAddress;
+            String newDetail = (detailAddress != null) ? detailAddress : this.detailAddress;
+
+            // 기존에 만들어두신 updateAddress 메서드 재사용
+            updateAddress(newBase, newDetail);
+        }
+    }
+
+    public void updateAddress(String baseAddress, String detailAddress) {
+        this.baseAddress = baseAddress;
+        this.detailAddress = (detailAddress != null) ? detailAddress : "";
+        this.address = (this.baseAddress + " " + this.detailAddress).trim();
+    }
+
+    public void updateAges(List<AgeEntity> ages) {
+        this.academyAges.clear();
+        if (ages != null) {
+            ages.forEach(age -> this.academyAges.add(new AcademyAgeEntity(this, age)));
+        }
+    }
+
+    public void updateSubjects(List<SubjectEntity> subjects) {
+        this.academySubjects.clear();
+        if (subjects != null) {
+            subjects.forEach(subject -> this.academySubjects.add(new AcademySubjectEntity(this, subject)));
+        }
+    }
+
+    public void updateImages(List<String> imageUrls) {
+        this.academyImages.clear();
+        if (imageUrls != null) {
+            imageUrls.forEach(url -> this.academyImages.add(AcademyImageEntity.builder()
+                    .imageUrl(url)
+                    .academy(this)
+                    .build()));
+        }
+    }
+}

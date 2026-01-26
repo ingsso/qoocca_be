@@ -9,10 +9,13 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface ClassInfoRepository extends JpaRepository<ClassInfoEntity, Long> {
 
     List<ClassInfoEntity> findByAcademy_Id(Long academyId);
+
+    Optional<ClassInfoEntity> findByAcademy_IdAndClassName(Long academyId, String className);
 
     // Age, Subject 정보를 한 번에 조회
     @Query("SELECT c FROM ClassInfoEntity c " +

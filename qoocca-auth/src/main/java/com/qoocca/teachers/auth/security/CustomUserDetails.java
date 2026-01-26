@@ -1,4 +1,4 @@
-package com.qoocca.teachers.api.user.security;
+package com.qoocca.teachers.auth.security;
 
 import com.qoocca.teachers.db.user.entity.UserEntity;
 import io.micrometer.common.lang.Nullable;

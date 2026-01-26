@@ -1,11 +1,11 @@
-package com.qoocca.teachers.api.user.service;
+package com.qoocca.teachers.auth.service;
 
 import com.qoocca.teachers.common.global.utils.CookieUtils;
 import com.qoocca.teachers.db.user.entity.OauthProvider;
 import com.qoocca.teachers.db.user.entity.UserEntity;
-import com.qoocca.teachers.api.user.model.LoginResponse;
+import com.qoocca.teachers.common.auth.model.LoginResponse;
 import com.qoocca.teachers.db.user.repository.UserRepository;
-import com.qoocca.teachers.api.global.jwt.JwtTokenProvider;
+import com.qoocca.teachers.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;

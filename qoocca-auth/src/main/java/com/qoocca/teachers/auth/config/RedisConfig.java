@@ -1,4 +1,4 @@
-package com.qoocca.teachers.api.global.config;
+package com.qoocca.teachers.auth.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

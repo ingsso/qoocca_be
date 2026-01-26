@@ -1,8 +1,12 @@
 package com.qoocca.teachers.api.classInfo.model.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 public class ClassStudentRequest {
 

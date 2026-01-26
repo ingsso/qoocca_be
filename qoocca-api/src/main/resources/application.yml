@@ -41,6 +41,9 @@ naver:
   client-secret: ${NAVER_CLIENT_SECRET}
   redirect-uri: ${NAVER_REDIRECT_URI}
 
+openai:
+  api-key: ${OPENAI_API_KEY}
+
 file:
   upload:
     path: D:/qoocca-be/nginx/images/

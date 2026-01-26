@@ -1,1 +1,5 @@
 rootProject.name = 'qoocca-teachers'
+
+include 'qoocca-common'
+include 'qoocca-db'
+include 'qoocca-api'

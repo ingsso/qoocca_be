@@ -1,8 +1,8 @@
-package com.qoocca.teachers.api.user.service;
+package com.qoocca.teachers.auth.service;
 
 import com.qoocca.teachers.db.user.entity.UserEntity;
 import com.qoocca.teachers.db.user.repository.UserRepository;
-import com.qoocca.teachers.api.user.security.CustomUserDetails;
+import com.qoocca.teachers.auth.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

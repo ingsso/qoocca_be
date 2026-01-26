@@ -1,16 +1,15 @@
 package com.qoocca.teachers.api.user.service;
 
 import com.qoocca.teachers.db.academy.entity.AcademyEntity;
-import com.qoocca.teachers.api.academy.model.response.AcademyListResponse;
 import com.qoocca.teachers.db.academy.repository.AcademyRepository;
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.user.entity.UserEntity;
-import com.qoocca.teachers.api.user.model.LoginResponse;
-import com.qoocca.teachers.api.user.model.SocialLinkRequest;
-import com.qoocca.teachers.api.user.model.UserRequest;
+import com.qoocca.teachers.common.auth.model.LoginResponse;
+import com.qoocca.teachers.common.auth.model.SocialLinkRequest;
+import com.qoocca.teachers.common.auth.model.UserRequest;
 import com.qoocca.teachers.db.user.repository.UserRepository;
-import com.qoocca.teachers.api.global.jwt.JwtTokenProvider;
+import com.qoocca.teachers.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -161,11 +160,11 @@ public class UserService {
         List<AcademyEntity> academies =
                 academyRepository.findAllByUserId(user.getId());
 
-        List<AcademyListResponse> academyInfos = academies.stream()
-                .map(a -> AcademyListResponse.builder()
+        List<LoginResponse.AcademyListResponse> academyInfos = academies.stream()
+                .map(a -> LoginResponse.AcademyListResponse.builder()
                         .academyId(a.getId())
                         .name(a.getName())
-                        .approvalStatus(a.getApprovalStatus())
+                        .approvalStatus(a.getApprovalStatus().name())
                         .build())
                 .toList();
 

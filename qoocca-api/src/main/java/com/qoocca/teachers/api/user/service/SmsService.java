@@ -1,6 +1,6 @@
 package com.qoocca.teachers.api.user.service;
 
-import com.qoocca.teachers.api.user.model.RedisDao;
+import com.qoocca.teachers.common.redis.RedisDao;
 import com.qoocca.teachers.db.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

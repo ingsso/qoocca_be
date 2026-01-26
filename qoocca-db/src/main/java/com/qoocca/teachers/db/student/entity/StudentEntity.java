@@ -36,7 +36,6 @@ public class StudentEntity {
     @Column(name = "student_name")
     private String studentName;
 
-    // ✅ 추가
     @Column(name = "student_phone")
     private String studentPhone;
 
@@ -56,6 +55,5 @@ public class StudentEntity {
     @OneToMany(mappedBy = "student")
     @Builder.Default
     private List<AcademyStudentEntity> academyStudents = new ArrayList<>();
-
 
 }

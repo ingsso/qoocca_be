@@ -1,7 +1,7 @@
-package com.qoocca.teachers.api.global.config;
+package com.qoocca.teachers.auth.config;
 
-import com.qoocca.teachers.api.global.jwt.JwtAuthenticationFilter;
-import com.qoocca.teachers.api.global.security.AcademyApprovalFilter;
+import com.qoocca.teachers.auth.jwt.JwtAuthenticationFilter;
+import com.qoocca.teachers.auth.security.AcademyApprovalFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -1,11 +1,11 @@
 package com.qoocca.teachers.api.user.controller;
 
 import com.qoocca.teachers.common.global.utils.CookieUtils;
-import com.qoocca.teachers.api.user.model.LoginRequest;
-import com.qoocca.teachers.api.user.model.LoginResponse;
-import com.qoocca.teachers.api.user.model.SocialLinkRequest;
-import com.qoocca.teachers.api.user.model.UserRequest;
-import com.qoocca.teachers.api.user.service.AuthService;
+import com.qoocca.teachers.common.auth.model.LoginRequest;
+import com.qoocca.teachers.common.auth.model.LoginResponse;
+import com.qoocca.teachers.common.auth.model.SocialLinkRequest;
+import com.qoocca.teachers.common.auth.model.UserRequest;
+import com.qoocca.teachers.auth.service.AuthService;
 import com.qoocca.teachers.api.user.service.SmsService;
 import com.qoocca.teachers.api.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;

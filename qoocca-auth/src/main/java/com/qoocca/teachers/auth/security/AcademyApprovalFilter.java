@@ -1,7 +1,7 @@
-package com.qoocca.teachers.api.global.security;
+package com.qoocca.teachers.auth.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qoocca.teachers.api.user.security.CustomUserDetails;
+import com.qoocca.teachers.auth.security.CustomUserDetails;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.common.global.exception.ErrorResponse;
 import com.qoocca.teachers.db.academy.entity.AcademyEntity;

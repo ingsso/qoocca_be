@@ -1,7 +1,7 @@
-package com.qoocca.teachers.api.global.jwt;
+package com.qoocca.teachers.auth.jwt;
 
-import com.qoocca.teachers.api.user.model.LoginResponse;
-import com.qoocca.teachers.api.user.model.RedisDao;
+import com.qoocca.teachers.common.auth.model.LoginResponse;
+import com.qoocca.teachers.common.redis.RedisDao;
 import com.qoocca.teachers.common.global.utils.CookieUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

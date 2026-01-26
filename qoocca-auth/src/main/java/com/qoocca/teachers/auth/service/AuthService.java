@@ -1,12 +1,12 @@
-package com.qoocca.teachers.api.user.service;
+package com.qoocca.teachers.auth.service;
 
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
-import com.qoocca.teachers.api.global.jwt.JwtTokenProvider;
+import com.qoocca.teachers.auth.jwt.JwtTokenProvider;
 import com.qoocca.teachers.db.user.entity.OauthProvider;
 import com.qoocca.teachers.db.user.entity.UserEntity;
-import com.qoocca.teachers.api.user.model.LoginRequest;
-import com.qoocca.teachers.api.user.model.LoginResponse;
+import com.qoocca.teachers.common.auth.model.LoginRequest;
+import com.qoocca.teachers.common.auth.model.LoginResponse;
 import com.qoocca.teachers.db.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

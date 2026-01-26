@@ -1,4 +1,4 @@
-package com.qoocca.teachers.api.user.model;
+package com.qoocca.teachers.common.redis;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -25,7 +25,6 @@ public class RedisDao {
         return values.get(key);
     }
 
-    // 데이터 삭제 (Refresh Token 삭제 시)
     public void deleteValues(String key) {
         redisTemplate.delete(key);
     }

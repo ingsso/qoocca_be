@@ -76,7 +76,7 @@ public class AcademyStudentUploadService {
             }
 
             List<String> headers = readHeaders(headerRow, formatter);
-            Map<String, Integer> fieldIndex = mapHeaders(headers, useAi, classId != null);
+            Map<String, Integer> fieldIndex = mapHeaders(academyId, headers, useAi, classId != null);
             headerMapping.putAll(buildHeaderMapping(headers, fieldIndex));
 
             if (!fieldIndex.containsKey("studentName") || !fieldIndex.containsKey("studentPhone")) {
@@ -177,7 +177,7 @@ public class AcademyStudentUploadService {
         return mapping;
     }
 
-    private Map<String, Integer> mapHeaders(List<String> headers, boolean useAi, boolean classIdProvided) {
+    private Map<String, Integer> mapHeaders(Long academyId, List<String> headers, boolean useAi, boolean classIdProvided) {
         Map<String, Integer> fieldIndex = new HashMap<>();
 
         for (int i = 0; i < headers.size(); i++) {
@@ -196,7 +196,7 @@ public class AcademyStudentUploadService {
                 || (!classIdProvided && !fieldIndex.containsKey("className"));
 
         if (useAi && missingRequired) {
-            Map<String, String> aiMapping = openAiHeaderMappingClient.mapHeaders(headers);
+            Map<String, String> aiMapping = openAiHeaderMappingClient.mapHeaders(academyId, headers);
             aiMapping.forEach((field, headerName) -> {
                 if (!fieldIndex.containsKey(field)) {
                     Integer idx = findHeaderIndex(headers, headerName);

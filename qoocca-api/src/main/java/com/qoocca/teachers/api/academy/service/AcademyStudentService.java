@@ -29,12 +29,16 @@ public class AcademyStudentService {
         AcademyEntity academy = academyRepository.findById(academyId)
                 .orElseThrow(() -> new IllegalArgumentException("학원 없음"));
 
-        StudentEntity student = StudentEntity.builder()
-                .studentName(request.getStudentName())
-                .studentPhone(request.getStudentPhone())
-                .build();
-
-        studentRepository.save(student);
+        // 기존 학생 있는지 확인, 없으면 새로 생성
+        StudentEntity student = studentRepository
+                .findByStudentNameAndStudentPhone(request.getStudentName(), request.getStudentPhone())
+                .orElseGet(() -> {
+                    StudentEntity newStudent = StudentEntity.builder()
+                            .studentName(request.getStudentName())
+                            .studentPhone(request.getStudentPhone())
+                            .build();
+                    return studentRepository.save(newStudent);
+                });
 
         AcademyStudentEntity academyStudent = AcademyStudentEntity.builder()
                 .academy(academy)
@@ -45,6 +49,7 @@ public class AcademyStudentService {
 
         return AcademyStudentResponse.from(student);
     }
+
 
     public AcademyStudentResponse modifyStudent(
             Long academyId,

@@ -3,13 +3,17 @@ package com.qoocca.teachers.api.academy.controller;
 import com.qoocca.teachers.api.academy.model.request.AcademyStudentCreateRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyStudentModifyRequest;
 import com.qoocca.teachers.api.academy.model.response.AcademyStudentResponse;
+import com.qoocca.teachers.api.academy.model.response.AcademyStudentUploadResponse;
 import com.qoocca.teachers.api.academy.service.AcademyStudentService;
+import com.qoocca.teachers.api.academy.service.AcademyStudentUploadService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -20,6 +24,7 @@ import java.util.List;
 public class AcademyStudentController {
 
     private final AcademyStudentService academyStudentService;
+    private final AcademyStudentUploadService academyStudentUploadService;
 
     @Operation(summary = "학원 원생 등록", description = "특정 학원에 새로운 학생을 등록합니다.")
     @PostMapping
@@ -61,4 +66,30 @@ public class AcademyStudentController {
     ) {
         academyStudentService.deleteStudent(academyId, studentId);
     }
+
+
+    @PostMapping(
+            value = "/upload",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @Operation(summary = "엑셀 업로드 원생 등록", description = "엑셀 파일로 원생을 등록하고 클래스에 배정합니다.")
+    public AcademyStudentUploadResponse upload(
+            @Parameter(description = "학원 고유 ID", example = "1")
+            @PathVariable Long academyId,
+
+            @Parameter(description = "학생 엑셀 파일 (.xlsx)")
+            @RequestPart("file") MultipartFile file,
+
+            @Parameter(description = "기본 클래스 ID (엑셀에 class 컬럼 없을 때)")
+            @RequestParam(value = "classId", required = false) Long classId,
+
+            @Parameter(description = "AI 헤더 매핑 사용")
+            @RequestParam(value = "useAi", defaultValue = "true") boolean useAi,
+
+            @Parameter(description = "검증만 수행 (DB 저장 안함)")
+            @RequestParam(value = "dryRun", defaultValue = "false") boolean dryRun
+    ) {
+        return academyStudentUploadService.upload(academyId, file, classId, useAi, dryRun);
+    }
+
 }

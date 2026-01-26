@@ -1,8 +1,12 @@
 package com.qoocca.teachers.api.academy.model.request;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 public class AcademyStudentCreateRequest {
 

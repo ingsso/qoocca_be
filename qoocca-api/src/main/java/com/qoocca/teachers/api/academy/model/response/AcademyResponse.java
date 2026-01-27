@@ -42,6 +42,7 @@ public class AcademyResponse {
     private String instagramUrl;
 
     private String certificate;
+    private String rejectionReason;
 
     private List<String> imageUrls;
     private List<AgeResponse> ages;
@@ -64,6 +65,7 @@ public class AcademyResponse {
                 .websiteUrl(academy.getWebsiteUrl())
                 .instagramUrl(academy.getInstagramUrl())
                 .certificate(academy.getCertificate())
+                .rejectionReason(academy.getRejectionReason())
                 .imageUrls(academy.getAcademyImages().stream()
                         .map(AcademyImageEntity::getImageUrl)
                         .collect(Collectors.toList()))

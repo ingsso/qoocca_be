@@ -25,5 +25,6 @@ public class ClassPaymentSummaryResponse {
         private String studentName;
         private Long amount;
         private String status;
+        private boolean isCardRegistered;
     }
 }

@@ -13,12 +13,14 @@ public class AcademyListResponse {
     private Long academyId;
     private String name;
     private ApprovalStatus approvalStatus; // PENDING, APPROVED, REJECTED
+    private String rejectionReason;
 
     public static AcademyListResponse from(AcademyEntity entity) {
         return AcademyListResponse.builder()
                 .academyId(entity.getId())
                 .name(entity.getName())
                 .approvalStatus(entity.getApprovalStatus())
+                .rejectionReason(entity.getRejectionReason())
                 .build();
     }
 }

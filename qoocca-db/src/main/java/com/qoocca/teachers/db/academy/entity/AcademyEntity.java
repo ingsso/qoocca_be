@@ -78,6 +78,10 @@ public class AcademyEntity {
     private String websiteUrl;
 
     @Setter
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    @Setter
     private String certificate;
 
     @CreatedDate

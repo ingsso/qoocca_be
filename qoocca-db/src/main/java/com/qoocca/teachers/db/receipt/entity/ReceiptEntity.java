@@ -71,6 +71,7 @@ public class ReceiptEntity {
      * ========================= */
     @Getter
     public enum ReceiptStatus {
+        NO_STUDENTS("인원 없음"),
         BEFORE_REQUEST("요청 전"),
         CANCELLED("수납 취소"),
         ISSUED("결제 대기"),

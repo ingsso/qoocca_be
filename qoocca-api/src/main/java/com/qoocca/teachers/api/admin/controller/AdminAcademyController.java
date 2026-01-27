@@ -1,10 +1,12 @@
 package com.qoocca.teachers.api.admin.controller;
 
+import com.qoocca.teachers.api.academy.model.request.AcademyRejectRequest;
 import com.qoocca.teachers.api.academy.model.response.AcademyListResponse;
 import com.qoocca.teachers.api.academy.service.AcademyService;
 import com.qoocca.teachers.common.global.common.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,8 +31,11 @@ public class AdminAcademyController {
 
     @Operation(summary = "학원 등록 반려")
     @PostMapping("/academy/{id}/reject")
-    public ResponseEntity<String> rejectAcademy(@PathVariable Long id) {
-        academyService.rejectAcademy(id);
+    public ResponseEntity<String> rejectAcademy(
+            @PathVariable Long id,
+            @RequestBody @Valid AcademyRejectRequest request
+    ) {
+        academyService.rejectAcademy(id, request.getRejectionReason());
         return ResponseEntity.ok("학원 승인이 반려되었습니다.");
     }
 

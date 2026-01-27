@@ -1,6 +1,7 @@
 package com.qoocca.teachers.api.academy.controller;
 
 import com.qoocca.teachers.api.academy.model.request.AcademyCreateRequest;
+import com.qoocca.teachers.api.academy.model.request.AcademyResubmitRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyUpdateRequest;
 import com.qoocca.teachers.api.academy.model.response.AcademyCheckResponse;
 import com.qoocca.teachers.api.academy.model.response.AcademyListResponse;
@@ -76,6 +77,17 @@ public class AcademyController {
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         academyService.updateAcademy(id, dto, userDetails.getUserId());
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "학원 재신청", description = "승인 거절된 학원의 정보를 수정해 재신청합니다.")
+    @PutMapping(value = "/{id}/resubmit", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> resubmitAcademy(
+            @Parameter(description = "학원 고유 ID", example = "1") @PathVariable Long id,
+            @Valid @ModelAttribute AcademyResubmitRequest req,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        academyService.resubmitAcademy(id, req, userDetails.getUserId());
         return ResponseEntity.ok().build();
     }
 

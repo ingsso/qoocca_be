@@ -35,6 +35,7 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
             "/api/ages/**",
             "/api/subjects/**",
             "/api/academy/register",
+            "/api/academy/*/resubmit",
             "/api/academy/complete",
             "/api/academy/academy-list",
             "/api/attendance/**",

@@ -4,6 +4,7 @@ import com.qoocca.teachers.common.global.common.PageResponse;
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.api.academy.model.request.AcademyCreateRequest;
+import com.qoocca.teachers.api.academy.model.request.AcademyResubmitRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyUpdateRequest;
 import com.qoocca.teachers.api.academy.model.response.AcademyCheckResponse;
@@ -282,6 +283,30 @@ public class AcademyService {
         }
     }
 
+    @Transactional
+    public void resubmitAcademy(Long id, AcademyResubmitRequest req, Long userId) {
+        AcademyEntity academy = academyRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
+
+        if (!academy.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.NO_AUTHORITY);
+        }
+
+        if (academy.getApprovalStatus() != ApprovalStatus.REJECTED) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        academy.updateInfo(req.getName(), null, null, null);
+        academy.updateFullAddress(req.getBaseAddress(), req.getDetailAddress());
+
+        if (req.getCertificateFile() != null && !req.getCertificateFile().isEmpty()) {
+            updateCertificateFile(academy, req.getCertificateFile());
+        }
+
+        academy.updateApprovalStatus(ApprovalStatus.PENDING);
+        academy.setRejectionReason(null);
+    }
+
     private void deletePhysicalFile(String fileUrl) {
         try {
             String relativePath = fileUrl.replace(IMAGE_BASE_URL, "");
@@ -295,20 +320,40 @@ public class AcademyService {
         }
     }
 
+    private void updateCertificateFile(AcademyEntity academy, MultipartFile certificateFile) {
+        String academyFolderPath = IMAGE_SAVE_PATH + academy.getId() + "/";
+        File folder = new File(academyFolderPath);
+        if (!folder.exists()) folder.mkdirs();
+
+        if (academy.getCertificate() != null) {
+            deletePhysicalFile(academy.getCertificate());
+        }
+
+        String certFileName = "cert_" + UUID.randomUUID() + "_" + certificateFile.getOriginalFilename();
+        try {
+            certificateFile.transferTo(new File(academyFolderPath + certFileName));
+            academy.setCertificate(IMAGE_BASE_URL + academy.getId() + "/" + certFileName);
+        } catch (IOException e) {
+            throw new RuntimeException("?ъ뾽???깅줉利?????ㅽ뙣", e);
+        }
+    }
+
     @Transactional
     public void approveAcademy(Long academyId) {
         AcademyEntity academy = academyRepository.findById(academyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
         academy.updateApprovalStatus(ApprovalStatus.APPROVED);
+        academy.setRejectionReason(null);
     }
 
     @Transactional
-    public void rejectAcademy(Long academyId) {
+    public void rejectAcademy(Long academyId, String rejectionReason) {
         AcademyEntity academy = academyRepository.findById(academyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
         academy.updateApprovalStatus(ApprovalStatus.REJECTED);
+        academy.setRejectionReason(rejectionReason);
     }
 
     @Transactional(readOnly = true)
@@ -338,4 +383,3 @@ public class AcademyService {
     }
 
 }
-

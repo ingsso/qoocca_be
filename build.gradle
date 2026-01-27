@@ -19,4 +19,8 @@ subprojects {
         annotationProcessor 'org.projectlombok:lombok'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
     }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
 }

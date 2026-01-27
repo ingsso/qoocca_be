@@ -15,6 +15,8 @@ import com.qoocca.teachers.api.receipt.model.*;
 import com.qoocca.teachers.api.receipt.model.response.*;
 import com.qoocca.teachers.db.receipt.repository.ReceiptRepository;
 import com.qoocca.teachers.db.student.entity.StudentEntity;
+import com.qoocca.teachers.db.student.entity.StudentParentEntity;
+import com.qoocca.teachers.db.student.repository.StudentParentRepository;
 import com.qoocca.teachers.db.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class ReceiptService {
     private final StudentRepository studentRepository;
     private final ClassInfoRepository classInfoRepository;
     private final ClassInfoStudentRepository classInfoStudentRepository;
+    private final StudentParentRepository studentParentRepository;
 
     /* =========================
      * POST: 수납 생성 (한 달에 1회 제한 로직 추가)
@@ -46,6 +49,14 @@ public class ReceiptService {
 
         ClassInfoEntity classInfo = classInfoRepository.findById(request.getClassId())
                 .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND));
+
+        // 카드 등록 여부 체크
+        boolean hasCard = studentParentRepository.findByStudent_StudentId(studentId).stream()
+                .anyMatch(sp -> Boolean.TRUE.equals(sp.getParent().getCardState()));
+
+        if (!hasCard) {
+            throw new CustomException(ErrorCode.PAYMENT_METHOD_NOT_FOUND);
+        }
 
 
         if (isAlreadyProcessedInMonth(studentId, request.getClassId(), request.getReceiptDate())) {
@@ -122,6 +133,7 @@ public class ReceiptService {
                         .studentName(enroll.getStudent().getStudentName())
                         .amount(cls.getPrice())
                         .status(status)
+                        .isCardRegistered(data.cardStatusMap().getOrDefault(enroll.getStudent().getStudentId(), false))
                         .build();
             }).toList();
 
@@ -184,17 +196,38 @@ public class ReceiptService {
                         (existing, replacement) -> existing
                 ));
 
-        return new ReceiptDataContainer(classList, enrollmentsByClass, receiptMap);
+        List<Long> studentIds = allEnrollments.stream()
+                .map(e -> e.getStudent().getStudentId())
+                .distinct()
+                .toList();
+
+        Map<Long, Boolean> cardStatusMap;
+        if (studentIds.isEmpty()) {
+            cardStatusMap = Map.of();
+        } else {
+            List<StudentParentEntity> studentParents = studentParentRepository.findAllByStudentIdsWithParent(studentIds);
+            Map<Long, List<StudentParentEntity>> parentsByStudent = studentParents.stream()
+                    .collect(Collectors.groupingBy(sp -> sp.getStudent().getStudentId()));
+
+            cardStatusMap = studentIds.stream().collect(Collectors.toMap(
+                    id -> id,
+                    id -> parentsByStudent.getOrDefault(id, List.of()).stream()
+                            .anyMatch(sp -> Boolean.TRUE.equals(sp.getParent().getCardState()))
+            ));
+        }
+
+        return new ReceiptDataContainer(classList, enrollmentsByClass, receiptMap, cardStatusMap);
     }
 
     private record ReceiptDataContainer(
             List<ClassInfoEntity> classList,
             Map<Long, List<ClassInfoStudentEntity>> enrollmentsByClass,
-            Map<String, ReceiptEntity> receiptMap
+            Map<String, ReceiptEntity> receiptMap,
+            Map<Long, Boolean> cardStatusMap
     ) {}
 
     private ReceiptEntity.ReceiptStatus calculateRepresentativeStatus(Long classId, List<ClassInfoStudentEntity> enrollments, Map<String, ReceiptEntity> receiptMap) {
-        if (enrollments.isEmpty()) return ReceiptEntity.ReceiptStatus.PAID;
+        if (enrollments.isEmpty()) return ReceiptEntity.ReceiptStatus.NO_STUDENTS;
 
         boolean hasIssued = false;
         for (ClassInfoStudentEntity enroll : enrollments) {

@@ -43,6 +43,7 @@ public enum ErrorCode {
     DUPLICATE_RECEIPT_IN_MONTH (400, "R001", "해당 월에 이미 수납 기록이 존재합니다."),
     RECEIPT_NOT_FOUND (404, "R002", "수납 기록(영수증)을 찾을 수 없습니다."),
     RECEIPT_ACCESS_DENIED (403, "R003", "본인의 수납 기록만 접근할 수 있습니다."),
+    PAYMENT_METHOD_NOT_FOUND(400, "R004", "등록된 결제 수단이 없습니다."),
 
     /**
      * 시스템 공통

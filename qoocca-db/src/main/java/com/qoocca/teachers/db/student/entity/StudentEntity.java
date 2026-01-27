@@ -36,7 +36,7 @@ public class StudentEntity {
     @Column(name = "student_name")
     private String studentName;
 
-    @Column(name = "student_phone")
+    @Column(name = "student_phone", unique = true)
     private String studentPhone;
 
 

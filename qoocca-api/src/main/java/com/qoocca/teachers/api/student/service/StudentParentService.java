@@ -9,6 +9,8 @@ import com.qoocca.teachers.db.student.entity.StudentEntity;
 import com.qoocca.teachers.db.student.entity.StudentParentEntity;
 import com.qoocca.teachers.db.student.repository.StudentParentRepository;
 import com.qoocca.teachers.db.student.repository.StudentRepository;
+import com.qoocca.teachers.common.global.exception.CustomException;
+import com.qoocca.teachers.common.global.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,7 +38,7 @@ public class StudentParentService {
     public ParentResponse addParent(Long studentId, ParentCreateRequest request) {
 
         StudentEntity student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("학생을 찾을 수 없습니다. id=" + studentId));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         String cardNum = request.getCardNum();
         boolean hasCard = (cardNum != null && !cardNum.isBlank());
@@ -68,7 +70,7 @@ public class StudentParentService {
 
         StudentParentEntity sp = studentParentRepository
                 .findByStudent_StudentIdAndParent_ParentId(studentId, parentId)
-                .orElseThrow(() -> new IllegalArgumentException("학생-부모 관계를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_PARENT_RELATION_NOT_FOUND));
 
         ParentEntity parent = sp.getParent();
 

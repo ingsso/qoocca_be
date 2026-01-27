@@ -3,6 +3,8 @@ package com.qoocca.teachers.api.student.service;
 import com.qoocca.teachers.db.student.entity.StudentEntity;
 import com.qoocca.teachers.api.student.model.StudentCreateRequest;
 import com.qoocca.teachers.api.student.model.StudentResponse;
+import com.qoocca.teachers.common.global.exception.CustomException;
+import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +32,7 @@ public class StudentService {
     @Transactional(readOnly = true)
     public StudentResponse get(Long studentId) {
         StudentEntity student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("학생 없음"));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         return StudentResponse.from(student);
     }
@@ -38,7 +40,7 @@ public class StudentService {
     public StudentResponse update(Long studentId, StudentCreateRequest request) {
 
         StudentEntity student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("학생 없음"));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         if (request.getStudentName() != null) {
             student.setStudentName(request.getStudentName());
@@ -54,7 +56,7 @@ public class StudentService {
 
     public void delete(Long studentId) {
         StudentEntity student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("학생 없음"));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         studentRepository.delete(student); // 또는 soft delete 컬럼 추가 가능
     }

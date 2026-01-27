@@ -36,7 +36,7 @@ public class ClassInfoStudentService {
 
         // 이미 등록되어 있는지 체크
         if (repository.existsByClassInfo_ClassIdAndStudent_StudentId(classId, request.getStudentId())) {
-            throw new IllegalStateException("이미 등록된 학생입니다.");
+            throw new CustomException(ErrorCode.STUDENT_ALREADY_ENROLLED);
         }
 
         // 클래스 존재 확인
@@ -75,15 +75,15 @@ public class ClassInfoStudentService {
         // 기존 반 수강 정보 조회
         ClassInfoStudentEntity current = classInfoStudentRepository
                 .findByClassInfo_ClassIdAndStudent_StudentId(classId, studentId)
-                .orElseThrow(() -> new IllegalArgumentException("기존 반 수강 정보가 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.ENROLLMENT_NOT_FOUND));
 
         // 이동할 반 존재 확인
         ClassInfoEntity targetClass = classInfoRepository.findById(targetClassId)
-                .orElseThrow(() -> new IllegalArgumentException("대상 반이 존재하지 않습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND));
 
         // 중복 등록 방지
         if (classInfoStudentRepository.existsByClassInfo_ClassIdAndStudent_StudentId(targetClassId, studentId)) {
-            throw new IllegalStateException("이미 대상 반에 등록된 학생입니다.");
+            throw new CustomException(ErrorCode.STUDENT_ALREADY_ENROLLED);
         }
 
         StudentEntity student = current.getStudent();

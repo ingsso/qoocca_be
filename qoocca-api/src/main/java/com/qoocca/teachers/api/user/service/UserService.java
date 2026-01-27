@@ -54,7 +54,7 @@ public class UserService {
         UserEntity userEntity = userRepository.findByPhoneNumber(req.getPhone())
                 .map(existingUser -> {
                     if (existingUser.getPassword() != null) {
-                        throw new RuntimeException("이미 사용 중인 전화번호 입니다.");
+                        throw new CustomException(ErrorCode.PHONE_ALREADY_IN_USE);
                     }
                     existingUser.setEmail(req.getEmail());
                     existingUser.setUserName(req.getUsername());
@@ -148,7 +148,7 @@ public class UserService {
                 !agreements.isService() ||
                 !agreements.isPrivacy() ||
                 !agreements.isThirdParty()) {
-            throw new RuntimeException("필수 약관 동의가 누락되었습니다.");
+            throw new CustomException(ErrorCode.REQUIRED_AGREEMENTS_MISSING);
         }
     }
 

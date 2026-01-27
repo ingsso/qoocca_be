@@ -3,6 +3,8 @@ package com.qoocca.teachers.api.academy.service;
 import com.qoocca.teachers.api.academy.model.request.AcademyStudentCreateRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyStudentModifyRequest;
 import com.qoocca.teachers.api.academy.model.response.AcademyStudentResponse;
+import com.qoocca.teachers.common.global.exception.CustomException;
+import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.academy.entity.AcademyEntity;
 import com.qoocca.teachers.db.academy.entity.AcademyStudentEntity;
 import com.qoocca.teachers.db.academy.repository.AcademyRepository;
@@ -27,7 +29,7 @@ public class AcademyStudentService {
     public AcademyStudentResponse registerStudent(Long academyId, AcademyStudentCreateRequest request) {
 
         AcademyEntity academy = academyRepository.findById(academyId)
-                .orElseThrow(() -> new IllegalArgumentException("학원 없음"));
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
         // 기존 학생 있는지 확인, 없으면 새로 생성
         StudentEntity student = studentRepository
@@ -59,7 +61,7 @@ public class AcademyStudentService {
 
         AcademyStudentEntity relation = academyStudentRepository
                 .findByAcademy_IdAndStudent_StudentId(academyId, studentId)
-                .orElseThrow(() -> new IllegalArgumentException("학생이 학원에 등록되어 있지 않습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_STUDENT_RELATION_NOT_FOUND));
 
         StudentEntity student = relation.getStudent();
 
@@ -81,7 +83,7 @@ public class AcademyStudentService {
 
         AcademyStudentEntity relation = academyStudentRepository
                 .findByAcademy_IdAndStudent_StudentId(academyId, studentId)
-                .orElseThrow(() -> new IllegalArgumentException("관계 없음"));
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_STUDENT_RELATION_NOT_FOUND));
 
         academyStudentRepository.delete(relation);
     }

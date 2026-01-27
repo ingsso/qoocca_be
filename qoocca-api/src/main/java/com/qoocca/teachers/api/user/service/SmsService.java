@@ -1,6 +1,8 @@
 package com.qoocca.teachers.api.user.service;
 
 import com.qoocca.teachers.common.redis.RedisDao;
+import com.qoocca.teachers.common.global.exception.CustomException;
+import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +22,7 @@ public class SmsService {
         String cleanPhone = phone.replaceAll("[^0-9]", "");
 
         if (cleanPhone.length() != 11) {
-            throw new RuntimeException("휴대폰 번호는 11자리여야 합니다.");
+            throw new CustomException(ErrorCode.SMS_INVALID_PHONE);
         }
 
         String verificationCode = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
@@ -42,14 +44,14 @@ public class SmsService {
             result.put("isExistingUser", isExistingUser);
             return result;
         } else {
-            throw new RuntimeException("인증번호가 일치하지 않거나 만료되었습니다.");
+            throw new CustomException(ErrorCode.SMS_CODE_INVALID);
         }
     }
 
     public void checkIsVerified(String phone) {
         String verified = (String) redisDao.getValues("SMS_VERIFIED:" + phone);
         if (!"true".equals(verified)) {
-            throw new RuntimeException("휴대폰 인증이 완료되지 않았습니다.");
+            throw new CustomException(ErrorCode.SMS_NOT_VERIFIED);
         }
     }
 

@@ -121,7 +121,7 @@ public class AcademyService {
                 req.getCertificateFile().transferTo(new File(academyFolderPath + certFileName));
                 academy.setCertificate(IMAGE_BASE_URL + academy.getId() + "/" + certFileName);
             } catch (IOException e) {
-                throw new RuntimeException("사업자 등록증 저장 실패", e);
+                throw new CustomException(ErrorCode.ACADEMY_CERTIFICATE_SAVE_FAILED);
             }
         }
 
@@ -135,7 +135,7 @@ public class AcademyService {
                     file.transferTo(new File(academyFolderPath + filename));
                     finalImageUrls.add(IMAGE_BASE_URL + academy.getId() + "/" + filename);
                 } catch (IOException e) {
-                    throw new RuntimeException("이미지 파일 저장 실패", e);
+                    throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
                 }
             }
         }
@@ -276,7 +276,7 @@ public class AcademyService {
                             .build();
                     oldImages.add(newImage);
                 } catch (IOException e) {
-                    throw new RuntimeException("새 이미지 저장 실패", e);
+                    throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
                 }
             }
         }
@@ -291,7 +291,7 @@ public class AcademyService {
                 fileToDelete.delete();
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new CustomException(ErrorCode.ACADEMY_IMAGE_DELETE_FAILED);
         }
     }
 

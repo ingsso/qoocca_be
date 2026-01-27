@@ -365,6 +365,15 @@ public class AcademyService {
         return new PageResponse<>(dtoPage);
     }
 
+    @Transactional(readOnly = true)
+    public PageResponse<AcademyListResponse> getRejectedAcademies(Pageable pageable) {
+        Page<AcademyEntity> rejectedPage = academyRepository.findAllByApprovalStatus(ApprovalStatus.REJECTED, pageable);
+
+        Page<AcademyListResponse> dtoPage = rejectedPage.map(AcademyListResponse::from);
+
+        return new PageResponse<>(dtoPage);
+    }
+
 
     private void updateRelationalData(AcademyEntity academy, AcademyRequest req) {
         if (req.getAgeIds() != null) {

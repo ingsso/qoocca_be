@@ -40,10 +40,18 @@ public class AdminAcademyController {
     }
 
     @Operation(summary = "승인 대기 중인 학원 리스트 조회")
-    @GetMapping("/pending")
+    @GetMapping("/academy/pending")
     public ResponseEntity<PageResponse<AcademyListResponse>> getPendingAcademies(
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
 
         return ResponseEntity.ok(academyService.getPendingAcademies(pageable));
+    }
+
+    @Operation(summary = "반려 학원 리스트 조회")
+    @GetMapping("/academy/rejected")
+    public ResponseEntity<PageResponse<AcademyListResponse>> getRejectedAcademies(
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
+
+        return ResponseEntity.ok(academyService.getRejectedAcademies(pageable));
     }
 }

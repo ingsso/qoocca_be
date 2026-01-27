@@ -11,6 +11,7 @@ import com.qoocca.teachers.api.academy.model.response.AcademyCheckResponse;
 import com.qoocca.teachers.api.academy.model.response.AcademyListResponse;
 import com.qoocca.teachers.api.academy.model.response.AcademyResponse;
 import com.qoocca.teachers.api.academy.model.response.DashboardStatsResponse;
+import com.qoocca.teachers.api.admin.model.response.AdminAcademyDetailResponse;
 import com.qoocca.teachers.api.age.model.AgeResponse;
 import com.qoocca.teachers.api.subject.model.SubjectResponse;
 import com.qoocca.teachers.api.user.service.UserService;
@@ -41,6 +42,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -246,7 +248,7 @@ public class AcademyService {
 
         String academyFolderPath = IMAGE_SAVE_PATH + academy.getId() + "/";
 
-        List<AcademyImageEntity> oldImages = academy.getAcademyImages();
+        Set<AcademyImageEntity> oldImages = academy.getAcademyImages();
         List<AcademyImageEntity> imagesToRemove = new ArrayList<>();
 
         for (AcademyImageEntity imageEntity : oldImages) {
@@ -334,7 +336,7 @@ public class AcademyService {
             certificateFile.transferTo(new File(academyFolderPath + certFileName));
             academy.setCertificate(IMAGE_BASE_URL + academy.getId() + "/" + certFileName);
         } catch (IOException e) {
-            throw new RuntimeException("?ъ뾽???깅줉利?????ㅽ뙣", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -363,6 +365,21 @@ public class AcademyService {
         Page<AcademyListResponse> dtoPage = pendingPage.map(AcademyListResponse::from);
 
         return new PageResponse<>(dtoPage);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<AcademyListResponse> getAllAcademies(Pageable pageable) {
+        Page<AcademyEntity> academyPage = academyRepository.findAll(pageable);
+        Page<AcademyListResponse> dtoPage = academyPage.map(AcademyListResponse::from);
+        return new PageResponse<>(dtoPage);
+    }
+
+    @Transactional(readOnly = true)
+    public AdminAcademyDetailResponse getAdminAcademyDetail(Long id) {
+        AcademyEntity academy = academyRepository.findAdminDetailById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
+
+        return AdminAcademyDetailResponse.from(academy);
     }
 
     @Transactional(readOnly = true)

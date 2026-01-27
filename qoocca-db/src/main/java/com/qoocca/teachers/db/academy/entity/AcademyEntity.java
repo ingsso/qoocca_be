@@ -12,7 +12,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
@@ -103,15 +105,15 @@ public class AcademyEntity {
 
     @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<AcademyImageEntity> academyImages = new ArrayList<>();
+    private Set<AcademyImageEntity> academyImages = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<AcademyAgeEntity> academyAges = new ArrayList<>();
+    private Set<AcademyAgeEntity> academyAges = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<AcademySubjectEntity> academySubjects = new ArrayList<>();
+    private Set<AcademySubjectEntity> academySubjects = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

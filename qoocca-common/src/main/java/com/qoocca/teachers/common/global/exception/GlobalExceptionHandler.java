@@ -1,5 +1,6 @@
 package com.qoocca.teachers.common.global.exception;
 
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -18,7 +19,18 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
-    // 그 외 예상치 못한 런타임 예외 처리
+    @ExceptionHandler(PropertyReferenceException.class)
+    protected ResponseEntity<ErrorResponse> handlePropertyReferenceException(PropertyReferenceException e) {
+        ErrorCode errorCode = ErrorCode.INVALID_INPUT_VALUE;
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ErrorResponse.builder()
+                        .status(errorCode.getStatus())
+                        .code(errorCode.getCode())
+                        .message(errorCode.getMessage())
+                        .build());
+    }
+
     @ExceptionHandler(RuntimeException.class)
     protected ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException e) {
         return ResponseEntity

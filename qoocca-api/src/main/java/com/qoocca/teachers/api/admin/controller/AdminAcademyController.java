@@ -2,6 +2,7 @@ package com.qoocca.teachers.api.admin.controller;
 
 import com.qoocca.teachers.api.academy.model.request.AcademyRejectRequest;
 import com.qoocca.teachers.api.academy.model.response.AcademyListResponse;
+import com.qoocca.teachers.api.admin.model.response.AdminAcademyDetailResponse;
 import com.qoocca.teachers.api.academy.service.AcademyService;
 import com.qoocca.teachers.common.global.common.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,5 +54,19 @@ public class AdminAcademyController {
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
 
         return ResponseEntity.ok(academyService.getRejectedAcademies(pageable));
+    }
+
+    @Operation(summary = "전체 학원 리스트 조회")
+    @GetMapping("/academy")
+    public ResponseEntity<PageResponse<AcademyListResponse>> getAllAcademies(
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        return ResponseEntity.ok(academyService.getAllAcademies(pageable));
+    }
+
+    @Operation(summary = "학원 상세 조회 (관리자)")
+    @GetMapping("/academy/{id}")
+    public ResponseEntity<AdminAcademyDetailResponse> getAcademyDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(academyService.getAdminAcademyDetail(id));
     }
 }

@@ -18,9 +18,6 @@ public class ParentCreateRequest {
 
     private String cardNum;
 
-    @NotNull
-    private Boolean cardState;
-
     @NotBlank
     private String parentRelationship;
 

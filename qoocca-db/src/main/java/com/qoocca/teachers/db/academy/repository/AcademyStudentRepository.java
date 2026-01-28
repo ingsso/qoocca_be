@@ -23,11 +23,13 @@ public interface AcademyStudentRepository extends JpaRepository<AcademyStudentEn
     @Query("""
     SELECT COUNT(DISTINCT ast.student.studentId)
     FROM AcademyStudentEntity ast
-    JOIN StudentParentEntity sp ON ast.student.studentId = sp.student.studentId
-    JOIN sp.parent p
+    LEFT JOIN StudentParentEntity sp ON ast.student.studentId = sp.student.studentId
+    LEFT JOIN sp.parent p
     WHERE ast.academy.id = :academyId
-      AND p.isPay = true
-      AND p.cardState = false
+      AND (
+          p.parentId IS NULL
+          OR (p.isPay = true AND p.cardState = false)
+      )
 """)
     long countStudentsWithoutCard(@Param("academyId") Long academyId);
 }

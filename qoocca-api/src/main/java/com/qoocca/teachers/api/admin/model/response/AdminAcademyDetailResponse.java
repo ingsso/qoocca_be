@@ -1,4 +1,4 @@
-package com.qoocca.teachers.api.academy.model.response;
+package com.qoocca.teachers.api.admin.model.response;
 
 import com.qoocca.teachers.api.age.model.AgeResponse;
 import com.qoocca.teachers.api.subject.model.SubjectResponse;
@@ -16,43 +16,42 @@ import java.util.stream.Collectors;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AcademyResponse {
+public class AdminAcademyDetailResponse {
 
     private Long id;
-
     private String name;
-
     private String approvalStatus;
+    private String rejectionReason;
+    private String certificate;
 
     private String address;
     private String baseAddress;
     private String detailAddress;
 
+    private String phoneNumber;
     private String briefInfo;
-
     private String detailInfo;
     private String costInfo;
-
     private String operatingHours;
-
-    private String phoneNumber;
 
     private String blogUrl;
     private String websiteUrl;
     private String instagramUrl;
 
-    private String certificate;
-    private String rejectionReason;
+    private String userName;
+    private String userPhoneNumber;
 
     private List<String> imageUrls;
     private List<AgeResponse> ages;
     private List<SubjectResponse> subjects;
 
-    public static AcademyResponse from(AcademyEntity academy) {
-        return AcademyResponse.builder()
+    public static AdminAcademyDetailResponse from(AcademyEntity academy) {
+        return AdminAcademyDetailResponse.builder()
                 .id(academy.getId())
                 .name(academy.getName())
                 .approvalStatus(academy.getApprovalStatus().name())
+                .rejectionReason(academy.getRejectionReason())
+                .certificate(academy.getCertificate())
                 .address(academy.getAddress())
                 .baseAddress(academy.getBaseAddress())
                 .detailAddress(academy.getDetailAddress())
@@ -64,8 +63,8 @@ public class AcademyResponse {
                 .blogUrl(academy.getBlogUrl())
                 .websiteUrl(academy.getWebsiteUrl())
                 .instagramUrl(academy.getInstagramUrl())
-                .certificate(academy.getCertificate())
-                .rejectionReason(academy.getRejectionReason())
+                .userName(academy.getUser() != null ? academy.getUser().getUserName() : null)
+                .userPhoneNumber(academy.getUser() != null ? academy.getUser().getPhoneNumber() : null)
                 .imageUrls(academy.getAcademyImages().stream()
                         .map(AcademyImageEntity::getImageUrl)
                         .collect(Collectors.toList()))

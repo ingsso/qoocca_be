@@ -4,12 +4,14 @@ import com.qoocca.teachers.common.global.common.PageResponse;
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.api.academy.model.request.AcademyCreateRequest;
+import com.qoocca.teachers.api.academy.model.request.AcademyResubmitRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyUpdateRequest;
 import com.qoocca.teachers.api.academy.model.response.AcademyCheckResponse;
 import com.qoocca.teachers.api.academy.model.response.AcademyListResponse;
 import com.qoocca.teachers.api.academy.model.response.AcademyResponse;
 import com.qoocca.teachers.api.academy.model.response.DashboardStatsResponse;
+import com.qoocca.teachers.api.admin.model.response.AdminAcademyDetailResponse;
 import com.qoocca.teachers.api.age.model.AgeResponse;
 import com.qoocca.teachers.api.subject.model.SubjectResponse;
 import com.qoocca.teachers.api.user.service.UserService;
@@ -40,6 +42,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -245,7 +248,7 @@ public class AcademyService {
 
         String academyFolderPath = IMAGE_SAVE_PATH + academy.getId() + "/";
 
-        List<AcademyImageEntity> oldImages = academy.getAcademyImages();
+        Set<AcademyImageEntity> oldImages = academy.getAcademyImages();
         List<AcademyImageEntity> imagesToRemove = new ArrayList<>();
 
         for (AcademyImageEntity imageEntity : oldImages) {
@@ -282,6 +285,30 @@ public class AcademyService {
         }
     }
 
+    @Transactional
+    public void resubmitAcademy(Long id, AcademyResubmitRequest req, Long userId) {
+        AcademyEntity academy = academyRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
+
+        if (!academy.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.NO_AUTHORITY);
+        }
+
+        if (academy.getApprovalStatus() != ApprovalStatus.REJECTED) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        academy.updateInfo(req.getName(), null, null, null);
+        academy.updateFullAddress(req.getBaseAddress(), req.getDetailAddress());
+
+        if (req.getCertificateFile() != null && !req.getCertificateFile().isEmpty()) {
+            updateCertificateFile(academy, req.getCertificateFile());
+        }
+
+        academy.updateApprovalStatus(ApprovalStatus.PENDING);
+        academy.setRejectionReason(null);
+    }
+
     private void deletePhysicalFile(String fileUrl) {
         try {
             String relativePath = fileUrl.replace(IMAGE_BASE_URL, "");
@@ -295,20 +322,40 @@ public class AcademyService {
         }
     }
 
+    private void updateCertificateFile(AcademyEntity academy, MultipartFile certificateFile) {
+        String academyFolderPath = IMAGE_SAVE_PATH + academy.getId() + "/";
+        File folder = new File(academyFolderPath);
+        if (!folder.exists()) folder.mkdirs();
+
+        if (academy.getCertificate() != null) {
+            deletePhysicalFile(academy.getCertificate());
+        }
+
+        String certFileName = "cert_" + UUID.randomUUID() + "_" + certificateFile.getOriginalFilename();
+        try {
+            certificateFile.transferTo(new File(academyFolderPath + certFileName));
+            academy.setCertificate(IMAGE_BASE_URL + academy.getId() + "/" + certFileName);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Transactional
     public void approveAcademy(Long academyId) {
         AcademyEntity academy = academyRepository.findById(academyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
         academy.updateApprovalStatus(ApprovalStatus.APPROVED);
+        academy.setRejectionReason(null);
     }
 
     @Transactional
-    public void rejectAcademy(Long academyId) {
+    public void rejectAcademy(Long academyId, String rejectionReason) {
         AcademyEntity academy = academyRepository.findById(academyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
         academy.updateApprovalStatus(ApprovalStatus.REJECTED);
+        academy.setRejectionReason(rejectionReason);
     }
 
     @Transactional(readOnly = true)
@@ -316,6 +363,30 @@ public class AcademyService {
         Page<AcademyEntity> pendingPage = academyRepository.findAllByApprovalStatus(ApprovalStatus.PENDING, pageable);
 
         Page<AcademyListResponse> dtoPage = pendingPage.map(AcademyListResponse::from);
+
+        return new PageResponse<>(dtoPage);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<AcademyListResponse> getAllAcademies(Pageable pageable) {
+        Page<AcademyEntity> academyPage = academyRepository.findAll(pageable);
+        Page<AcademyListResponse> dtoPage = academyPage.map(AcademyListResponse::from);
+        return new PageResponse<>(dtoPage);
+    }
+
+    @Transactional(readOnly = true)
+    public AdminAcademyDetailResponse getAdminAcademyDetail(Long id) {
+        AcademyEntity academy = academyRepository.findAdminDetailById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
+
+        return AdminAcademyDetailResponse.from(academy);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<AcademyListResponse> getRejectedAcademies(Pageable pageable) {
+        Page<AcademyEntity> rejectedPage = academyRepository.findAllByApprovalStatus(ApprovalStatus.REJECTED, pageable);
+
+        Page<AcademyListResponse> dtoPage = rejectedPage.map(AcademyListResponse::from);
 
         return new PageResponse<>(dtoPage);
     }
@@ -338,4 +409,3 @@ public class AcademyService {
     }
 
 }
-

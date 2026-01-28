@@ -31,26 +31,35 @@ public enum ErrorCode {
     ACADEMY_STUDENT_RELATION_NOT_FOUND(404, "AC008", "학원-학생 관계를 찾을 수 없습니다."),
     NO_AUTHORITY(403, "G001", "권한이 없습니다."),
 
-    // 출결 관련
-    ATTENDANCE_ALREADY_EXISTS(400, "AT001", "이미 해당 수업에 오늘 출결 기록이 존재합니다."),
-    ATTENDANCE_NOT_FOUND(404, "AT002", "출결 기록을 찾을 수 없습니다."),
-    CLASS_NOT_FOUND_FOR_TIME(400, "AT003", "현재 시간에 해당하는 수업이 없습니다."),
+    /**
+     * 출결 관련
+     */
+    ATTENDANCE_ALREADY_EXISTS (400, "AT001", "이미 해당 수업에 대한 오늘자 출결 기록이 존재합니다."),
+    ATTENDANCE_NOT_FOUND (404, "AT002", "출결 기록을 찾을 수 없습니다."),
+    CLASS_NOT_FOUND_FOR_TIME (400, "AT003", "현재 시간에 수강하는 수업이 없습니다."),
 
-    // 클래스/수강 관련
+    /**
+     * 클래스 및 수강생 관련
+     */
     STUDENT_NOT_FOUND(404, "ST001", "학생 정보를 찾을 수 없습니다."),
     STUDENT_PARENT_RELATION_NOT_FOUND(404, "ST002", "학생-부모 관계를 찾을 수 없습니다."),
     CLASS_NOT_FOUND(404, "C001", "클래스 정보를 찾을 수 없습니다."),
     STUDENT_ALREADY_ENROLLED(400, "C002", "이미 해당 클래스에 등록된 학생입니다."),
     ENROLLMENT_NOT_FOUND(404, "C003", "수강 정보를 찾을 수 없습니다."),
 
-    // 수납 관련
-    DUPLICATE_RECEIPT_IN_MONTH(400, "R001", "해당 월에 이미 수납 기록이 존재합니다."),
-    RECEIPT_NOT_FOUND(404, "R002", "수납 기록(영수증)을 찾을 수 없습니다."),
-    RECEIPT_ACCESS_DENIED(403, "R003", "본인의 수납 기록만 조회할 수 있습니다."),
+    /**
+     * 수납 관련
+     */
+    DUPLICATE_RECEIPT_IN_MONTH (400, "R001", "해당 월에 이미 수납 기록이 존재합니다."),
+    RECEIPT_NOT_FOUND (404, "R002", "수납 기록(영수증)을 찾을 수 없습니다."),
+    RECEIPT_ACCESS_DENIED (403, "R003", "본인의 수납 기록만 접근할 수 있습니다."),
+    PAYMENT_METHOD_NOT_FOUND(400, "R004", "등록된 결제 수단이 없습니다."),
 
-    // 공통
-    INVALID_INPUT_VALUE(400, "G002", "입력값이 올바르지 않습니다."),
-    INTERNAL_SERVER_ERROR(500, "G003", "서버 내부 오류가 발생했습니다.");
+    /**
+     * 시스템 공통
+     */
+    INVALID_INPUT_VALUE (400, "G002", "입력값이 올바르지 않습니다."),
+    INTERNAL_SERVER_ERROR (500, "G003", "서버 내부 오류가 발생했습니다.");
 
     private final int status;
     private final String code;

@@ -46,7 +46,7 @@ public class StudentParentService {
         ParentEntity parent = ParentEntity.builder()
                 .parentName(request.getParentName())
                 .cardNum(hasCard ? cardNum : null)
-                .cardState(hasCard) // ✅ 프론트 값 무시하고 서버에서 결정
+                .cardState(hasCard)
                 .parentRelationship(request.getParentRelationship())
                 .parentPhone(request.getParentPhone())
                 .isPay(request.getIsPay())
@@ -74,8 +74,9 @@ public class StudentParentService {
 
         ParentEntity parent = sp.getParent();
 
-        if (request.getParentName() != null) parent.setParentName(request.getParentName());   // ✅ 추가
-        if (request.getCardNum() != null) {
+        if (request.getParentName() != null) parent.setParentName(request.getParentName());
+        boolean cardNumProvided = request.getCardNum() != null;
+        if (cardNumProvided) {
             String cardNum = request.getCardNum();
             boolean hasCard = !cardNum.isBlank();
 
@@ -83,7 +84,6 @@ public class StudentParentService {
             parent.setCardState(hasCard);
         }
 
-        if (request.getCardState() != null) parent.setCardState(request.getCardState());
         if (request.getParentRelationship() != null) parent.setParentRelationship(request.getParentRelationship());
         if (request.getParentPhone() != null) parent.setParentPhone(request.getParentPhone());
         if (request.getIsPay() != null) parent.setIsPay(request.getIsPay());

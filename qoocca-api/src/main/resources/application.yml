@@ -46,7 +46,7 @@ openai:
 
 file:
   upload:
-    path: D:/qoocca-be/nginx/images/
+    path: D:/qoocca-teachers/nginx/images/
     base-url: http://localhost:8081/academy/
 
 logging:

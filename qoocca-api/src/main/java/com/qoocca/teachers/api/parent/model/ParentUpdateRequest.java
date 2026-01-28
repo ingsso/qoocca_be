@@ -13,7 +13,6 @@ public class ParentUpdateRequest {
 
     private String parentName;
     private String cardNum;
-    private Boolean cardState;
     private String parentRelationship;
     private String parentPhone;
     private Boolean isPay;

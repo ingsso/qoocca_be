@@ -4,6 +4,7 @@ import com.qoocca.teachers.db.academy.entity.AcademyEntity;
 import com.qoocca.teachers.db.academy.entity.ApprovalStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,7 +17,15 @@ public interface AcademyRepository extends JpaRepository<AcademyEntity, Long> {
             "left join fetch a.academyImages " +
             "where a.id = :id")
     Optional<AcademyEntity> findDetailById(@Param("id") Long id);
+
+    @EntityGraph(attributePaths = {"user", "academyImages", "academyAges", "academySubjects"})
+    Optional<AcademyEntity> findAdminDetailById(Long id);
     List<AcademyEntity> findAllByUserId(Long userId);
 
+    @EntityGraph(attributePaths = "user")
     Page<AcademyEntity> findAllByApprovalStatus(ApprovalStatus approvalStatus, Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = "user")
+    Page<AcademyEntity> findAll(Pageable pageable);
 }

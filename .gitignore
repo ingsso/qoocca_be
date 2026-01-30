@@ -42,3 +42,11 @@ qoocca-api/src/main/resources/application.yml
 src/main/resources/data.sql
 nginx
 Dockerfile
+
+# === secrets / credentials (CRITICAL) ===
+**/application.yml
+**/service-account.json
+**/google-services.json
+**/.env
+**/*.jks
+**/*.keystore

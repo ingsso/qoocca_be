@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Tag(name = "Student Receipt API", description = "Student receipt create/update/query API")
+@Tag(name = "Student Receipt API", description = "학생 수납 생성/조회/수정 API")
 @RestController
 @RequestMapping("/api/student/{studentId}/receipt")
 @RequiredArgsConstructor
@@ -30,7 +30,7 @@ public class ReceiptController {
 
     private final ReceiptService receiptService;
 
-    @Operation(summary = "Create receipt", description = "Create a receipt record for a student.")
+    @Operation(summary = "수납 기록 생성", description = "학생 수납(결제) 기록을 생성합니다.")
     @PostMapping
     public ReceiptCreateResponse createReceipt(
             @Parameter(description = "Student ID", example = "1") @PathVariable Long studentId,
@@ -39,14 +39,14 @@ public class ReceiptController {
         return receiptService.createReceipt(studentId, request);
     }
 
-    @Operation(summary = "List receipts", description = "List all receipts for a student.")
+    @Operation(summary = "학생 전체 수납 이력 조회", description = "특정 학생의 전체 수납 이력을 조회합니다.")
     @GetMapping
     public List<ReceiptResponse> getAllReceipts(
             @Parameter(description = "Student ID", example = "1") @PathVariable Long studentId) {
         return receiptService.getReceiptsByStudent(studentId);
     }
 
-    @Operation(summary = "Monthly receipts", description = "List receipts for a student by year/month.")
+    @Operation(summary = "학생 월별 수납 이력 조회", description = "연도/월을 지정하여 학생 수납 이력을 조회합니다.")
     @GetMapping("/month")
     public List<ReceiptResponse> getMonthlyReceipts(
             @Parameter(description = "Student ID", example = "1") @PathVariable Long studentId,
@@ -56,7 +56,7 @@ public class ReceiptController {
         return receiptService.getReceiptsByStudentAndMonth(studentId, year, month);
     }
 
-    @Operation(summary = "Update receipt status", description = "Update receipt status for a student.")
+    @Operation(summary = "수납 상태 수정", description = "수납 상태를 수정합니다.")
     @PutMapping("/{receiptId}")
     public ReceiptUpdateResponse updateReceiptStatus(
             @Parameter(description = "Student ID", example = "1") @PathVariable Long studentId,

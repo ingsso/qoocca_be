@@ -3,6 +3,7 @@ package com.qoocca.teachers.api.receipt.service;
 import com.qoocca.teachers.api.receipt.model.ReceiptCreateRequest;
 import com.qoocca.teachers.api.receipt.model.ReceiptUpdateRequest;
 import com.qoocca.teachers.api.receipt.model.response.*;
+import com.qoocca.teachers.api.global.service.FcmPushService;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoEntity;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoStudentEntity;
 import com.qoocca.teachers.db.classInfo.entity.StudentStatus;
@@ -38,6 +39,7 @@ public class ReceiptService {
     private final ClassInfoRepository classInfoRepository;
     private final ClassInfoStudentRepository classInfoStudentRepository;
     private final StudentParentRepository studentParentRepository;
+    private final FcmPushService fcmPushService;
 
     /* =========================
      * POST: 수납 생성 (한 달에 1회 제한 로직 추가)
@@ -64,9 +66,20 @@ public class ReceiptService {
         }
 
         ReceiptEntity receipt = ReceiptEntity.createReceipt(
-                student, classInfo, request.getAmount(), request.getReceiptDate(), request.getReceiptStatus());
+                student, classInfo, request.getAmount(), request.getReceiptDate(), ReceiptEntity.ReceiptStatus.ISSUED);
 
-        return ReceiptCreateResponse.fromEntity(receiptRepository.save(receipt));
+        ReceiptEntity saved = receiptRepository.save(receipt);
+
+        List<StudentParentEntity> parents = studentParentRepository.findByStudent_StudentId(studentId);
+        String title = "Payment request";
+        String body = "Class: " + classInfo.getClassName() + ", amount: " + request.getAmount();
+        for (StudentParentEntity sp : parents) {
+            if (sp.getParent() != null && sp.getParent().getParentId() != null) {
+                fcmPushService.sendPushToUser(sp.getParent().getParentId(), saved.getReceiptId(), title, body);
+            }
+        }
+
+        return ReceiptCreateResponse.fromEntity(saved);
     }
 
     /* =========================
@@ -110,6 +123,18 @@ public class ReceiptService {
             receipt.setReceiptStatus(request.getReceiptStatus());
         }
 
+        return ReceiptUpdateResponse.fromEntity(receipt);
+    }
+
+    public ReceiptUpdateResponse payReceipt(Long receiptId, Long parentId) {
+        ReceiptEntity receipt = getReceiptForParentAction(receiptId, parentId);
+        receipt.setReceiptStatus(ReceiptEntity.ReceiptStatus.PAID);
+        return ReceiptUpdateResponse.fromEntity(receipt);
+    }
+
+    public ReceiptUpdateResponse cancelReceipt(Long receiptId, Long parentId) {
+        ReceiptEntity receipt = getReceiptForParentAction(receiptId, parentId);
+        receipt.setReceiptStatus(ReceiptEntity.ReceiptStatus.CANCELLED);
         return ReceiptUpdateResponse.fromEntity(receipt);
     }
 
@@ -169,12 +194,6 @@ public class ReceiptService {
                     .totalAmount(cls.getPrice() * enrollments.size())
                     .build();
         }).collect(Collectors.toList());
-    }
-
-    private boolean isAlreadyProcessedInMonth(Long studentId, Long classId, LocalDateTime date) {
-        YearMonth ym = YearMonth.from(date != null ? date : LocalDateTime.now());
-        return receiptRepository.existsByStudent_StudentIdAndClassInfo_ClassIdAndReceiptDateBetween(
-                studentId, classId, ym.atDay(1).atStartOfDay(), ym.atEndOfMonth().atTime(23, 59, 59));
     }
 
     private ReceiptDataContainer prepareReceiptData(Long academyId, int year, int month) {
@@ -237,4 +256,29 @@ public class ReceiptService {
         }
         return hasIssued ? ReceiptEntity.ReceiptStatus.ISSUED : ReceiptEntity.ReceiptStatus.PAID;
     }
+
+    private ReceiptEntity getReceiptForParentAction(Long receiptId, Long parentId) {
+        ReceiptEntity receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECEIPT_NOT_FOUND));
+
+        boolean isParent = studentParentRepository
+                .findByStudent_StudentIdAndParent_ParentId(receipt.getStudent().getStudentId(), parentId)
+                .isPresent();
+        if (!isParent) {
+            throw new CustomException(ErrorCode.STUDENT_PARENT_RELATION_NOT_FOUND);
+        }
+
+        if (receipt.getReceiptStatus() != ReceiptEntity.ReceiptStatus.ISSUED) {
+            throw new CustomException(ErrorCode.INVALID_RECEIPT_STATUS);
+        }
+
+        return receipt;
+    }
+
+    private boolean isAlreadyProcessedInMonth(Long studentId, Long classId, LocalDateTime date) {
+        YearMonth ym = YearMonth.from(date != null ? date : LocalDateTime.now());
+        return receiptRepository.existsByStudent_StudentIdAndClassInfo_ClassIdAndReceiptDateBetween(
+                studentId, classId, ym.atDay(1).atStartOfDay(), ym.atEndOfMonth().atTime(23, 59, 59));
+    }
 }
+

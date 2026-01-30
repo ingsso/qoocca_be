@@ -29,6 +29,7 @@ public class StudentParentEntity {
     @Column(name = "student_parent_id")
     private Long studentParentId;
 
+
     /* =========================
      * 연관관계 (FK)
      * ========================= */

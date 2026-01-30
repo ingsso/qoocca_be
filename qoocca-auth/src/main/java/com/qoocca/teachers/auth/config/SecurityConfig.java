@@ -41,18 +41,36 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
+                        // Swagger
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-                        .requestMatchers("/api/auth/**", "/api/ages", "/api/subjects").permitAll()
-                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
+
+                        // Auth & public APIs
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/parent/auth/login",
+                                "/oauth2/**",
+                                "/api/ages",
+                                "/api/subjects",
+
+                                // ✅ FCM 토큰 등록 API 허용
+                                "/api/fcm/register",
+                                "/api/receipt/**"
+                        ).permitAll()
+
+                        // Admin only
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/class/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/class/**").hasAnyRole("USER", "ADMIN")
 
+                        // User or Admin
+                        .requestMatchers(HttpMethod.PUT, "/api/class/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/academy/**").hasAnyRole("USER", "ADMIN")
+
+                        // Everything else
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -71,7 +89,6 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(allowedOrigins);
-
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);

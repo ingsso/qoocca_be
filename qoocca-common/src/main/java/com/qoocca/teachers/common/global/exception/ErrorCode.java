@@ -43,6 +43,7 @@ public enum ErrorCode {
      */
     STUDENT_NOT_FOUND(404, "ST001", "학생 정보를 찾을 수 없습니다."),
     STUDENT_PARENT_RELATION_NOT_FOUND(404, "ST002", "학생-부모 관계를 찾을 수 없습니다."),
+    PARENT_NOT_FOUND(404, "ST003", "부모 정보를 찾을 수 없습니다."),
     CLASS_NOT_FOUND(404, "C001", "클래스 정보를 찾을 수 없습니다."),
     STUDENT_ALREADY_ENROLLED(400, "C002", "이미 해당 클래스에 등록된 학생입니다."),
     ENROLLMENT_NOT_FOUND(404, "C003", "수강 정보를 찾을 수 없습니다."),
@@ -54,6 +55,7 @@ public enum ErrorCode {
     RECEIPT_NOT_FOUND (404, "R002", "수납 기록(영수증)을 찾을 수 없습니다."),
     RECEIPT_ACCESS_DENIED (403, "R003", "본인의 수납 기록만 접근할 수 있습니다."),
     PAYMENT_METHOD_NOT_FOUND(400, "R004", "등록된 결제 수단이 없습니다."),
+    INVALID_RECEIPT_STATUS(400, "R005", "수납 상태 변경이 허용되지 않습니다."),
 
     /**
      * 시스템 공통

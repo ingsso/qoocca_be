@@ -42,3 +42,11 @@ qoocca-api/src/main/resources/application.yml
 src/main/resources/data.sql
 nginx
 Dockerfile
+
+appliction.properties
+service-account.json
+google-services.json
+key.properties
+*.jks
+*.keystore
+*.log

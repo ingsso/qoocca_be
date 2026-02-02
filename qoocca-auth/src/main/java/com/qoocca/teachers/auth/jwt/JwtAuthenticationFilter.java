@@ -1,6 +1,7 @@
 package com.qoocca.teachers.auth.jwt;
 
 import com.qoocca.teachers.auth.service.CustomUserDetailsService;
+import com.qoocca.teachers.auth.service.ParentUserDetailsService;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
+    private final ParentUserDetailsService parentUserDetailsService;
 
     @Override
     protected void doFilterInternal (HttpServletRequest req, HttpServletResponse res,
@@ -38,7 +40,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
                 String userId = String.valueOf(jwtTokenProvider.getUserIdFromToken(token));
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
+                String role = jwtTokenProvider.getRoleFromToken(token);
+                UserDetails userDetails = "ROLE_PARENT".equals(role)
+                        ? parentUserDetailsService.loadUserByUsername(userId)
+                        : userDetailsService.loadUserByUsername(userId);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(

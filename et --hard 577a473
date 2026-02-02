@@ -1,0 +1,103 @@
+[33m11f5cc4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/26[m[33m, [m[1;31morigin/feature/26[m[33m)[m HEAD@{0}: commit: chore: remove application.yml and secure gitignore
+[33m316a3f2[m[33m ([m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m HEAD@{1}: checkout: moving from develop to feature/26
+[33m316a3f2[m[33m ([m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m HEAD@{2}: checkout: moving from main to develop
+[33m68049df[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{3}: checkout: moving from feature/26 to main
+[33m577a473[m HEAD@{4}: commit: feature/26 add firebase receipt logic
+[33m69e351a[m HEAD@{5}: reset: moving to HEAD
+[33m69e351a[m HEAD@{6}: commit: featrue/26 add firebase receipt logic
+[33mb10c23d[m HEAD@{7}: commit: featrue/26 add firebase receipt logic
+[33m316a3f2[m[33m ([m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m HEAD@{8}: checkout: moving from develop to feature/26
+[33m316a3f2[m[33m ([m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m HEAD@{9}: pull origin develop: Fast-forward
+[33m71eae6b[m HEAD@{10}: checkout: moving from fix/15 to develop
+[33me170748[m[33m ([m[1;31morigin/fix/15[m[33m, [m[1;32mfix/15[m[33m)[m HEAD@{11}: commit: fix/15 add new errorCode
+[33m71eae6b[m HEAD@{12}: checkout: moving from develop to fix/15
+[33m71eae6b[m HEAD@{13}: pull origin develop: Fast-forward
+[33meeba363[m HEAD@{14}: checkout: moving from develop to develop
+[33meeba363[m HEAD@{15}: checkout: moving from fix/14 to develop
+[33m0fcd577[m[33m ([m[1;31morigin/fix/14[m[33m, [m[1;32mfix/14[m[33m)[m HEAD@{16}: checkout: moving from fix/13 to fix/14
+[33m3c85949[m[33m ([m[1;31morigin/fix/13[m[33m, [m[1;32mfix/13[m[33m)[m HEAD@{17}: commit: fix/13 fix academyStudentServcie register logic
+[33meeba363[m HEAD@{18}: checkout: moving from develop to fix/13
+[33meeba363[m HEAD@{19}: pull origin develop: Fast-forward
+[33m3c0bb51[m HEAD@{20}: checkout: moving from feature/24 to develop
+[33m4b5feec[m[33m ([m[1;31morigin/feature/24[m[33m, [m[1;32mfeature/24[m[33m)[m HEAD@{21}: commit: feat: add excel upload api with ai header mapping
+[33m3c0bb51[m HEAD@{22}: checkout: moving from develop to feature/24
+[33m3c0bb51[m HEAD@{23}: pull origin develop: Fast-forward
+[33m5762081[m HEAD@{24}: checkout: moving from develop to develop
+[33m5762081[m HEAD@{25}: pull origin develop: Fast-forward
+[33m069f162[m HEAD@{26}: checkout: moving from develop to develop
+[33m069f162[m HEAD@{27}: pull origin develop: Fast-forward
+[33md14292e[m HEAD@{28}: checkout: moving from feature/23 to develop
+[33m4e1a021[m[33m ([m[1;31morigin/feature/23[m[33m, [m[1;32mfeature/23[m[33m)[m HEAD@{29}: commit: feature/23 add select several Academy
+[33md14292e[m HEAD@{30}: checkout: moving from develop to feature/23
+[33md14292e[m HEAD@{31}: pull origin develop: Fast-forward
+[33m7b0f63e[m HEAD@{32}: checkout: moving from develop to develop
+[33m7b0f63e[m HEAD@{33}: pull origin develop: Fast-forward
+[33m1b5dea7[m HEAD@{34}: checkout: moving from feature/22 to develop
+[33mccae2f2[m[33m ([m[1;31morigin/feature/22[m[33m, [m[1;32mfeature/22[m[33m)[m HEAD@{35}: commit: feature/22 add api for student modify
+[33m1b5dea7[m HEAD@{36}: checkout: moving from develop to feature/22
+[33m1b5dea7[m HEAD@{37}: pull origin develop: Fast-forward
+[33m4512edd[m HEAD@{38}: checkout: moving from feature/20 to develop
+[33m53e46f8[m[33m ([m[1;31morigin/feature/20[m[33m, [m[1;32mfeature/20[m[33m)[m HEAD@{39}: commit: feature/20 fix Entity for StudentRegisterForm
+[33m124b6d9[m[33m ([m[1;31morigin/feature/18[m[33m, [m[1;32mfeature/18[m[33m)[m HEAD@{40}: checkout: moving from feature/18 to feature/20
+[33m124b6d9[m[33m ([m[1;31morigin/feature/18[m[33m, [m[1;32mfeature/18[m[33m)[m HEAD@{41}: commit: feature/18 Add ClassParentStats Code
+[33m284696c[m[33m ([m[1;31morigin/feature/15[m[33m, [m[1;32mfeature/15[m[33m)[m HEAD@{42}: checkout: moving from feature/15 to feature/18
+[33m284696c[m[33m ([m[1;31morigin/feature/15[m[33m, [m[1;32mfeature/15[m[33m)[m HEAD@{43}: commit: feature/15 Add ClassInfoStats Code
+[33m4512edd[m HEAD@{44}: checkout: moving from develop to feature/15
+[33m4512edd[m HEAD@{45}: commit: Resolve merge conflicts after pulling develop
+[33mab2baa7[m HEAD@{46}: pull origin develop: Fast-forward
+[33m25b2824[m HEAD@{47}: reset: moving to HEAD
+[33m25b2824[m HEAD@{48}: checkout: moving from develop to develop
+[33m25b2824[m HEAD@{49}: pull: Fast-forward
+[33m8fe0f6d[m HEAD@{50}: checkout: moving from develop to develop
+[33m8fe0f6d[m HEAD@{51}: checkout: moving from fix/4 to develop
+[33m2730372[m[33m ([m[1;31morigin/fix/4[m[33m, [m[1;32mfix/4[m[33m)[m HEAD@{52}: commit: fix: move student status to academy-student relation
+[33m25b2824[m HEAD@{53}: pull origin develop: Fast-forward
+[33m73bd427[m HEAD@{54}: commit: fix/4 StudentEntity delete status
+[33m517a9b7[m[33m ([m[1;32mfeature/13[m[33m)[m HEAD@{55}: checkout: moving from feature/13 to fix/4
+[33m517a9b7[m[33m ([m[1;32mfeature/13[m[33m)[m HEAD@{56}: commit: feature/13 DB 테이블 수정
+[33m8fe0f6d[m HEAD@{57}: checkout: moving from develop to feature/13
+[33m8fe0f6d[m HEAD@{58}: checkout: moving from feature/10 to develop
+[33me1f6fe9[m[33m ([m[1;32mfeature/10[m[33m)[m HEAD@{59}: checkout: moving from develop to feature/10
+[33m8fe0f6d[m HEAD@{60}: checkout: moving from feature/10 to develop
+[33me1f6fe9[m[33m ([m[1;32mfeature/10[m[33m)[m HEAD@{61}: checkout: moving from develop to feature/10
+[33m8fe0f6d[m HEAD@{62}: checkout: moving from feature/10 to develop
+[33me1f6fe9[m[33m ([m[1;32mfeature/10[m[33m)[m HEAD@{63}: checkout: moving from develop to feature/10
+[33m8fe0f6d[m HEAD@{64}: checkout: moving from feature/10 to develop
+[33me1f6fe9[m[33m ([m[1;32mfeature/10[m[33m)[m HEAD@{65}: checkout: moving from develop to feature/10
+[33m8fe0f6d[m HEAD@{66}: pull origin develop: Fast-forward
+[33md6985ea[m HEAD@{67}: checkout: moving from develop to develop
+[33md6985ea[m HEAD@{68}: checkout: moving from feature/12 to develop
+[33m6d7be3b[m[33m ([m[1;32mfeature/12[m[33m)[m HEAD@{69}: checkout: moving from develop to feature/12
+[33md6985ea[m HEAD@{70}: reset: moving to HEAD
+[33md6985ea[m HEAD@{71}: checkout: moving from develop to develop
+[33md6985ea[m HEAD@{72}: reset: moving to origin/develop
+[33m52df37e[m HEAD@{73}: reset: moving to origin/develop
+[33m52df37e[m HEAD@{74}: checkout: moving from feature/10 to develop
+[33me1f6fe9[m[33m ([m[1;32mfeature/10[m[33m)[m HEAD@{75}: reset: moving to HEAD
+[33me1f6fe9[m[33m ([m[1;32mfeature/10[m[33m)[m HEAD@{76}: checkout: moving from develop to feature/10
+[33m52df37e[m HEAD@{77}: reset: moving to HEAD
+[33m52df37e[m HEAD@{78}: reset: moving to origin/develop
+[33m52df37e[m HEAD@{79}: checkout: moving from develop to develop
+[33m52df37e[m HEAD@{80}: reset: moving to origin/develop
+[33m050c162[m HEAD@{81}: checkout: moving from feature/10 to develop
+[33me1f6fe9[m[33m ([m[1;32mfeature/10[m[33m)[m HEAD@{82}: commit: feature/10 Nginx 서버 설정
+[33m050c162[m HEAD@{83}: checkout: moving from develop to feature/10
+[33m050c162[m HEAD@{84}: reset: moving to origin/develop
+[33m0df74e4[m HEAD@{85}: checkout: moving from 050c1628dbeaa682a4e0ba1c2342d3d5fc7c8b9a to develop
+[33m050c162[m HEAD@{86}: checkout: moving from feature/8 to origin/develop
+[33m09286c5[m[33m ([m[1;31morigin/feature/8[m[33m, [m[1;32mfeature/8[m[33m)[m HEAD@{87}: commit: feature/8 : 클래스 조회 api 추가 작성
+[33m0df74e4[m HEAD@{88}: checkout: moving from develop to feature/8
+[33m0df74e4[m HEAD@{89}: pull origin develop: Fast-forward
+[33maa0334c[m HEAD@{90}: checkout: moving from feature/5 to develop
+[33m155382d[m[33m ([m[1;31morigin/feature/5[m[33m, [m[1;32mfeature/5[m[33m)[m HEAD@{91}: checkout: moving from feature/6 to feature/5
+[33m5b44cbd[m[33m ([m[1;32mfeature/6[m[33m)[m HEAD@{92}: checkout: moving from feature/5 to feature/6
+[33m155382d[m[33m ([m[1;31morigin/feature/5[m[33m, [m[1;32mfeature/5[m[33m)[m HEAD@{93}: checkout: moving from feature/6 to feature/5
+[33m5b44cbd[m[33m ([m[1;32mfeature/6[m[33m)[m HEAD@{94}: checkout: moving from feature/5 to feature/6
+[33m155382d[m[33m ([m[1;31morigin/feature/5[m[33m, [m[1;32mfeature/5[m[33m)[m HEAD@{95}: commit: feature/5 작업 내용 커밋 메시지
+[33maa0334c[m HEAD@{96}: checkout: moving from develop to feature/5
+[33maa0334c[m HEAD@{97}: pull origin develop: Fast-forward
+[33m6e9759a[m HEAD@{98}: checkout: moving from feature/4 to develop
+[33m04febc2[m[33m ([m[1;32mfeature/4[m[33m)[m HEAD@{99}: commit: fix: student-class relation and repository query error
+[33m6e9759a[m HEAD@{100}: checkout: moving from develop to feature/4
+[33m6e9759a[m HEAD@{101}: checkout: moving from main to develop
+[33m68049df[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{102}: clone: from https://github.com/ingsso/qoocca_be.git

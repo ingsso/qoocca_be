@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: qoocca-teachers
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:mysql://localhost:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: always
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        default_batch_fetch_size: 100
+    defer-datasource-initialization: true
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+jwt:
+  secret: ${SECRET_KEY}
+  cookie-encryption-key: ${ENCRYPTION_KEY}
+  access-token-expiration: 1800000
+  refresh-token-expiration: 604800000
+
+kakao:
+  client-id: ${KAKAO_CLIENT_ID}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
+
+naver:
+  client-id: ${NAVER_CLIENT_ID}
+  client-secret: ${NAVER_CLIENT_SECRET}
+  redirect-uri: ${NAVER_REDIRECT_URI}
+
+logging:
+  level:
+    org:
+      springframework: info
+      zerock: debug
+
+file:
+  upload:
+    path: D:\fintech\login\qoocca_be\nginx
+    base-url: http://localhost:8081/academy/

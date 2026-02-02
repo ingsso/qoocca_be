@@ -54,7 +54,10 @@ public class ReceiptService {
 
         // 카드 등록 여부 체크
         boolean hasCard = studentParentRepository.findByStudent_StudentId(studentId).stream()
-                .anyMatch(sp -> Boolean.TRUE.equals(sp.getParent().getCardState()));
+                .anyMatch(sp ->
+                        Boolean.TRUE.equals(sp.getParent().getCardState())
+                                || (sp.getParent().getCardNum() != null && !sp.getParent().getCardNum().isBlank())
+                );
 
         if (!hasCard) {
             throw new CustomException(ErrorCode.PAYMENT_METHOD_NOT_FOUND);
@@ -71,8 +74,9 @@ public class ReceiptService {
         ReceiptEntity saved = receiptRepository.save(receipt);
 
         List<StudentParentEntity> parents = studentParentRepository.findByStudent_StudentId(studentId);
-        String title = "Payment request";
-        String body = "Class: " + classInfo.getClassName() + ", amount: " + request.getAmount();
+        String title = "결제 요청이 도착했어요";
+        String body = String.format("%s 학생의 %s 수업 수강료 %,d원 결제를 진행해 주세요.",
+                student.getStudentName(), classInfo.getClassName(), request.getAmount());
         for (StudentParentEntity sp : parents) {
             if (sp.getParent() != null && sp.getParent().getParentId() != null) {
                 fcmPushService.sendPushToUser(sp.getParent().getParentId(), saved.getReceiptId(), title, body);
@@ -136,6 +140,12 @@ public class ReceiptService {
         ReceiptEntity receipt = getReceiptForParentAction(receiptId, parentId);
         receipt.setReceiptStatus(ReceiptEntity.ReceiptStatus.CANCELLED);
         return ReceiptUpdateResponse.fromEntity(receipt);
+    }
+
+    @Transactional(readOnly = true)
+    public ParentReceiptResponse getReceiptDetailForParent(Long receiptId, Long parentId) {
+        ReceiptEntity receipt = getReceiptForParentAccess(receiptId, parentId);
+        return ParentReceiptResponse.fromEntity(receipt);
     }
 
     /* =========================
@@ -231,7 +241,10 @@ public class ReceiptService {
             cardStatusMap = studentIds.stream().collect(Collectors.toMap(
                     id -> id,
                     id -> parentsByStudent.getOrDefault(id, List.of()).stream()
-                            .anyMatch(sp -> Boolean.TRUE.equals(sp.getParent().getCardState()))
+                            .anyMatch(sp ->
+                                    Boolean.TRUE.equals(sp.getParent().getCardState())
+                                            || (sp.getParent().getCardNum() != null && !sp.getParent().getCardNum().isBlank())
+                            )
             ));
         }
 
@@ -258,6 +271,16 @@ public class ReceiptService {
     }
 
     private ReceiptEntity getReceiptForParentAction(Long receiptId, Long parentId) {
+        ReceiptEntity receipt = getReceiptForParentAccess(receiptId, parentId);
+
+        if (receipt.getReceiptStatus() != ReceiptEntity.ReceiptStatus.ISSUED) {
+            throw new CustomException(ErrorCode.INVALID_RECEIPT_STATUS);
+        }
+
+        return receipt;
+    }
+
+    private ReceiptEntity getReceiptForParentAccess(Long receiptId, Long parentId) {
         ReceiptEntity receipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECEIPT_NOT_FOUND));
 
@@ -268,11 +291,15 @@ public class ReceiptService {
             throw new CustomException(ErrorCode.STUDENT_PARENT_RELATION_NOT_FOUND);
         }
 
-        if (receipt.getReceiptStatus() != ReceiptEntity.ReceiptStatus.ISSUED) {
-            throw new CustomException(ErrorCode.INVALID_RECEIPT_STATUS);
-        }
-
         return receipt;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ParentReceiptResponse> getPendingReceiptsByParent(Long parentId) {
+        return receiptRepository.findAllByParentAndStatus(parentId, ReceiptEntity.ReceiptStatus.ISSUED)
+                .stream()
+                .map(ParentReceiptResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 
     private boolean isAlreadyProcessedInMonth(Long studentId, Long classId, LocalDateTime date) {

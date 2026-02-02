@@ -2,6 +2,7 @@ package com.qoocca.teachers.api.parent.auth.service;
 
 import com.qoocca.teachers.api.parent.auth.dto.ParentLoginRequest;
 import com.qoocca.teachers.api.parent.auth.dto.ParentLoginResponse;
+import com.qoocca.teachers.auth.jwt.JwtTokenProvider;
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.parent.entity.ParentEntity;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ParentAuthService {
 
     private final ParentRepository parentRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional(readOnly = true)
     public ParentLoginResponse login(ParentLoginRequest request) {
@@ -25,6 +27,7 @@ public class ParentAuthService {
         ParentEntity parent = parentRepository.findByParentPhone(request.getParentPhone())
                 .orElseThrow(() -> new CustomException(ErrorCode.PARENT_NOT_FOUND));
 
-        return ParentLoginResponse.from(parent);
+        String accessToken = jwtTokenProvider.generateAccessToken(parent.getParentId(), "ROLE_PARENT");
+        return ParentLoginResponse.from(parent, accessToken);
     }
 }

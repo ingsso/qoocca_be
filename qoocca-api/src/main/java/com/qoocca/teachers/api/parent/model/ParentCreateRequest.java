@@ -24,6 +24,9 @@ public class ParentCreateRequest {
     @NotBlank
     private String parentPhone;
 
+    @NotBlank
+    private String password;
+
     @NotNull
     private Boolean isPay;
 

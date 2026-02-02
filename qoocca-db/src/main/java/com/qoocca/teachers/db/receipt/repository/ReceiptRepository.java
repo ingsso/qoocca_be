@@ -15,7 +15,7 @@ public interface ReceiptRepository
 
 
     /* =========================
-     * 학생 기준
+     * ?숈깮 湲곗?
      * ========================= */
 
     List<ReceiptEntity> findByStudent_StudentId(Long studentId);
@@ -37,8 +37,25 @@ public interface ReceiptRepository
             @Param("end") LocalDateTime end
     );
 
+    @Query("""
+        SELECT r
+        FROM ReceiptEntity r
+        JOIN FETCH r.student s
+        JOIN FETCH r.classInfo c
+        JOIN FETCH c.academy a
+        JOIN StudentParentEntity sp ON sp.student = s
+        WHERE sp.parent.parentId = :parentId
+          AND sp.parent.isPay = true
+          AND r.receiptStatus = :status
+        ORDER BY r.receiptDate DESC
+    """)
+    List<ReceiptEntity> findAllByParentAndStatus(
+            @Param("parentId") Long parentId,
+            @Param("status") ReceiptEntity.ReceiptStatus status
+    );
+
     /* =========================
-     * 관리자 기준
+     * 愿由ъ옄 湲곗?
      * ========================= */
 
     @Query("""

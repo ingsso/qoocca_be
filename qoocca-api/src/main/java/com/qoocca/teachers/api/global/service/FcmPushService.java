@@ -18,7 +18,6 @@ public class FcmPushService {
         this.tokenRepository = tokenRepository;
     }
 
-    // 1截뤴깵 ?대씪?댁뼵?몄뿉??諛쏆? ?좏겙 ???媛깆떊
     public void registerToken(Long parentId, String token) {
         Optional<FirebaseTokenEntity> existing = tokenRepository.findByParentId(parentId);
         FirebaseTokenEntity entity = existing.orElseGet(FirebaseTokenEntity::new);
@@ -27,18 +26,21 @@ public class FcmPushService {
         tokenRepository.save(entity);
     }
 
-    // 2截뤴깵 ?좎??먭쾶 ?몄떆 蹂대궡湲?
     public void sendPushToUser(Long parentId, Long receiptId, String title, String body) {
         tokenRepository.findByParentId(parentId).ifPresent(token -> {
             sendPush(token.getFcmToken(), receiptId, title, body);
         });
     }
 
-    // 3截뤴깵 ?ㅼ젣 FCM ?꾩넚
     private void sendPush(String token, Long receiptId, String title, String body) {
+        String receiptIdValue = receiptId != null ? receiptId.toString() : "";
+        String receiptPath = receiptId != null ? "/api/parent/receipt/" + receiptId : "/api/parent/receipt/requests";
+
         Message message = Message.builder()
                 .setToken(token)
-                .putData("receiptId", receiptId != null ? receiptId.toString() : "")
+                .putData("type", "RECEIPT_ISSUED")
+                .putData("receiptId", receiptIdValue)
+                .putData("route", receiptPath)
                 .putData("title", title != null ? title : "")
                 .putData("body", body != null ? body : "")
                 .build();

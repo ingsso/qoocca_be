@@ -58,9 +58,11 @@ public class SecurityConfig {
                                 "/api/subjects",
 
                                 // ✅ FCM 토큰 등록 API 허용
-                                "/api/fcm/register",
-                                "/api/receipt/**"
+                                "/api/fcm/register"
                         ).permitAll()
+
+                        // Parent only
+                        .requestMatchers("/api/parent/**", "/api/receipt/**", "/api/payment/**").hasRole("PARENT")
 
                         // Admin only
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

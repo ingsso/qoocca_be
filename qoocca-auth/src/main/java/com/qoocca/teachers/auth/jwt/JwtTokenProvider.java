@@ -1,6 +1,8 @@
 package com.qoocca.teachers.auth.jwt;
 
 import com.qoocca.teachers.common.auth.model.LoginResponse;
+import com.qoocca.teachers.common.global.exception.CustomException;
+import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.common.redis.RedisDao;
 import com.qoocca.teachers.common.global.utils.CookieUtils;
 import io.jsonwebtoken.Claims;
@@ -34,7 +36,15 @@ public class JwtTokenProvider {
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
                             RedisDao redisDao,
                             CookieUtils cookieUtils) {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("jwt.secret must not be blank");
+        }
+
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("jwt.secret must be at least 32 bytes");
+        }
+
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.redisDao = redisDao;
         this.cookieUtils = cookieUtils;
@@ -149,7 +159,7 @@ public class JwtTokenProvider {
                 redisDao.setValues(BLACKLIST_PREFIX + accessToken, "logout", Duration.ofMillis(remainTime));
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 

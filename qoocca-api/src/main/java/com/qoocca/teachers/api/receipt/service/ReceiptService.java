@@ -131,14 +131,20 @@ public class ReceiptService {
     }
 
     public ReceiptUpdateResponse payReceipt(Long receiptId, Long parentId) {
-        ReceiptEntity receipt = getReceiptForParentAction(receiptId, parentId);
-        receipt.setReceiptStatus(ReceiptEntity.ReceiptStatus.PAID);
-        return ReceiptUpdateResponse.fromEntity(receipt);
+        return changeReceiptStatusForParent(receiptId, parentId, ReceiptEntity.ReceiptStatus.PAID);
     }
 
     public ReceiptUpdateResponse cancelReceipt(Long receiptId, Long parentId) {
+        return changeReceiptStatusForParent(receiptId, parentId, ReceiptEntity.ReceiptStatus.CANCELLED);
+    }
+
+    private ReceiptUpdateResponse changeReceiptStatusForParent(
+            Long receiptId,
+            Long parentId,
+            ReceiptEntity.ReceiptStatus targetStatus
+    ) {
         ReceiptEntity receipt = getReceiptForParentAction(receiptId, parentId);
-        receipt.setReceiptStatus(ReceiptEntity.ReceiptStatus.CANCELLED);
+        receipt.setReceiptStatus(targetStatus);
         return ReceiptUpdateResponse.fromEntity(receipt);
     }
 

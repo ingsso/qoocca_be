@@ -336,7 +336,7 @@ public class AcademyService {
             certificateFile.transferTo(new File(academyFolderPath + certFileName));
             academy.setCertificate(IMAGE_BASE_URL + academy.getId() + "/" + certFileName);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CustomException(ErrorCode.ACADEMY_CERTIFICATE_SAVE_FAILED);
         }
     }
 

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qoocca.teachers.api.global.config.OpenAiProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -27,7 +28,8 @@ public class OpenAiHeaderMappingClient {
     private final OpenAiProperties properties;
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate redis;
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Qualifier("openAiRestTemplate")
+    private final RestTemplate restTemplate;
 
     private static final Duration HEADER_CACHE_TTL = Duration.ofHours(24);
     private static final Duration COOLDOWN_TTL = Duration.ofSeconds(10);
@@ -64,8 +66,11 @@ public class OpenAiHeaderMappingClient {
         Map<String, String> mapping;
         try {
             mapping = callOpenAI(headers);
+        } catch (RestClientException e) {
+            log.warn("OpenAI request failed. academyId={}, reason={}", academyId, e.getMessage());
+            return Map.of();
         } catch (Exception e) {
-            log.error("OpenAI header mapping failed", e);
+            log.error("OpenAI header mapping failed. academyId={}", academyId, e);
             return Map.of();
         }
 

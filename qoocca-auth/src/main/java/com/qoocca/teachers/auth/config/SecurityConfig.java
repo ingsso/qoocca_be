@@ -66,7 +66,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/class/**").hasRole("ADMIN")
 
                         // Parent only
-                        .requestMatchers("/api/parent/**", "/api/payment/**").hasRole("PARENT")
+                        .requestMatchers("/api/parent/**").hasRole("PARENT")
                         .requestMatchers(HttpMethod.POST, "/api/receipt/*/pay", "/api/receipt/*/cancel").hasRole("PARENT")
 
                         // User or Admin

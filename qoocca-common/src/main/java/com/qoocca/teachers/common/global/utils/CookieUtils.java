@@ -1,5 +1,7 @@
 package com.qoocca.teachers.common.global.utils;
 
+import com.qoocca.teachers.common.global.exception.CustomException;
+import com.qoocca.teachers.common.global.exception.ErrorCode;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -54,7 +56,7 @@ public class CookieUtils {
 
             res.addHeader(HttpHeaders.SET_COOKIE, cookieBuilder.build().toString());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to encrypt refresh token cookie", e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 

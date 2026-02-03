@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+security:
+  cookie:
+    refresh:
+      secure: false
+      same-site: Lax

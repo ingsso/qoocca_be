@@ -18,6 +18,21 @@ public class CookieUtils {
     @Value("${jwt.cookie-encryption-key:this-is-a-very-secret-key-32chars}")
     private String encryptionKey;
 
+    @Value("${security.cookie.refresh.secure:false}")
+    private boolean refreshCookieSecure;
+
+    @Value("${security.cookie.refresh.same-site:Lax}")
+    private String refreshCookieSameSite;
+
+    @Value("${security.cookie.refresh.path:/}")
+    private String refreshCookiePath;
+
+    @Value("${security.cookie.refresh.domain:}")
+    private String refreshCookieDomain;
+
+    @Value("${security.cookie.refresh.max-age:604800}")
+    private long refreshCookieMaxAge;
+
     private static final String ALGORITHM = "AES";
 
     public void addRefreshTokenCookie(HttpServletResponse res, String refreshToken) {
@@ -26,17 +41,20 @@ public class CookieUtils {
         try {
             String encryptedToken = encrypt(refreshToken);
 
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", encryptedToken)
+            ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("refreshToken", encryptedToken)
                     .httpOnly(true)
-                    .secure(false) // 로컬 테스트 시 false
-                    .path("/")
-                    .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Lax")
-                    .build();
+                    .secure(refreshCookieSecure)
+                    .path(refreshCookiePath)
+                    .maxAge(refreshCookieMaxAge)
+                    .sameSite(refreshCookieSameSite);
 
-            res.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            if (!refreshCookieDomain.isBlank()) {
+                cookieBuilder.domain(refreshCookieDomain);
+            }
+
+            res.addHeader(HttpHeaders.SET_COOKIE, cookieBuilder.build().toString());
         } catch (Exception e) {
-            throw new RuntimeException("쿠키 암호화 중 오류 발생", e);
+            throw new RuntimeException("Failed to encrypt refresh token cookie", e);
         }
     }
 
@@ -55,7 +73,6 @@ public class CookieUtils {
         return null;
     }
 
-    // AES 암호화 로직
     private String encrypt(String data) throws Exception {
         SecretKeySpec keySpec = new SecretKeySpec(encryptionKey.getBytes(), ALGORITHM);
         Cipher cipher = Cipher.getInstance(ALGORITHM);
@@ -64,7 +81,6 @@ public class CookieUtils {
         return Base64.getEncoder().encodeToString(encrypted);
     }
 
-    // AES 복호화 로직
     private String decrypt(String encryptedData) throws Exception {
         SecretKeySpec keySpec = new SecretKeySpec(encryptionKey.getBytes(), ALGORITHM);
         Cipher cipher = Cipher.getInstance(ALGORITHM);
@@ -74,11 +90,17 @@ public class CookieUtils {
     }
 
     public void deleteRefreshTokenCookie(HttpServletResponse res) {
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .path("/")
+                .secure(refreshCookieSecure)
+                .path(refreshCookiePath)
                 .maxAge(0)
-                .build();
-        res.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+                .sameSite(refreshCookieSameSite);
+
+        if (!refreshCookieDomain.isBlank()) {
+            cookieBuilder.domain(refreshCookieDomain);
+        }
+
+        res.addHeader(HttpHeaders.SET_COOKIE, cookieBuilder.build().toString());
     }
 }

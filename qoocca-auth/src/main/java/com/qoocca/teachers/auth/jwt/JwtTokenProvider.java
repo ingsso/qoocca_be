@@ -34,7 +34,15 @@ public class JwtTokenProvider {
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
                             RedisDao redisDao,
                             CookieUtils cookieUtils) {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("jwt.secret must not be blank");
+        }
+
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("jwt.secret must be at least 32 bytes");
+        }
+
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.redisDao = redisDao;
         this.cookieUtils = cookieUtils;

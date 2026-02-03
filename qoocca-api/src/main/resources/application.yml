@@ -32,6 +32,15 @@ jwt:
   access-token-expiration: 1800000
   refresh-token-expiration: 604800000
 
+security:
+  cookie:
+    refresh:
+      secure: false
+      same-site: Lax
+      path: /
+      domain:
+      max-age: 604800
+
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   redirect-uri: ${KAKAO_REDIRECT_URI}

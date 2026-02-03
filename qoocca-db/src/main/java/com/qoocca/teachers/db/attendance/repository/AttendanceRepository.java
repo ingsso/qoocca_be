@@ -28,6 +28,11 @@ public interface AttendanceRepository
             LocalDate attendanceDate
     );
 
+    Optional<AttendanceEntity> findFirstByStudent_StudentIdAndAttendanceDateAndCheckOutIsNullOrderByCheckInDesc(
+            Long studentId,
+            LocalDate attendanceDate
+    );
+
     // 특정 학원에서 특정 학생의 일정 기간(예: 이번 달) 출결 데이터를 조회
     @Query("""
     SELECT a FROM AttendanceEntity a
@@ -78,6 +83,15 @@ public interface AttendanceRepository
     SELECT cs.student, cs.classInfo, :today, 'ABSENT', NOW(), NOW()
     FROM ClassInfoStudentEntity cs
     WHERE cs.status = 'ENROLLED'
+      AND (
+          (function('DAYOFWEEK', :today) = 1 AND cs.classInfo.sunday = true) OR
+          (function('DAYOFWEEK', :today) = 2 AND cs.classInfo.monday = true) OR
+          (function('DAYOFWEEK', :today) = 3 AND cs.classInfo.tuesday = true) OR
+          (function('DAYOFWEEK', :today) = 4 AND cs.classInfo.wednesday = true) OR
+          (function('DAYOFWEEK', :today) = 5 AND cs.classInfo.thursday = true) OR
+          (function('DAYOFWEEK', :today) = 6 AND cs.classInfo.friday = true) OR
+          (function('DAYOFWEEK', :today) = 7 AND cs.classInfo.saturday = true)
+      )
       AND NOT EXISTS (
           SELECT 1 FROM AttendanceEntity a
           WHERE a.student = cs.student

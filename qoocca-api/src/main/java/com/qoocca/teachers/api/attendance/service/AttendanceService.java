@@ -41,7 +41,7 @@ public class AttendanceService {
         StudentEntity student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
-        ClassInfoEntity targetClass = findMatchingClass(studentId, request.getCheckIn());
+        ClassInfoEntity targetClass = findMatchingClass(studentId, request.getAttendanceDate(), request.getCheckIn());
 
         // 중복 등원 체크
         if (attendanceRepository.existsByStudent_StudentIdAndClassInfo_ClassIdAndAttendanceDate(
@@ -62,10 +62,10 @@ public class AttendanceService {
         return AttendanceResponse.fromEntity(saved);
     }
 
-    private ClassInfoEntity findMatchingClass(Long studentId, LocalTime checkIn) {
+    private ClassInfoEntity findMatchingClass(Long studentId, LocalDate attendanceDate, LocalTime checkIn) {
         List<ClassInfoEntity> classes = classInfoStudentRepository.findClassesByStudentId(studentId, StudentStatus.ENROLLED);
 
-        String dayOfWeek = LocalDate.now().getDayOfWeek().name().toLowerCase();
+        String dayOfWeek = attendanceDate.getDayOfWeek().name().toLowerCase();
 
         return classes.stream()
                 .filter(c -> isClassOnDay(c, dayOfWeek))
@@ -77,8 +77,10 @@ public class AttendanceService {
     @Transactional
     public AttendanceResponse updateCheckOut(Long studentId, LocalDate date) {
         AttendanceEntity attendance = attendanceRepository
-                .findByStudent_StudentIdAndAttendanceDate(studentId, date)
-                .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
+                .findFirstByStudent_StudentIdAndAttendanceDateAndCheckOutIsNullOrderByCheckInDesc(studentId, date)
+                .orElseGet(() -> attendanceRepository
+                        .findByStudent_StudentIdAndAttendanceDate(studentId, date)
+                        .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND)));
 
         attendance.processCheckOut(attendance.getClassInfo().getEndTime());
 

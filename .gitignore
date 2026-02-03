@@ -37,16 +37,19 @@ out/
 .vscode/
 
 .env
-docker-compose.yml
-qoocca-api/src/main/resources/application.yml
-src/main/resources/data.sql
-nginx
-Dockerfile
-
-appliction.properties
+**/.env
 service-account.json
 google-services.json
 key.properties
 *.jks
 *.keystore
 *.log
+*.yml
+*.yaml
+docker-compose.yml
+qoocca-api/src/main/resources/application.yml
+nginx/nginx.conf
+appliction.properties
+src/main/resources/data.sql
+nginx
+Dockerfile

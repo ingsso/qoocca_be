@@ -52,6 +52,8 @@ naver:
 
 openai:
   api-key: ${OPENAI_API_KEY}
+  connect-timeout-millis: 2000
+  read-timeout-millis: 5000
 
 file:
   upload:

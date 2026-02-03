@@ -5,6 +5,7 @@ import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class SmsService {
     private final RedisDao redisDao;
@@ -35,7 +37,7 @@ public class SmsService {
         String verificationCode = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
         redisDao.setValues("SMS:" + cleanPhone, verificationCode, Duration.ofMinutes(3));
 
-        System.out.println("휴대폰: " + cleanPhone + " / 인증번호: " + verificationCode);
+        log.info("SMS verification code generated for phone={}", cleanPhone);
     }
 
     public Map<String, Object> verifyCode(String phone, String code) {

@@ -9,6 +9,7 @@ import com.qoocca.teachers.api.classInfo.service.ClassInfoStudentService;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoEntity;
 import com.qoocca.teachers.db.classInfo.repository.ClassInfoRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional
 public class AcademyStudentUploadService {
@@ -147,7 +149,8 @@ public class AcademyStudentUploadService {
                     );
                     successCount++;
                 } catch (Exception e) {
-                    errors.add(new AcademyStudentUploadError(i + 1, e.getMessage()));
+                    log.warn("Student upload row processing failed. academyId={}, row={}", academyId, i + 1, e);
+                    errors.add(new AcademyStudentUploadError(i + 1, "Failed to process row"));
                 }
             }
 

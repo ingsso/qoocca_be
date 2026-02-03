@@ -4,34 +4,32 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+@Slf4j
 @Configuration
 public class FirebaseConfig {
 
     @PostConstruct
     public void init() {
-        try {
-            // ClassPathResource를 사용해서 stream으로 읽기
-            ClassPathResource resource = new ClassPathResource("service-account.json");
-            InputStream serviceAccount = resource.getInputStream();
-
+        try (InputStream serviceAccount = new ClassPathResource("service-account.json").getInputStream()) {
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .build();
 
-            if (FirebaseApp.getApps().isEmpty()) { // 이미 초기화되어 있으면 중복 방지
+            if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
-                System.out.println("✅ Firebase initialized successfully");
+                log.info("Firebase initialized successfully");
+            } else {
+                log.debug("Firebase already initialized");
             }
-
         } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("❌ Firebase initialization failed");
+            log.warn("Firebase initialization failed. Push delivery will be disabled.", e);
         }
     }
 }

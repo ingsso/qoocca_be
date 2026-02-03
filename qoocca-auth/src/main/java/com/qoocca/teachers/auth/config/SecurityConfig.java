@@ -61,16 +61,17 @@ public class SecurityConfig {
                                 "/api/fcm/register"
                         ).permitAll()
 
-                        // Parent only
-                        .requestMatchers("/api/parent/**", "/api/receipt/**", "/api/payment/**").hasRole("PARENT")
-
                         // Admin only
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/class/**").hasRole("ADMIN")
 
+                        // Parent only
+                        .requestMatchers("/api/parent/**").hasRole("PARENT")
+                        .requestMatchers(HttpMethod.POST, "/api/receipt/*/pay", "/api/receipt/*/cancel").hasRole("PARENT")
+
                         // User or Admin
-                        .requestMatchers(HttpMethod.PUT, "/api/class/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/academy/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/academy/**", "/api/class/**", "/api/student/**", "/api/attendance/**")
+                        .hasAnyRole("USER", "ADMIN")
 
                         // Everything else
                         .anyRequest().authenticated()

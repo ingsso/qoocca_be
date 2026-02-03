@@ -1,14 +1,17 @@
 package com.qoocca.teachers.api.global.service;
 
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.qoocca.teachers.db.fcm.FirebaseTokenEntity;
 import com.qoocca.teachers.db.fcm.FirebaseTokenRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class FcmPushService {
 
@@ -33,6 +36,11 @@ public class FcmPushService {
     }
 
     private void sendPush(String token, Long receiptId, String title, String body) {
+        if (FirebaseApp.getApps().isEmpty()) {
+            log.warn("Skipping FCM push because Firebase is not initialized. receiptId={}", receiptId);
+            return;
+        }
+
         String receiptIdValue = receiptId != null ? receiptId.toString() : "";
         String receiptPath = receiptId != null ? "/api/parent/receipt/" + receiptId : "/api/parent/receipt/requests";
 
@@ -47,9 +55,9 @@ public class FcmPushService {
 
         try {
             String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("??Sent message: " + response);
+            log.info("FCM push sent. receiptId={}, responseId={}", receiptId, response);
         } catch (FirebaseMessagingException e) {
-            e.printStackTrace();
+            log.warn("FCM push failed. receiptId={}, reason={}", receiptId, e.getMessage());
         }
     }
 }

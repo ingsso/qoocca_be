@@ -10,9 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Payment API", description = "결제 처리 API")
+@Tag(name = "Payment API", description = "결제 처리 API (하위 호환용)")
 @RestController
 @RequestMapping("/api/payment")
+@Deprecated(since = "day6", forRemoval = false)
 public class PaymentController {
 
     private final PaymentService paymentService;
@@ -21,10 +22,16 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
-    @Operation(summary = "결제 완료 처리", description = "결제 완료 상태로 처리합니다")
+    @Operation(
+            summary = "결제 완료 처리 (하위 호환)",
+            description = "신규 엔드포인트 /api/receipt/{receiptId}/pay 로 대체되었습니다."
+    )
+    @Deprecated(since = "day6", forRemoval = false)
     @PostMapping("/complete")
-    public String completePayment(@RequestParam Long receiptId,
-                                  @Parameter(hidden = true) @AuthenticationPrincipal ParentUserDetails parentUserDetails) {
+    public String completePayment(
+            @RequestParam Long receiptId,
+            @Parameter(hidden = true) @AuthenticationPrincipal ParentUserDetails parentUserDetails
+    ) {
         paymentService.completePayment(receiptId, parentUserDetails.getParentId());
         return "Payment completed";
     }

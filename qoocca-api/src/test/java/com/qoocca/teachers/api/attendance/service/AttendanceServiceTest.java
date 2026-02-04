@@ -8,7 +8,6 @@ import com.qoocca.teachers.db.attendance.entity.AttendanceEntity;
 import com.qoocca.teachers.db.attendance.repository.AttendanceRepository;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoEntity;
 import com.qoocca.teachers.db.classInfo.entity.StudentStatus;
-import com.qoocca.teachers.db.classInfo.repository.ClassInfoRepository;
 import com.qoocca.teachers.db.classInfo.repository.ClassInfoStudentRepository;
 import com.qoocca.teachers.db.student.entity.StudentEntity;
 import com.qoocca.teachers.db.student.repository.StudentRepository;
@@ -36,11 +35,8 @@ class AttendanceServiceTest {
     private StudentRepository studentRepository;
     @Mock
     private ClassInfoStudentRepository classInfoStudentRepository;
-    @Mock
-    private ClassInfoRepository classInfoRepository;
-
     @InjectMocks
-    private AttendanceService attendanceService;
+    private AttendanceCommandService attendanceService;
 
     @Test
     void createAttendanceUsesRequestAttendanceDateForDayMatching() {

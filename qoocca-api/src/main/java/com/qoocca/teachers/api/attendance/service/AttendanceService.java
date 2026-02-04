@@ -37,7 +37,7 @@ public class AttendanceAnalyticsService {
 
         List<ClassInfoStudentEntity> todayEnrollments = classInfoStudentRepository
                 .findAllByAcademyAndStatus(academyId, StudentStatus.ENROLLED).stream()
-                .filter(enroll -> isClassOnDay(enroll.getClassInfo(), dayOfWeek))
+                .filter(enroll -> AttendanceDayMatcher.isClassOnDay(enroll.getClassInfo(), dayOfWeek))
                 .toList();
 
         List<AttendanceEntity> todayAttendances = attendanceRepository.findByAttendanceDateWithDetails(today);
@@ -118,19 +118,6 @@ public class AttendanceAnalyticsService {
                     .absentCount(records.stream().filter(r -> r.getStatus() == AttendanceEntity.AttendanceStatus.ABSENT).count())
                     .build();
         }).collect(Collectors.toList());
-    }
-
-    private boolean isClassOnDay(ClassInfoEntity c, String day) {
-        return switch (day) {
-            case "monday" -> c.isMonday();
-            case "tuesday" -> c.isTuesday();
-            case "wednesday" -> c.isWednesday();
-            case "thursday" -> c.isThursday();
-            case "friday" -> c.isFriday();
-            case "saturday" -> c.isSaturday();
-            case "sunday" -> c.isSunday();
-            default -> false;
-        };
     }
 
     private String formatStatusLabel(Optional<AttendanceEntity> attendance) {

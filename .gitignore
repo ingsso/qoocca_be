@@ -46,7 +46,4 @@ key.properties
 *.log
 *.yml
 *.yaml
-!qoocca-api/src/main/resources/application.yml
-!qoocca-api/src/main/resources/application-local.yml
-!qoocca-api/src/main/resources/application-prod.yml
 !nginx/nginx.conf

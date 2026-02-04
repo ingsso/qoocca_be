@@ -7,7 +7,6 @@ import com.qoocca.teachers.db.attendance.entity.AttendanceEntity;
 import com.qoocca.teachers.db.attendance.repository.AttendanceRepository;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoEntity;
 import com.qoocca.teachers.db.classInfo.entity.StudentStatus;
-import com.qoocca.teachers.db.classInfo.repository.ClassInfoRepository;
 import com.qoocca.teachers.db.classInfo.repository.ClassInfoStudentRepository;
 import com.qoocca.teachers.db.student.entity.StudentEntity;
 import com.qoocca.teachers.db.student.repository.StudentRepository;
@@ -39,11 +38,8 @@ class AttendanceServiceTest {
     private StudentRepository studentRepository;
     @Mock
     private ClassInfoStudentRepository classInfoStudentRepository;
-    @Mock
-    private ClassInfoRepository classInfoRepository;
-
     @InjectMocks
-    private AttendanceService attendanceService;
+    private AttendanceCommandService attendanceCommandService;
 
     @Test
     void createAttendanceUsesRequestAttendanceDateForDayMatching() {
@@ -79,7 +75,7 @@ class AttendanceServiceTest {
                     .build();
         });
 
-        var response = attendanceService.createAttendance(studentId, request);
+        var response = attendanceCommandService.createAttendance(studentId, request);
 
         verify(attendanceRepository).existsByStudent_StudentIdAndClassInfo_ClassIdAndAttendanceDate(studentId, 20L, attendanceDate);
         assertEquals(20L, response.getClassId());
@@ -105,7 +101,7 @@ class AttendanceServiceTest {
         when(attendanceRepository.findFirstByStudent_StudentIdAndAttendanceDateAndCheckOutIsNullOrderByCheckInDesc(studentId, attendanceDate))
                 .thenReturn(Optional.of(openAttendance));
 
-        var response = attendanceService.updateCheckOut(studentId, attendanceDate);
+        var response = attendanceCommandService.updateCheckOut(studentId, attendanceDate);
 
         verify(attendanceRepository, never()).findByStudent_StudentIdAndAttendanceDate(studentId, attendanceDate);
         assertEquals(111L, response.getAttendanceId());
@@ -123,7 +119,7 @@ class AttendanceServiceTest {
                 .thenReturn(Optional.empty());
 
         CustomException exception = assertThrows(CustomException.class,
-                () -> attendanceService.updateCheckOut(studentId, attendanceDate));
+                () -> attendanceCommandService.updateCheckOut(studentId, attendanceDate));
 
         assertEquals(ErrorCode.ATTENDANCE_NOT_FOUND, exception.getErrorCode());
     }

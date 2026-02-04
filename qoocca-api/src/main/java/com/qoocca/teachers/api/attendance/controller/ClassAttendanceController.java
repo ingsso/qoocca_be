@@ -2,7 +2,7 @@ package com.qoocca.teachers.api.attendance.controller;
 
 import com.qoocca.teachers.api.attendance.model.ClassAttendanceResponse;
 import com.qoocca.teachers.api.attendance.model.StudentMonthlyStatResponse;
-import com.qoocca.teachers.api.attendance.service.AttendanceService;
+import com.qoocca.teachers.api.attendance.service.AttendanceAnalyticsService;
 import com.qoocca.teachers.api.classInfo.model.response.ClassSummaryResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,16 +20,17 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/attendance")
 public class ClassAttendanceController {
-    private final AttendanceService attendanceService;
 
-    @Operation(summary = "학원별 오늘 출결 현황 상세 조회", description = "학원 내 오늘 수업이 있는 모든 학생의 출결 상태와 등/하원 시간을 조회합니다.")
+    private final AttendanceAnalyticsService attendanceAnalyticsService;
+
+    @Operation(summary = "학원별 오늘 출결 현황 조회", description = "학원 기준으로 오늘 출결 상세를 조회합니다.")
     @GetMapping("/academy/{academyId}/today")
     public ResponseEntity<List<ClassAttendanceResponse>> getTodayClassAttendance(
             @Parameter(description = "학원 ID") @PathVariable Long academyId) {
-        return ResponseEntity.ok(attendanceService.getTodayAttendanceByAcademy(academyId));
+        return ResponseEntity.ok(attendanceAnalyticsService.getTodayAttendanceByAcademy(academyId));
     }
 
-    @Operation(summary = "학원별 클래스 출결 요약 통계 조회", description = "특정 날짜의 클래스별 출석, 지각, 결석 인원 수 요약을 조회합니다. 날짜 미입력 시 오늘 날짜를 기준으로 합니다.")
+    @Operation(summary = "학원별 반 출결 요약 조회", description = "특정 날짜 기준 반별 출결 요약을 조회합니다.")
     @GetMapping("/academy/{academyId}/summary")
     public ResponseEntity<List<ClassSummaryResponse>> getTodayClassSummaries(
             @Parameter(description = "학원 ID") @PathVariable Long academyId,
@@ -37,15 +38,15 @@ public class ClassAttendanceController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         LocalDate targetDate = (date != null) ? date : LocalDate.now();
-        return ResponseEntity.ok(attendanceService.getClassSummariesByDate(academyId, targetDate));
+        return ResponseEntity.ok(attendanceAnalyticsService.getClassSummariesByDate(academyId, targetDate));
     }
 
-    @Operation(summary = "클래스별 월간 출결 통계 조회", description = "특정 클래스의 학생별 한 달간 출석, 지각, 결석 횟수 합계를 조회합니다.")
+    @Operation(summary = "반 월간 출결 통계 조회", description = "반별 학생 월간 출결 통계를 조회합니다.")
     @GetMapping("/class/{classId}/monthly-stats")
     public ResponseEntity<List<StudentMonthlyStatResponse>> getMonthlyStats(
-            @Parameter(description = "클래스 ID") @PathVariable Long classId,
+            @Parameter(description = "반 ID") @PathVariable Long classId,
             @Parameter(description = "조회 연도") @RequestParam int year,
             @Parameter(description = "조회 월") @RequestParam int month) {
-        return ResponseEntity.ok(attendanceService.getMonthlyStatsByClass(classId, year, month));
+        return ResponseEntity.ok(attendanceAnalyticsService.getMonthlyStatsByClass(classId, year, month));
     }
 }

@@ -4,7 +4,8 @@ import com.qoocca.teachers.api.attendance.model.AttendanceCheckOutRequest;
 import com.qoocca.teachers.api.attendance.model.AttendanceCreateRequest;
 import com.qoocca.teachers.api.attendance.model.AttendanceResponse;
 import com.qoocca.teachers.api.attendance.model.StudentCalendarResponse;
-import com.qoocca.teachers.api.attendance.service.AttendanceService;
+import com.qoocca.teachers.api.attendance.service.AttendanceCommandService;
+import com.qoocca.teachers.api.attendance.service.AttendanceQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,7 +22,8 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class AttendanceController {
 
-    private final AttendanceService attendanceService;
+    private final AttendanceCommandService attendanceCommandService;
+    private final AttendanceQueryService attendanceQueryService;
 
     @Operation(summary = "출결(등원) 등록", description = "학생의 등원 시간을 기록하고 출결 상태(정상, 지각)를 자동 계산합니다.")
     @PostMapping("/api/student/{studentId}/attendance")
@@ -29,7 +31,7 @@ public class AttendanceController {
             @Parameter(description = "학생 ID", example = "1") @PathVariable Long studentId,
             @Valid @RequestBody AttendanceCreateRequest request
     ) {
-        AttendanceResponse response = attendanceService.createAttendance(studentId, request);
+        AttendanceResponse response = attendanceCommandService.createAttendance(studentId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -40,7 +42,7 @@ public class AttendanceController {
             @Parameter(description = "조회 날짜 (yyyy-MM-dd)", example = "2026-01-19")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
-        AttendanceResponse response = attendanceService.getAttendanceByDate(studentId, date);
+        AttendanceResponse response = attendanceQueryService.getAttendanceByDate(studentId, date);
         return ResponseEntity.ok(response);
     }
 
@@ -51,7 +53,7 @@ public class AttendanceController {
             @Parameter(description = "학원 ID", example = "1") @RequestParam Long academyId,
             @Parameter(description = "조회 연도", example = "2026") @RequestParam int year,
             @Parameter(description = "조회 월", example = "1") @RequestParam int month) {
-        return ResponseEntity.ok(attendanceService.getStudentCalendarView(studentId, academyId, year, month));
+        return ResponseEntity.ok(attendanceQueryService.getStudentCalendarView(studentId, academyId, year, month));
     }
 
     @Operation(summary = "하원(체크아웃) 처리", description = "학생의 하원 시간을 기록하고 조퇴 여부를 판단합니다.")
@@ -60,8 +62,7 @@ public class AttendanceController {
             @PathVariable Long studentId,
             @Valid @RequestBody AttendanceCheckOutRequest request
     ) {
-        AttendanceResponse response =
-                attendanceService.updateCheckOut(studentId, request);
+        AttendanceResponse response = attendanceCommandService.updateCheckOut(studentId, request);
         return ResponseEntity.ok(response);
     }
 

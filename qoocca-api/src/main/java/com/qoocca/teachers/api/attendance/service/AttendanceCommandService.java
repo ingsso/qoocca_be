@@ -1,5 +1,6 @@
 package com.qoocca.teachers.api.attendance.service;
 
+import com.qoocca.teachers.api.attendance.model.AttendanceCheckOutRequest;
 import com.qoocca.teachers.api.attendance.model.AttendanceCreateRequest;
 import com.qoocca.teachers.api.attendance.model.AttendanceResponse;
 import com.qoocca.teachers.common.global.exception.CustomException;
@@ -51,13 +52,19 @@ public class AttendanceCommandService {
         return AttendanceResponse.fromEntity(saved);
     }
 
-    public AttendanceResponse updateCheckOut(Long studentId, LocalDate date) {
+    public AttendanceResponse updateCheckOut(Long studentId, AttendanceCheckOutRequest request) {
         AttendanceEntity attendance = attendanceRepository
-                .findFirstByStudent_StudentIdAndAttendanceDateAndCheckOutIsNullOrderByCheckInDesc(studentId, date)
-                .or(() -> attendanceRepository.findByStudent_StudentIdAndAttendanceDate(studentId, date))
-                .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
+            .findFirstByStudent_StudentIdAndAttendanceDateAndCheckOutIsNullOrderByCheckInDesc(
+                    studentId, request.getAttendanceDate()
+            ).orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
 
-        attendance.processCheckOut(attendance.getClassInfo().getEndTime());
+        attendance.setCheckOut(request.getCheckOut());
+
+        // 조퇴 판단
+        if (request.getCheckOut().isBefore(attendance.getClassInfo().getEndTime())) {
+            attendance.setStatus(AttendanceEntity.AttendanceStatus.EARLY_LEAVE);
+        }
+
         return AttendanceResponse.fromEntity(attendance);
     }
 

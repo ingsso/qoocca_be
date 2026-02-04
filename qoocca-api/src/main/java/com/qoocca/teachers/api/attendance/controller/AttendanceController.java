@@ -1,5 +1,6 @@
 package com.qoocca.teachers.api.attendance.controller;
 
+import com.qoocca.teachers.api.attendance.model.AttendanceCheckOutRequest;
 import com.qoocca.teachers.api.attendance.model.AttendanceCreateRequest;
 import com.qoocca.teachers.api.attendance.model.AttendanceResponse;
 import com.qoocca.teachers.api.attendance.model.StudentCalendarResponse;
@@ -59,10 +60,9 @@ public class AttendanceController {
     @PatchMapping("/api/student/{studentId}/attendance/check-out")
     public ResponseEntity<AttendanceResponse> checkOut(
             @Parameter(description = "학생 ID", example = "1") @PathVariable Long studentId,
-            @Parameter(description = "하원 날짜 (yyyy-MM-dd)", example = "2026-01-19")
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+            @Valid @RequestBody AttendanceCheckOutRequest request
     ) {
-        AttendanceResponse response = attendanceCommandService.updateCheckOut(studentId, date);
+        AttendanceResponse response = attendanceCommandService.updateCheckOut(studentId, request);
         return ResponseEntity.ok(response);
     }
 }

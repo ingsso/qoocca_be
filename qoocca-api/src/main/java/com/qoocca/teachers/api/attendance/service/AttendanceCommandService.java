@@ -66,23 +66,10 @@ public class AttendanceCommandService {
         String dayOfWeek = attendanceDate.getDayOfWeek().name().toLowerCase();
 
         return classes.stream()
-                .filter(c -> isClassOnDay(c, dayOfWeek))
+                .filter(c -> AttendanceDayMatcher.isClassOnDay(c, dayOfWeek))
                 .filter(c -> isTimeWithinRange(c, checkIn))
                 .findFirst()
                 .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND_FOR_TIME));
-    }
-
-    private boolean isClassOnDay(ClassInfoEntity c, String day) {
-        return switch (day) {
-            case "monday" -> c.isMonday();
-            case "tuesday" -> c.isTuesday();
-            case "wednesday" -> c.isWednesday();
-            case "thursday" -> c.isThursday();
-            case "friday" -> c.isFriday();
-            case "saturday" -> c.isSaturday();
-            case "sunday" -> c.isSunday();
-            default -> false;
-        };
     }
 
     private boolean isTimeWithinRange(ClassInfoEntity c, LocalTime checkInTime) {

@@ -98,7 +98,7 @@ public interface AttendanceRepository
             AND a.classInfo = cs.classInfo
             AND a.attendanceDate = :today
       )
-      AND cs.classInfo.endTime < :nowTime
+      AND cs.classInfo.endTime <= :nowTime
 """)
     int insertAbsenteesForFinishedClasses(@Param("today") LocalDate today,
                                           @Param("nowTime") LocalTime nowTime);

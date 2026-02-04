@@ -16,17 +16,17 @@ public class AttendanceScheduler {
 
     private final AttendanceRepository attendanceRepository;
 
-    // 매시간 정각(0분 0초)에 실행
-    @Scheduled(cron = "0 0 * * * *")
+    // 기본 1시간 주기 실행 (설정값이 있으면 우선 적용)
+    @Scheduled(cron = "${attendance.auto-absent.cron:0 0 * * * *}")
     public void autoAbsentProcess() {
         log.info("자동 결석 처리 스케줄러 시작");
         try {
             LocalDate today = LocalDate.now();
             LocalTime now = LocalTime.now();
             int count = attendanceRepository.insertAbsenteesForFinishedClasses(today, now);
-            log.info("자동 결석 처리 완료: {}건의 결석 레코드가 생성되었습니다.", count);
+            log.info("자동 결석 처리 완료: date={}, now={}, inserted={}", today, now, count);
         } catch (Exception e) {
-            log.error("자동 결석 처리 중 에러 발생: ", e);
+            log.error("자동 결석 처리 중 오류", e);
         }
     }
 }

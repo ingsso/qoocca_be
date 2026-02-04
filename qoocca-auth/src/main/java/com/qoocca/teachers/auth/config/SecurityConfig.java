@@ -70,7 +70,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/receipt/*/pay", "/api/receipt/*/cancel").hasRole("PARENT")
 
                         // User or Admin
-                        .requestMatchers("/api/academy/**", "/api/class/**", "/api/student/**", "/api/attendance/**")
+                        .requestMatchers("/api/academy/**", "/api/class/**", "/api/student/**", "/api/attendance/**", "/api/me/**")
                         .hasAnyRole("USER", "ADMIN")
 
                         // Everything else

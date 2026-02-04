@@ -32,12 +32,12 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
 
     private static final List<String> EXCLUDE_URLS = List.of(
             "/api/auth/**",
+            "/api/admin/**",
             "/api/ages/**",
             "/api/subjects/**",
-            "/api/academy/register",
-            "/api/academy/*/resubmit",
-            "/api/academy/complete",
-            "/api/academy/academy-list",
+            "/api/academy/registrations",
+            "/api/academy/*/approval/resubmissions",
+            "/api/me/**",
             "/api/attendance/**",
             "/swagger-ui/**",
             "/v3/api-docs/**",
@@ -81,10 +81,22 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
 
         if (request.getMethod().equals("GET") && pathMatcher.match("/api/academy/{id}", requestUri)) {
             Map<String, String> variables = pathMatcher.extractUriTemplateVariables("/api/academy/{id}", requestUri);
-            String idStr = variables.get("id");
+            Long requestedAcademyId = parseLongPathVar(variables.get("id"));
+            if (requestedAcademyId != null) {
+                boolean isMine = myAcademies.stream()
+                        .anyMatch(a -> a.getId().equals(requestedAcademyId));
 
-            if (idStr != null) {
-                Long requestedAcademyId = Long.parseLong(idStr);
+                if (isMine) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+            }
+        }
+
+        if (request.getMethod().equals("GET") && pathMatcher.match("/api/academy/{id}/profile", requestUri)) {
+            Map<String, String> variables = pathMatcher.extractUriTemplateVariables("/api/academy/{id}/profile", requestUri);
+            Long requestedAcademyId = parseLongPathVar(variables.get("id"));
+            if (requestedAcademyId != null) {
                 boolean isMine = myAcademies.stream()
                         .anyMatch(a -> a.getId().equals(requestedAcademyId));
 
@@ -119,6 +131,15 @@ public class AcademyApprovalFilter extends OncePerRequestFilter {
     private boolean hasRole(Authentication auth, String role) {
         return auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals(role));
+    }
+
+    private Long parseLongPathVar(String value) {
+        if (value == null) return null;
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private void sendErrorResponse(HttpServletResponse res, ErrorCode errorCode) throws IOException {

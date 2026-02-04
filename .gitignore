@@ -47,3 +47,4 @@ key.properties
 *.yml
 *.yaml
 !nginx/nginx.conf
+nginx/images/

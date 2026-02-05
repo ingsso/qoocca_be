@@ -10,11 +10,15 @@ public class ClassStudentResponse {
 
     private Long studentId;
     private String studentName;
+    private Long payerId;
+    private String payerName;
 
     public static ClassStudentResponse from(ClassInfoStudentEntity entity) {
         return ClassStudentResponse.builder()
                 .studentId(entity.getStudent().getStudentId())
                 .studentName(entity.getStudent().getStudentName())
+                .payerId(entity.getPayerParent() == null ? null : entity.getPayerParent().getParentId())
+                .payerName(entity.getPayerParent() == null ? null : entity.getPayerParent().getParentName())
                 .build();
     }
 }

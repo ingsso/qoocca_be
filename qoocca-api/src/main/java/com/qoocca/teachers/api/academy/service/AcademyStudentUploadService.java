@@ -146,7 +146,7 @@ public class AcademyStudentUploadService {
                     classInfoStudentService.register(
                             academyId,
                             targetClassId,
-                            new ClassStudentRequest(student.getStudentId())
+                            new ClassStudentRequest(student.getStudentId(), null)
                     );
                     successCount++;
                 } catch (Exception e) {

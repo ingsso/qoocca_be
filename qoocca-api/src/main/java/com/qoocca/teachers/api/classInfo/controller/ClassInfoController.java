@@ -9,13 +9,14 @@ import com.qoocca.teachers.api.classInfo.service.ClassInfoStudentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "Class Info API", description = "학원 반 관리 API")
+@Tag(name = "Class Info API", description = "학원별 클래스 관리 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/academy/{academyId}/class")
@@ -28,7 +29,7 @@ public class ClassInfoController {
     @PostMapping
     public ResponseEntity<ClassCreateResponse> createClass(
             @Parameter(description = "학원 ID") @PathVariable Long academyId,
-            @RequestBody ClassCreateRequest request
+            @Valid @RequestBody ClassCreateRequest request
     ) {
         return ResponseEntity.ok(classInfoService.createClass(academyId, request));
     }
@@ -41,15 +42,15 @@ public class ClassInfoController {
         return ResponseEntity.ok(classInfoService.getClasses(academyId));
     }
 
-    @Operation(summary = "학생 반 이동", description = "학생을 다른 반으로 이동시킵니다.")
+    @Operation(summary = "학생 반 이동", description = "학생을 같은 학원 내 다른 반으로 이동시킵니다.")
     @PutMapping("/{classId}/student/{studentId}/move")
     public ResponseEntity<Void> moveStudent(
             @Parameter(description = "학원 ID") @PathVariable Long academyId,
             @Parameter(description = "현재 반 ID") @PathVariable Long classId,
             @Parameter(description = "학생 ID") @PathVariable Long studentId,
-            @RequestBody ClassStudentMoveRequest request
+            @Valid @RequestBody ClassStudentMoveRequest request
     ) {
-        classInfoStudentService.moveStudent(classId, studentId, request.getTargetClassId());
+        classInfoStudentService.moveStudent(academyId, classId, studentId, request.getTargetClassId());
         return ResponseEntity.ok().build();
     }
 }

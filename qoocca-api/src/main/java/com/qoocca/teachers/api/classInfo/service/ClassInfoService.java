@@ -68,7 +68,7 @@ public class ClassInfoService {
     @Transactional(readOnly = true)
     public List<ClassGetResponse> getClasses(Long academyId) {
 
-        return classInfoRepository.findByAcademy_Id(academyId).stream()
+        return classInfoRepository.findByAcademy_IdWithDetails(academyId).stream()
                 .map(ClassGetResponse::fromEntity)
                 .toList();
     }

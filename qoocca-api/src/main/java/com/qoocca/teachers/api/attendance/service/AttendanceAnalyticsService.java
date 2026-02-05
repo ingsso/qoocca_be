@@ -64,7 +64,7 @@ public class AttendanceAnalyticsService {
     }
 
     public List<ClassSummaryResponse> getClassSummariesByDate(Long academyId, LocalDate targetDate) {
-        String dayOfWeek = targetDate.getDayOfWeek().name();
+        String dayOfWeek = targetDate.getDayOfWeek().name().toLowerCase();
 
         List<ClassInfoEntity> classes = classInfoRepository.findAllByAcademyIdAndDayOfWeek(academyId, dayOfWeek);
         List<AttendanceEntity> allAttendances = attendanceRepository.findByAttendanceDateWithDetails(targetDate);
@@ -102,7 +102,8 @@ public class AttendanceAnalyticsService {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
-        List<ClassInfoStudentEntity> enrollments = classInfoStudentRepository.findByClassInfo_ClassId(classId);
+        List<ClassInfoStudentEntity> enrollments =
+                classInfoStudentRepository.findAllByClassInfo_ClassIdAndStatus(classId, StudentStatus.ENROLLED);
 
         return enrollments.stream().map(enroll -> {
             StudentEntity student = enroll.getStudent();

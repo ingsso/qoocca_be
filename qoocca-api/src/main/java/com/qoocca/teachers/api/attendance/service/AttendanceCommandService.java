@@ -58,6 +58,10 @@ public class AttendanceCommandService {
                 .or(() -> attendanceRepository.findByStudent_StudentIdAndAttendanceDate(studentId, request.getAttendanceDate()))
                 .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
 
+        if (attendance.getCheckIn() == null || request.getCheckOut().isBefore(attendance.getCheckIn())) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
         attendance.setCheckOut(request.getCheckOut());
         if (request.getCheckOut().isBefore(attendance.getClassInfo().getEndTime())) {
             attendance.setStatus(AttendanceEntity.AttendanceStatus.EARLY_LEAVE);

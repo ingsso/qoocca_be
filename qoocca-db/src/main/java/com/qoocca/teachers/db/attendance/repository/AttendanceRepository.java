@@ -28,6 +28,11 @@ public interface AttendanceRepository
             LocalDate attendanceDate
     );
 
+    Optional<AttendanceEntity> findFirstByStudent_StudentIdAndAttendanceDateOrderByCheckInDesc(
+            Long studentId,
+            LocalDate attendanceDate
+    );
+
     Optional<AttendanceEntity> findFirstByStudent_StudentIdAndAttendanceDateAndCheckOutIsNullOrderByCheckInDesc(
             Long studentId,
             LocalDate attendanceDate

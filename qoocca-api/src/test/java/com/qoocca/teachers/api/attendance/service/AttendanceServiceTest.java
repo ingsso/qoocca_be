@@ -133,6 +133,41 @@ class AttendanceServiceTest {
         assertEquals(ErrorCode.ATTENDANCE_NOT_FOUND, exception.getErrorCode());
     }
 
+    @Test
+    void updateCheckOutThrowsWhenCheckOutIsBeforeCheckIn() {
+        Long studentId = 1L;
+        LocalDate attendanceDate = LocalDate.of(2026, 2, 3);
+
+        StudentEntity student = buildStudent(studentId, "?숈깮A");
+        ClassInfoEntity classInfo =
+                buildClass(20L, "classA", false, true,
+                        LocalTime.of(9, 0), LocalTime.of(18, 0));
+
+        AttendanceEntity openAttendance = AttendanceEntity.builder()
+                .attendanceId(111L)
+                .student(student)
+                .classInfo(classInfo)
+                .attendanceDate(attendanceDate)
+                .checkIn(LocalTime.of(10, 0))
+                .status(AttendanceEntity.AttendanceStatus.PRESENT)
+                .build();
+
+        AttendanceCheckOutRequest request =
+                new AttendanceCheckOutRequest(attendanceDate, LocalTime.of(9, 30));
+
+        when(attendanceRepository
+                .findFirstByStudent_StudentIdAndAttendanceDateAndCheckOutIsNullOrderByCheckInDesc(
+                        studentId, attendanceDate))
+                .thenReturn(Optional.of(openAttendance));
+
+        CustomException exception = assertThrows(
+                CustomException.class,
+                () -> attendanceService.updateCheckOut(studentId, request)
+        );
+
+        assertEquals(ErrorCode.INVALID_INPUT_VALUE, exception.getErrorCode());
+    }
+
     private StudentEntity buildStudent(Long studentId, String studentName) {
         return StudentEntity.builder()
                 .studentId(studentId)

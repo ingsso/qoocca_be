@@ -1,19 +1,23 @@
 package com.qoocca.teachers.api.receipt.service;
 
+import com.qoocca.teachers.api.global.service.FcmPushService;
 import com.qoocca.teachers.api.receipt.model.ReceiptCreateRequest;
 import com.qoocca.teachers.api.receipt.model.ReceiptUpdateRequest;
-import com.qoocca.teachers.api.receipt.model.response.*;
-import com.qoocca.teachers.api.global.service.FcmPushService;
+import com.qoocca.teachers.api.receipt.model.response.ClassPaymentSummaryResponse;
+import com.qoocca.teachers.api.receipt.model.response.DashboardMainSummaryResponse;
+import com.qoocca.teachers.api.receipt.model.response.ParentReceiptResponse;
+import com.qoocca.teachers.api.receipt.model.response.ReceiptCreateResponse;
+import com.qoocca.teachers.api.receipt.model.response.ReceiptResponse;
+import com.qoocca.teachers.api.receipt.model.response.ReceiptUpdateResponse;
+import com.qoocca.teachers.common.global.exception.CustomException;
+import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoEntity;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoStudentEntity;
 import com.qoocca.teachers.db.classInfo.entity.StudentStatus;
 import com.qoocca.teachers.db.classInfo.repository.ClassInfoRepository;
 import com.qoocca.teachers.db.classInfo.repository.ClassInfoStudentRepository;
-import com.qoocca.teachers.common.global.exception.CustomException;
-import com.qoocca.teachers.common.global.exception.ErrorCode;
+import com.qoocca.teachers.db.parent.entity.ParentEntity;
 import com.qoocca.teachers.db.receipt.entity.ReceiptEntity;
-import com.qoocca.teachers.api.receipt.model.*;
-import com.qoocca.teachers.api.receipt.model.response.*;
 import com.qoocca.teachers.db.receipt.repository.ReceiptRepository;
 import com.qoocca.teachers.db.student.entity.StudentEntity;
 import com.qoocca.teachers.db.student.entity.StudentParentEntity;
@@ -27,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,28 +46,21 @@ public class ReceiptService {
     private final StudentParentRepository studentParentRepository;
     private final FcmPushService fcmPushService;
 
-    /* =========================
-     * POST: 수납 생성 (한 달에 1회 제한 로직 추가)
-     * ========================= */
     public ReceiptCreateResponse createReceipt(Long studentId, ReceiptCreateRequest request) {
-        // 1. 학생 존재 확인
         StudentEntity student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         ClassInfoEntity classInfo = classInfoRepository.findById(request.getClassId())
                 .orElseThrow(() -> new CustomException(ErrorCode.CLASS_NOT_FOUND));
 
-        // 카드 등록 여부 체크
-        boolean hasCard = studentParentRepository.findByStudent_StudentId(studentId).stream()
-                .anyMatch(sp ->
-                        Boolean.TRUE.equals(sp.getParent().getCardState())
-                                || (sp.getParent().getCardNum() != null && !sp.getParent().getCardNum().isBlank())
-                );
+        ClassInfoStudentEntity enrollment = classInfoStudentRepository
+                .findByClassInfo_ClassIdAndStudent_StudentId(request.getClassId(), studentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ENROLLMENT_NOT_FOUND));
 
-        if (!hasCard) {
+        ParentEntity payer = resolvePayerParent(enrollment.getPayerParent(), studentId);
+        if (!hasPaymentMethod(payer)) {
             throw new CustomException(ErrorCode.PAYMENT_METHOD_NOT_FOUND);
         }
-
 
         if (isAlreadyProcessedInMonth(studentId, request.getClassId(), request.getReceiptDate())) {
             throw new CustomException(ErrorCode.DUPLICATE_RECEIPT_IN_MONTH);
@@ -70,25 +68,18 @@ public class ReceiptService {
 
         ReceiptEntity receipt = ReceiptEntity.createReceipt(
                 student, classInfo, request.getAmount(), request.getReceiptDate(), ReceiptEntity.ReceiptStatus.ISSUED);
-
         ReceiptEntity saved = receiptRepository.save(receipt);
 
-        List<StudentParentEntity> parents = studentParentRepository.findByStudent_StudentId(studentId);
         String title = "결제 요청이 도착했어요";
         String body = String.format("%s 학생의 %s 수업 수강료 %,d원 결제를 진행해 주세요.",
                 student.getStudentName(), classInfo.getClassName(), request.getAmount());
-        for (StudentParentEntity sp : parents) {
-            if (sp.getParent() != null && sp.getParent().getParentId() != null) {
-                fcmPushService.sendPushToUser(sp.getParent().getParentId(), saved.getReceiptId(), title, body);
-            }
+        if (payer.getParentId() != null) {
+            fcmPushService.sendPushToUser(payer.getParentId(), saved.getReceiptId(), title, body);
         }
 
         return ReceiptCreateResponse.fromEntity(saved);
     }
 
-    /* =========================
-     * GET: 학생별 전체 조회
-     * ========================= */
     @Transactional(readOnly = true)
     public List<ReceiptResponse> getReceiptsByStudent(Long studentId) {
         return receiptRepository.findByStudent_StudentId(studentId)
@@ -97,9 +88,6 @@ public class ReceiptService {
                 .collect(Collectors.toList());
     }
 
-    /* =========================
-     * GET: 달별 조회 (YearMonth 활용으로 가독성 개선)
-     * ========================= */
     @Transactional(readOnly = true)
     public List<ReceiptResponse> getReceiptsByStudentAndMonth(Long studentId, int year, int month) {
         YearMonth ym = YearMonth.of(year, month);
@@ -112,9 +100,6 @@ public class ReceiptService {
                 .collect(Collectors.toList());
     }
 
-    /* =========================
-     * PUT: 상태 변경 (취소 등)
-     * ========================= */
     public ReceiptUpdateResponse updateReceiptStatus(Long studentId, Long receiptId, ReceiptUpdateRequest request) {
         ReceiptEntity receipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECEIPT_NOT_FOUND));
@@ -154,12 +139,8 @@ public class ReceiptService {
         return ParentReceiptResponse.fromEntity(receipt);
     }
 
-    /* =========================
-     * GET: 학원별 클래스 수납 요약 조회 (PaymentPage 테이블용)
-     * ========================= */
     @Transactional(readOnly = true)
     public List<ClassPaymentSummaryResponse> getClassReceiptSummary(Long academyId, int year, int month) {
-        // [공통 데이터 준비]
         ReceiptDataContainer data = prepareReceiptData(academyId, year, month);
 
         return data.classList.stream().map(cls -> {
@@ -199,7 +180,6 @@ public class ReceiptService {
 
         return data.classList.stream().map(cls -> {
             List<ClassInfoStudentEntity> enrollments = data.enrollmentsByClass.getOrDefault(cls.getClassId(), List.of());
-
             ReceiptEntity.ReceiptStatus repStatus = calculateRepresentativeStatus(cls.getClassId(), enrollments, data.receiptMap);
 
             return DashboardMainSummaryResponse.builder()
@@ -247,10 +227,7 @@ public class ReceiptService {
             cardStatusMap = studentIds.stream().collect(Collectors.toMap(
                     id -> id,
                     id -> parentsByStudent.getOrDefault(id, List.of()).stream()
-                            .anyMatch(sp ->
-                                    Boolean.TRUE.equals(sp.getParent().getCardState())
-                                            || (sp.getParent().getCardNum() != null && !sp.getParent().getCardNum().isBlank())
-                            )
+                            .anyMatch(sp -> hasPaymentMethod(sp.getParent()))
             ));
         }
 
@@ -264,25 +241,33 @@ public class ReceiptService {
             Map<Long, Boolean> cardStatusMap
     ) {}
 
-    private ReceiptEntity.ReceiptStatus calculateRepresentativeStatus(Long classId, List<ClassInfoStudentEntity> enrollments, Map<String, ReceiptEntity> receiptMap) {
-        if (enrollments.isEmpty()) return ReceiptEntity.ReceiptStatus.NO_STUDENTS;
+    private ReceiptEntity.ReceiptStatus calculateRepresentativeStatus(
+            Long classId,
+            List<ClassInfoStudentEntity> enrollments,
+            Map<String, ReceiptEntity> receiptMap
+    ) {
+        if (enrollments.isEmpty()) {
+            return ReceiptEntity.ReceiptStatus.NO_STUDENTS;
+        }
 
         boolean hasIssued = false;
         for (ClassInfoStudentEntity enroll : enrollments) {
-            ReceiptEntity r = receiptMap.get(classId + "-" + enroll.getStudent().getStudentId());
-            if (r == null) return ReceiptEntity.ReceiptStatus.BEFORE_REQUEST; // 하나라도 요청 전이면 전체 '요청 전'
-            if (r.getReceiptStatus() == ReceiptEntity.ReceiptStatus.ISSUED) hasIssued = true;
+            ReceiptEntity receipt = receiptMap.get(classId + "-" + enroll.getStudent().getStudentId());
+            if (receipt == null) {
+                return ReceiptEntity.ReceiptStatus.BEFORE_REQUEST;
+            }
+            if (receipt.getReceiptStatus() == ReceiptEntity.ReceiptStatus.ISSUED) {
+                hasIssued = true;
+            }
         }
         return hasIssued ? ReceiptEntity.ReceiptStatus.ISSUED : ReceiptEntity.ReceiptStatus.PAID;
     }
 
     private ReceiptEntity getReceiptForParentAction(Long receiptId, Long parentId) {
         ReceiptEntity receipt = getReceiptForParentAccess(receiptId, parentId);
-
         if (receipt.getReceiptStatus() != ReceiptEntity.ReceiptStatus.ISSUED) {
             throw new CustomException(ErrorCode.INVALID_RECEIPT_STATUS);
         }
-
         return receipt;
     }
 
@@ -290,20 +275,20 @@ public class ReceiptService {
         ReceiptEntity receipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECEIPT_NOT_FOUND));
 
-        boolean isParent = studentParentRepository
-                .findByStudent_StudentIdAndParent_ParentId(receipt.getStudent().getStudentId(), parentId)
-                .isPresent();
-        if (!isParent) {
+        Long payerParentId = resolvePayerParentId(receipt.getClassInfo().getClassId(), receipt.getStudent().getStudentId());
+        if (!payerParentId.equals(parentId)) {
             throw new CustomException(ErrorCode.STUDENT_PARENT_RELATION_NOT_FOUND);
         }
-
         return receipt;
     }
 
     @Transactional(readOnly = true)
     public List<ParentReceiptResponse> getPendingReceiptsByParent(Long parentId) {
-        return receiptRepository.findAllByParentAndStatus(parentId, ReceiptEntity.ReceiptStatus.ISSUED)
-                .stream()
+        return receiptRepository.findByReceiptStatusOrderByReceiptDateDesc(ReceiptEntity.ReceiptStatus.ISSUED).stream()
+                .filter(receipt -> parentId.equals(resolvePayerParentId(
+                        receipt.getClassInfo().getClassId(),
+                        receipt.getStudent().getStudentId()
+                )))
                 .map(ParentReceiptResponse::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -313,5 +298,33 @@ public class ReceiptService {
         return receiptRepository.existsByStudent_StudentIdAndClassInfo_ClassIdAndReceiptDateBetween(
                 studentId, classId, ym.atDay(1).atStartOfDay(), ym.atEndOfMonth().atTime(23, 59, 59));
     }
-}
 
+    private ParentEntity resolvePayerParent(ParentEntity designatedPayer, Long studentId) {
+        if (designatedPayer != null) {
+            return studentParentRepository.findByStudent_StudentIdAndParent_ParentId(studentId, designatedPayer.getParentId())
+                    .map(StudentParentEntity::getParent)
+                    .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_PARENT_RELATION_NOT_FOUND));
+        }
+
+        return studentParentRepository.findFirstByStudent_StudentIdOrderByStudentParentIdAsc(studentId)
+                .map(StudentParentEntity::getParent)
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_PARENT_RELATION_NOT_FOUND));
+    }
+
+    private Long resolvePayerParentId(Long classId, Long studentId) {
+        Optional<ClassInfoStudentEntity> enrollment = classInfoStudentRepository
+                .findByClassInfo_ClassIdAndStudent_StudentId(classId, studentId);
+
+        if (enrollment.isEmpty()) {
+            throw new CustomException(ErrorCode.ENROLLMENT_NOT_FOUND);
+        }
+
+        ParentEntity payer = resolvePayerParent(enrollment.get().getPayerParent(), studentId);
+        return payer.getParentId();
+    }
+
+    private boolean hasPaymentMethod(ParentEntity parent) {
+        return Boolean.TRUE.equals(parent.getCardState())
+                || (parent.getCardNum() != null && !parent.getCardNum().isBlank());
+    }
+}

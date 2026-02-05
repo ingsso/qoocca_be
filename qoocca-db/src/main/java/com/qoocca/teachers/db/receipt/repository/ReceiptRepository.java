@@ -26,6 +26,8 @@ public interface ReceiptRepository
             LocalDateTime end
     );
 
+    List<ReceiptEntity> findByReceiptStatusOrderByReceiptDateDesc(ReceiptEntity.ReceiptStatus status);
+
     @Query("SELECT r FROM ReceiptEntity r " +
             "JOIN FETCH r.student " +
             "JOIN FETCH r.classInfo " +

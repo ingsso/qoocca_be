@@ -10,7 +10,10 @@ import com.qoocca.teachers.db.classInfo.entity.ClassInfoStudentEntity;
 import com.qoocca.teachers.db.classInfo.entity.StudentStatus;
 import com.qoocca.teachers.db.classInfo.repository.ClassInfoRepository;
 import com.qoocca.teachers.db.classInfo.repository.ClassInfoStudentRepository;
+import com.qoocca.teachers.db.parent.entity.ParentEntity;
 import com.qoocca.teachers.db.student.entity.StudentEntity;
+import com.qoocca.teachers.db.student.entity.StudentParentEntity;
+import com.qoocca.teachers.db.student.repository.StudentParentRepository;
 import com.qoocca.teachers.db.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ public class ClassInfoStudentService {
     private final ClassInfoRepository classInfoRepository;
     private final StudentRepository studentRepository;
     private final ClassInfoStudentRepository classInfoStudentRepository;
+    private final StudentParentRepository studentParentRepository;
 
     public void register(Long academyId, Long classId, ClassStudentRequest request) {
         ClassInfoEntity classInfo = getClassInAcademy(academyId, classId);
@@ -37,9 +41,12 @@ public class ClassInfoStudentService {
         StudentEntity student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
+        ParentEntity payerParent = resolvePayerParent(student.getStudentId(), request.getPayerId());
+
         ClassInfoStudentEntity entity = ClassInfoStudentEntity.builder()
                 .classInfo(classInfo)
                 .student(student)
+                .payerParent(payerParent)
                 .build();
 
         classInfoStudentRepository.save(entity);
@@ -72,6 +79,7 @@ public class ClassInfoStudentService {
         ClassInfoStudentEntity newEntity = ClassInfoStudentEntity.builder()
                 .classInfo(targetClass)
                 .student(current.getStudent())
+                .payerParent(current.getPayerParent())
                 .status(StudentStatus.ENROLLED)
                 .build();
 
@@ -105,5 +113,16 @@ public class ClassInfoStudentService {
             throw new CustomException(ErrorCode.NO_AUTHORITY);
         }
         return classInfo;
+    }
+
+    private ParentEntity resolvePayerParent(Long studentId, Long payerId) {
+        if (payerId == null) {
+            return null;
+        }
+
+        StudentParentEntity relation = studentParentRepository
+                .findByStudent_StudentIdAndParent_ParentId(studentId, payerId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_PARENT_RELATION_NOT_FOUND));
+        return relation.getParent();
     }
 }

@@ -37,7 +37,7 @@ public class SmsService {
         String verificationCode = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
         redisDao.setValues("SMS:" + cleanPhone, verificationCode, Duration.ofMinutes(3));
 
-        log.info("SMS verification code generated for phone={}", cleanPhone);
+        log.info("SMS verification issued phone={}, code={}", cleanPhone, verificationCode);
     }
 
     public Map<String, Object> verifyCode(String phone, String code) {
@@ -47,6 +47,7 @@ public class SmsService {
         if (savedCode != null && savedCode.equals(code)) {
             redisDao.deleteValues("SMS:" + cleanPhone);
             redisDao.setValues("SMS_VERIFIED:" + cleanPhone, "true", Duration.ofMinutes(5));
+            log.info("SMS verification success phone={}, code={}", cleanPhone, code);
 
             boolean isExistingUser = userRepository.findByPhoneNumber(cleanPhone).isPresent();
 
@@ -54,6 +55,7 @@ public class SmsService {
             result.put("isExistingUser", isExistingUser);
             return result;
         } else {
+            log.warn("SMS verification failed phone={}, code={}", cleanPhone, code);
             throw new CustomException(ErrorCode.SMS_CODE_INVALID);
         }
     }

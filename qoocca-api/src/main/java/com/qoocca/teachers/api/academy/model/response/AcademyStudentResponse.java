@@ -10,12 +10,13 @@ public class AcademyStudentResponse {
 
     private Long studentId;
     private String studentName;
+    private String studentPhone;
 
     public static AcademyStudentResponse from(StudentEntity student) {
         return AcademyStudentResponse.builder()
                 .studentId(student.getStudentId())
                 .studentName(student.getStudentName())
+                .studentPhone(student.getStudentPhone())
                 .build();
     }
 }
- 

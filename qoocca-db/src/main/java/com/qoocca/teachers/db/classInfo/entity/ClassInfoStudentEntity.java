@@ -1,5 +1,6 @@
 package com.qoocca.teachers.db.classInfo.entity;
 
+import com.qoocca.teachers.db.parent.entity.ParentEntity;
 import com.qoocca.teachers.db.student.entity.StudentEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,6 +32,10 @@ public class ClassInfoStudentEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
     private StudentEntity student;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payer_parent_id")
+    private ParentEntity payerParent;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

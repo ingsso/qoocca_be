@@ -30,7 +30,7 @@ public class AttendanceQueryService {
 
     public AttendanceResponse getAttendanceByDate(Long studentId, LocalDate date) {
         AttendanceEntity attendance = attendanceRepository
-                .findByStudent_StudentIdAndAttendanceDate(studentId, date)
+                .findFirstByStudent_StudentIdAndAttendanceDateOrderByCheckInDesc(studentId, date)
                 .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
 
         return AttendanceResponse.fromEntity(attendance);

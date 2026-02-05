@@ -40,20 +40,28 @@ public class StudentParentService {
         StudentEntity student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
-        String cardNum = request.getCardNum();
-        boolean hasCard = (cardNum != null && !cardNum.isBlank());
+        ParentEntity parent = parentRepository.findByParentPhone(request.getParentPhone())
+                .orElseGet(() -> {
+                    String cardNum = request.getCardNum();
+                    boolean hasCard = (cardNum != null && !cardNum.isBlank());
 
-        ParentEntity parent = ParentEntity.builder()
-                .parentName(request.getParentName())
-                .cardNum(hasCard ? cardNum : null)
-                .cardState(hasCard)
-                .parentRelationship(request.getParentRelationship())
-                .parentPhone(request.getParentPhone())
-                .isPay(request.getIsPay())
-                .alarm(request.getAlarm())
-                .build();
+                    ParentEntity newParent = ParentEntity.builder()
+                            .parentName(request.getParentName())
+                            .cardNum(hasCard ? cardNum : null)
+                            .cardState(hasCard)
+                            .parentRelationship(request.getParentRelationship())
+                            .parentPhone(request.getParentPhone())
+                            .isPay(request.getIsPay())
+                            .alarm(request.getAlarm())
+                            .build();
+                    return parentRepository.save(newParent);
+                });
 
-        parentRepository.save(parent);
+        if (studentParentRepository
+                .findByStudent_StudentIdAndParent_ParentId(studentId, parent.getParentId())
+                .isPresent()) {
+            return ParentResponse.from(parent);
+        }
 
         StudentParentEntity studentParent = StudentParentEntity.builder()
                 .student(student)

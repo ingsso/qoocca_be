@@ -26,6 +26,13 @@ public class CacheConfig {
     public static final String ACADEMY_SUBJECTS = "academy:subjects";
     public static final String ACADEMY_AGES = "academy:ages";
     public static final String ATTENDANCE_SUMMARY = "attendance:summary";
+    public static final String ATTENDANCE_TODAY = "attendance:today";
+    public static final String RECEIPT_CLASS_SUMMARY = "receipt:class-summary";
+    public static final String RECEIPT_MAIN = "receipt:main";
+    public static final String ANALYTICS_CLASS_STATS = "analytics:class-stats";
+    public static final String ANALYTICS_PARENT_STATS = "analytics:parent-stats";
+    public static final String ACADEMY_STUDENTS = "academy:students";
+    public static final String ACADEMY_CLASSES = "academy:classes";
 
     @Bean
     @Primary
@@ -50,6 +57,13 @@ public class CacheConfig {
         configs.put(ACADEMY_SUBJECTS, baseConfig.entryTtl(Duration.ofHours(6)));
         configs.put(ACADEMY_AGES, baseConfig.entryTtl(Duration.ofHours(6)));
         configs.put(ATTENDANCE_SUMMARY, baseConfig.entryTtl(Duration.ofMinutes(2)));
+        configs.put(ATTENDANCE_TODAY, baseConfig.entryTtl(Duration.ofMinutes(2)));
+        configs.put(RECEIPT_CLASS_SUMMARY, baseConfig.entryTtl(Duration.ofMinutes(2)));
+        configs.put(RECEIPT_MAIN, baseConfig.entryTtl(Duration.ofMinutes(2)));
+        configs.put(ANALYTICS_CLASS_STATS, baseConfig.entryTtl(Duration.ofMinutes(10)));
+        configs.put(ANALYTICS_PARENT_STATS, baseConfig.entryTtl(Duration.ofMinutes(10)));
+        configs.put(ACADEMY_STUDENTS, baseConfig.entryTtl(Duration.ofMinutes(10)));
+        configs.put(ACADEMY_CLASSES, baseConfig.entryTtl(Duration.ofMinutes(10)));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(baseConfig)

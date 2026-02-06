@@ -3,12 +3,14 @@ package com.qoocca.teachers.api.receipt.model.response;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Getter
 @AllArgsConstructor
 @Builder
+@NoArgsConstructor
 public class ClassPaymentSummaryResponse {
     private Long classId;
     private String className;
@@ -20,6 +22,7 @@ public class ClassPaymentSummaryResponse {
     @Getter
     @Builder
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class StudentPaymentDetail {
         private Long studentId;
         private String studentName;

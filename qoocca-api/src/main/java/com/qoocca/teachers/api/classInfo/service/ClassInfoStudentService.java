@@ -36,7 +36,9 @@ public class ClassInfoStudentService {
 
     @Caching(evict = {
             @CacheEvict(cacheNames = CacheConfig.DASHBOARD_CLASS_SUMMARY, key = "#academyId"),
-            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId")
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_CLASS_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId")
     })
     public void register(Long academyId, Long classId, ClassStudentRequest request) {
         ClassInfoEntity classInfo = getClassInAcademy(academyId, classId);
@@ -61,7 +63,9 @@ public class ClassInfoStudentService {
 
     @Caching(evict = {
             @CacheEvict(cacheNames = CacheConfig.DASHBOARD_CLASS_SUMMARY, key = "#academyId"),
-            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId")
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_CLASS_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId")
     })
     public void modifyStatus(Long academyId, Long classId, Long studentId, ClassStudentModifyRequest request) {
         getClassInAcademy(academyId, classId);
@@ -75,7 +79,9 @@ public class ClassInfoStudentService {
 
     @Caching(evict = {
             @CacheEvict(cacheNames = CacheConfig.DASHBOARD_CLASS_SUMMARY, key = "#academyId"),
-            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId")
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_CLASS_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId")
     })
     public void moveStudent(Long academyId, Long classId, Long studentId, Long targetClassId) {
         getClassInAcademy(academyId, classId);
@@ -112,7 +118,9 @@ public class ClassInfoStudentService {
 
     @Caching(evict = {
             @CacheEvict(cacheNames = CacheConfig.DASHBOARD_CLASS_SUMMARY, key = "#academyId"),
-            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId")
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_CLASS_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId")
     })
     public void remove(Long academyId, Long classId, Long studentId) {
         getClassInAcademy(academyId, classId);

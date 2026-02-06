@@ -45,7 +45,10 @@ public class ClassInfoService {
      * ========================= */
     @Caching(evict = {
             @CacheEvict(cacheNames = CacheConfig.DASHBOARD_CLASS_SUMMARY, key = "#academyId"),
-            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId")
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ACADEMY_CLASSES, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_CLASS_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId")
     })
     public ClassCreateResponse createClass(Long academyId, ClassCreateRequest request) {
 
@@ -74,6 +77,7 @@ public class ClassInfoService {
      * 클래스 목록 조회
      * ========================= */
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheConfig.ACADEMY_CLASSES, key = "#academyId")
     public List<ClassGetResponse> getClasses(Long academyId) {
 
         return classInfoRepository.findByAcademy_IdWithDetails(academyId).stream()

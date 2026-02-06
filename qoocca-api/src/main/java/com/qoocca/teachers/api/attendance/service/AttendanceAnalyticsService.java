@@ -33,6 +33,7 @@ public class AttendanceAnalyticsService {
     private final ClassInfoStudentRepository classInfoStudentRepository;
     private final ClassInfoRepository classInfoRepository;
 
+    @Cacheable(cacheNames = CacheConfig.ATTENDANCE_TODAY, key = "#academyId + ':' + T(java.time.LocalDate).now()")
     public List<ClassAttendanceResponse> getTodayAttendanceByAcademy(Long academyId) {
         LocalDate today = LocalDate.now();
         String dayOfWeek = today.getDayOfWeek().name().toLowerCase();

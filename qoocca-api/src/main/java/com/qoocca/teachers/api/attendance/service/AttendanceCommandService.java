@@ -98,6 +98,9 @@ public class AttendanceCommandService {
         if (cacheManager.getCache(CacheConfig.ATTENDANCE_SUMMARY) != null) {
             cacheManager.getCache(CacheConfig.ATTENDANCE_SUMMARY).evict(key);
         }
+        if (cacheManager.getCache(CacheConfig.ATTENDANCE_TODAY) != null) {
+            cacheManager.getCache(CacheConfig.ATTENDANCE_TODAY).evict(key);
+        }
         if (cacheManager.getCache(CacheConfig.DASHBOARD_STATS) != null) {
             cacheManager.getCache(CacheConfig.DASHBOARD_STATS).evict(academyId);
         }

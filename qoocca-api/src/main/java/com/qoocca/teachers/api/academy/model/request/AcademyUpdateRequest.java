@@ -33,9 +33,6 @@ public class AcademyUpdateRequest implements AcademyRequest {
     private String websiteUrl;
     private String instagramUrl;
 
-    private List<String> imageUrls;
-
-    private List<MultipartFile> imageFiles;
 
     private MultipartFile certificateFile;
 

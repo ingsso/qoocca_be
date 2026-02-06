@@ -56,7 +56,7 @@ public class RedisConfig {
 
 
     // 캐싱 기능을 활용하기 위한 CacheManager 설정
-    @Bean
+    @Bean(name = "authCacheManager")
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))

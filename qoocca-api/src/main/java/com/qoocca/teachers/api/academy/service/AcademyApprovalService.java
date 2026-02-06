@@ -2,6 +2,7 @@ package com.qoocca.teachers.api.academy.service;
 
 import com.qoocca.teachers.api.academy.model.response.AcademyListResponse;
 import com.qoocca.teachers.api.admin.model.response.AdminAcademyDetailResponse;
+import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.common.global.common.PageResponse;
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
@@ -9,6 +10,7 @@ import com.qoocca.teachers.db.academy.entity.AcademyEntity;
 import com.qoocca.teachers.db.academy.entity.ApprovalStatus;
 import com.qoocca.teachers.db.academy.repository.AcademyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ public class AcademyApprovalService {
     private final AcademyRepository academyRepository;
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.ME_ACADEMIES, allEntries = true)
     public void approveAcademy(Long academyId) {
         AcademyEntity academy = academyRepository.findById(academyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
@@ -30,6 +33,7 @@ public class AcademyApprovalService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.ME_ACADEMIES, allEntries = true)
     public void rejectAcademy(Long academyId, String rejectionReason) {
         AcademyEntity academy = academyRepository.findById(academyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));

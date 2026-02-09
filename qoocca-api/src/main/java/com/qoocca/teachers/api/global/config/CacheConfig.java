@@ -68,6 +68,7 @@ public class CacheConfig {
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(baseConfig)
                 .withInitialCacheConfigurations(configs)
+                .prefixCacheNameWith("qoocca-api::")
                 .build();
     }
 }

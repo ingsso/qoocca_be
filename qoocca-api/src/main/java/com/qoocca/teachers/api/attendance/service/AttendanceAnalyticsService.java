@@ -6,6 +6,7 @@ import com.qoocca.teachers.api.classInfo.model.response.ClassSummaryResponse;
 import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.db.attendance.entity.AttendanceEntity;
 import com.qoocca.teachers.db.attendance.repository.AttendanceRepository;
+import com.qoocca.teachers.db.attendance.model.StudentMonthlyStatProjection;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoEntity;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoStudentEntity;
 import com.qoocca.teachers.db.classInfo.entity.StudentStatus;
@@ -105,24 +106,18 @@ public class AttendanceAnalyticsService {
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
+        List<StudentMonthlyStatProjection> stats = classInfoStudentRepository
+                .findMonthlyStatsByClass(classId, StudentStatus.ENROLLED, startDate, endDate);
 
-        List<ClassInfoStudentEntity> enrollments =
-                classInfoStudentRepository.findAllByClassInfo_ClassIdAndStatus(classId, StudentStatus.ENROLLED);
-
-        return enrollments.stream().map(enroll -> {
-            StudentEntity student = enroll.getStudent();
-
-            List<AttendanceEntity> records = attendanceRepository
-                    .findByStudent_StudentIdAndClassInfo_ClassIdAndAttendanceDateBetween(student.getStudentId(), classId, startDate, endDate);
-
-            return StudentMonthlyStatResponse.builder()
-                    .studentId(student.getStudentId())
-                    .studentName(student.getStudentName())
-                    .presentCount(records.stream().filter(r -> r.getStatus() == AttendanceEntity.AttendanceStatus.PRESENT).count())
-                    .lateCount(records.stream().filter(r -> r.getStatus() == AttendanceEntity.AttendanceStatus.LATE).count())
-                    .absentCount(records.stream().filter(r -> r.getStatus() == AttendanceEntity.AttendanceStatus.ABSENT).count())
-                    .build();
-        }).collect(Collectors.toList());
+        return stats.stream()
+                .map(s -> StudentMonthlyStatResponse.builder()
+                        .studentId(s.getStudentId())
+                        .studentName(s.getStudentName())
+                        .presentCount(s.getPresentCount() == null ? 0 : s.getPresentCount())
+                        .lateCount(s.getLateCount() == null ? 0 : s.getLateCount())
+                        .absentCount(s.getAbsentCount() == null ? 0 : s.getAbsentCount())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private String formatStatusLabel(Optional<AttendanceEntity> attendance) {

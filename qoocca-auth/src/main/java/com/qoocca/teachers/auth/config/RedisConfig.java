@@ -1,5 +1,9 @@
-package com.qoocca.teachers.auth.config;
+﻿package com.qoocca.teachers.auth.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,16 +59,25 @@ public class RedisConfig {
     }
 
 
-    // 캐싱 기능을 활용하기 위한 CacheManager 설정
+    // 罹먯떛 湲곕뒫???쒖슜?섍린 ?꾪븳 CacheManager ?ㅼ젙
     @Bean(name = "authCacheManager")
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        ObjectMapper objectMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .activateDefaultTyping(
+                        LaissezFaireSubTypeValidator.instance,
+                        ObjectMapper.DefaultTyping.NON_FINAL,
+                        JsonTypeInfo.As.PROPERTY
+                );
+
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
-                .entryTtl(Duration.ofMinutes(30)); // 기본 유효시간 30분
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper)))
+                .entryTtl(Duration.ofMinutes(30)); // 湲곕낯 ?좏슚?쒓컙 30遺?
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(config)
+                .prefixCacheNameWith("qoocca-auth::")
                 .build();
     }
 }

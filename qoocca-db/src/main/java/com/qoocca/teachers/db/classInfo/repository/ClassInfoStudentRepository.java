@@ -3,10 +3,12 @@ package com.qoocca.teachers.db.classInfo.repository;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoEntity;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoStudentEntity;
 import com.qoocca.teachers.db.classInfo.entity.StudentStatus;
+import com.qoocca.teachers.db.attendance.model.StudentMonthlyStatProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,4 +67,27 @@ public interface ClassInfoStudentRepository extends JpaRepository<ClassInfoStude
     );
 
     List<ClassInfoStudentEntity> findAllByClassInfo_ClassIdAndStatus(Long classInfoClassId, StudentStatus status);
+
+    @Query("""
+        SELECT
+            cse.student.studentId as studentId,
+            cse.student.studentName as studentName,
+            SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as presentCount,
+            SUM(CASE WHEN a.status = 'LATE' THEN 1 ELSE 0 END) as lateCount,
+            SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END) as absentCount
+        FROM ClassInfoStudentEntity cse
+        LEFT JOIN AttendanceEntity a
+            ON a.student = cse.student
+           AND a.classInfo = cse.classInfo
+           AND a.attendanceDate BETWEEN :startDate AND :endDate
+        WHERE cse.classInfo.classId = :classId
+          AND cse.status = :status
+        GROUP BY cse.student.studentId, cse.student.studentName
+    """)
+    List<StudentMonthlyStatProjection> findMonthlyStatsByClass(
+            @Param("classId") Long classId,
+            @Param("status") StudentStatus status,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 }

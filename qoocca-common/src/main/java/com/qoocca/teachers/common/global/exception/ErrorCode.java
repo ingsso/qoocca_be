@@ -28,6 +28,7 @@ public enum ErrorCode {
     ACADEMY_CERTIFICATE_SAVE_FAILED(500, "AC005", "학원 인증서 저장에 실패했습니다."),
     ACADEMY_IMAGE_SAVE_FAILED(500, "AC006", "학원 이미지 저장에 실패했습니다."),
     ACADEMY_IMAGE_DELETE_FAILED(500, "AC007", "학원 이미지 삭제에 실패했습니다."),
+    ACADEMY_IMAGE_NOT_FOUND(404, "AC009", "학원 이미지를 찾을 수 없습니다."),
     ACADEMY_STUDENT_RELATION_NOT_FOUND(404, "AC008", "학원-학생 관계를 찾을 수 없습니다."),
     NO_AUTHORITY(403, "G001", "권한이 없습니다."),
 

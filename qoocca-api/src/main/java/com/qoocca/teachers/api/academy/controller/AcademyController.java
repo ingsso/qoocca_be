@@ -17,9 +17,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -60,14 +62,48 @@ public class AcademyController {
         return ResponseEntity.ok(academyProfileService.getAcademyAges(id));
     }
 
-    @Operation(summary = "학원 프로필 수정", description = "학원 프로필 정보를 수정합니다. (신규 PATCH 엔드포인트)")
-    @PatchMapping("/{id}/profile")
-    public ResponseEntity<Void> patchAcademyProfile(
+    /*================= 프로필 수정 ================= */
+
+    @PatchMapping(
+            value = "/{id}/profile",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<Void> updateAcademyProfile(
             @PathVariable Long id,
-            @RequestBody AcademyUpdateRequest dto,
-            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
+            @ModelAttribute AcademyUpdateRequest req,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        academyProfileService.updateAcademy(id, dto, userDetails.getUserId());
+        academyProfileService.updateAcademy(id, req, userDetails.getUserId());
+        return ResponseEntity.ok().build();
+    }
+
+    /* ================= 이미지 업로드 ================= */
+
+    @PostMapping(
+            value = "/{id}/images",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<Void> uploadAcademyImages(
+            @PathVariable Long id,
+            @RequestPart("images") MultipartFile[] images,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        academyProfileService.uploadAcademyImages(id, List.of(images), userDetails.getUserId());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+
+    /* ================= 이미지 삭제 ================= */
+
+    @DeleteMapping("/{id}/images/{imageId}")
+    public ResponseEntity<Void> deleteAcademyImage(
+            @PathVariable Long id,
+            @PathVariable Long imageId,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        academyProfileService.deleteAcademyImage(id, imageId, userDetails.getUserId());
         return ResponseEntity.ok().build();
     }
 

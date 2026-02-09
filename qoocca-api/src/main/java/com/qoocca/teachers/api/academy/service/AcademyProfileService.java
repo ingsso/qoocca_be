@@ -98,48 +98,76 @@ public class AcademyProfileService {
                 req.getDetailInfo()
         );
 
-        academy.updateFullAddress(req.getBaseAddress(), req.getDetailAddress());
+        academy.updateFullAddress(
+                req.getBaseAddress(),
+                req.getDetailAddress()
+        );
+
         updateRelationalData(academy, req);
 
-        String academyFolderPath = imageSavePath + academy.getId() + "/";
-
-        Set<AcademyImageEntity> oldImages = academy.getAcademyImages();
-        List<AcademyImageEntity> imagesToRemove = new ArrayList<>();
-
-        for (AcademyImageEntity imageEntity : oldImages) {
-            String oldUrl = imageEntity.getImageUrl();
-            if (req.getImageUrls() == null || !req.getImageUrls().contains(oldUrl)) {
-                deletePhysicalFile(oldUrl);
-                imagesToRemove.add(imageEntity);
-            }
+        // ✅ 인증서 처리
+        if (req.getCertificateFile() != null && !req.getCertificateFile().isEmpty()) {
+            updateCertificateFile(academy, req.getCertificateFile());
         }
 
-        oldImages.removeAll(imagesToRemove);
+    }
 
-        if (req.getImageFiles() != null && !req.getImageFiles().isEmpty()) {
-            File folder = new File(academyFolderPath);
-            if (!folder.exists()) folder.mkdirs();
+    @Transactional
+    public void uploadAcademyImages(Long academyId, List<MultipartFile> images, Long userId) {
+        AcademyEntity academy = academyRepository.findById(academyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
-            for (MultipartFile file : req.getImageFiles()) {
-                if (file.isEmpty()) continue;
+        if (!academy.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.NO_AUTHORITY);
+        }
 
-                String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-                try {
-                    file.transferTo(new File(academyFolderPath + filename));
-                    String newUrl = imageBaseUrl + academy.getId() + "/" + filename;
+        String folderPath = imageSavePath + academy.getId() + "/";
+        File folder = new File(folderPath);
+        if (!folder.exists()) folder.mkdirs();
 
-                    AcademyImageEntity newImage = AcademyImageEntity.builder()
-                            .imageUrl(newUrl)
-                            .academy(academy)
-                            .build();
-                    oldImages.add(newImage);
-                } catch (IOException e) {
-                    throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
-                }
+        for (MultipartFile file : images) {
+            if (file.isEmpty()) continue;
+
+            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            try {
+                file.transferTo(new File(folderPath + filename));
+
+                AcademyImageEntity image = AcademyImageEntity.builder()
+                        .academy(academy)
+                        .imageUrl(imageBaseUrl + academy.getId() + "/" + filename)
+                        .build();
+
+                // ✅ 기존 이미지 유지하면서 새 이미지만 추가
+                academy.getAcademyImages().add(image);
+
+            } catch (IOException e) {
+                throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
             }
         }
     }
 
+
+    /* ================= 이미지 삭제 ================= */
+    @Transactional
+    public void deleteAcademyImage(Long academyId, Long imageId, Long userId) {
+        AcademyEntity academy = academyRepository.findById(academyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
+
+        if (!academy.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.NO_AUTHORITY);
+        }
+
+        AcademyImageEntity image = academy.getAcademyImages().stream()
+                .filter(img -> img.getId().equals(imageId))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_IMAGE_NOT_FOUND));
+
+        // DB에서 먼저 제거
+        academy.getAcademyImages().remove(image);
+
+        // 실제 파일 삭제
+        deletePhysicalFile(image.getImageUrl());
+    }
     @Transactional
     @Caching(evict = {
             @CacheEvict(cacheNames = CacheConfig.ME_ACADEMIES, key = "#userId"),
@@ -208,9 +236,7 @@ public class AcademyProfileService {
         if (req.getSubjects() != null) {
             academy.updateSubjects(subjectRepository.findAllById(req.getSubjects()));
         }
-
-        if (req instanceof AcademyUpdateRequest updateReq && updateReq.getImageUrls() != null) {
-            academy.updateImages(updateReq.getImageUrls());
-        }
     }
+
+
 }

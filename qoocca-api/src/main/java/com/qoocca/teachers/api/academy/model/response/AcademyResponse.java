@@ -44,7 +44,7 @@ public class AcademyResponse {
     private String certificate;
     private String rejectionReason;
 
-    private List<String> imageUrls;
+    private List<AcademyImageResponse> images;
     private List<AgeResponse> ages;
     private List<SubjectResponse> subjects;
 
@@ -66,9 +66,15 @@ public class AcademyResponse {
                 .instagramUrl(academy.getInstagramUrl())
                 .certificate(academy.getCertificate())
                 .rejectionReason(academy.getRejectionReason())
-                .imageUrls(academy.getAcademyImages().stream()
-                        .map(AcademyImageEntity::getImageUrl)
-                        .collect(Collectors.toList()))
+                .images(
+                        academy.getAcademyImages().stream()
+                                .map(img -> new AcademyImageResponse(
+                                        img.getId(),
+                                        img.getImageUrl()
+                                ))
+                                .collect(Collectors.toList())
+                )
+
                 .ages(academy.getAcademyAges().stream()
                         .map(aa -> AgeResponse.from(aa.getAge()))
                         .collect(Collectors.toList()))

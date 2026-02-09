@@ -3,6 +3,7 @@ package com.qoocca.teachers.api.academy.service;
 import com.qoocca.teachers.api.academy.model.request.AcademyCreateRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyRequest;
 import com.qoocca.teachers.api.user.service.UserService;
+import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.academy.entity.AcademyEntity;
@@ -12,6 +13,7 @@ import com.qoocca.teachers.db.subject.repository.SubjectRepository;
 import com.qoocca.teachers.db.user.entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,6 +40,7 @@ public class AcademyRegistrationService {
     private String imageBaseUrl;
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.ME_ACADEMIES, key = "#userId")
     public Long registerAcademy(AcademyCreateRequest req, Long userId) {
         UserEntity user = userService.findById(userId);
 

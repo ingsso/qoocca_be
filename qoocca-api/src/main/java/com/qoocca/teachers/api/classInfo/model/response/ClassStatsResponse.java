@@ -1,11 +1,15 @@
 package com.qoocca.teachers.api.classInfo.model.response;
 
 import com.qoocca.teachers.db.classInfo.model.ClassStatsProjection;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ClassStatsResponse {
 
     private Long classId;

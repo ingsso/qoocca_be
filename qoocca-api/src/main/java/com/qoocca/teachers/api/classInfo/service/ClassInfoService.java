@@ -7,6 +7,7 @@ import com.qoocca.teachers.api.classInfo.model.response.ClassSummaryResponse;
 
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
+import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.db.academy.entity.AcademyEntity;
 import com.qoocca.teachers.db.academy.repository.AcademyRepository;
 import com.qoocca.teachers.db.age.entity.AgeEntity;
@@ -18,6 +19,9 @@ import com.qoocca.teachers.db.classInfo.repository.ClassInfoRepository;
 import com.qoocca.teachers.db.subject.entity.SubjectEntity;
 import com.qoocca.teachers.db.subject.repository.SubjectRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +43,13 @@ public class ClassInfoService {
     /* =========================
      * 클래스 등록
      * ========================= */
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_CLASS_SUMMARY, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ACADEMY_CLASSES, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_CLASS_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId")
+    })
     public ClassCreateResponse createClass(Long academyId, ClassCreateRequest request) {
 
         AcademyEntity academy = academyRepository.findById(academyId)
@@ -66,6 +77,7 @@ public class ClassInfoService {
      * 클래스 목록 조회
      * ========================= */
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheConfig.ACADEMY_CLASSES, key = "#academyId")
     public List<ClassGetResponse> getClasses(Long academyId) {
 
         return classInfoRepository.findByAcademy_IdWithDetails(academyId).stream()
@@ -74,6 +86,7 @@ public class ClassInfoService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheConfig.DASHBOARD_CLASS_SUMMARY, key = "#academyId")
     public List<ClassSummaryResponse> getAcademyDashboard(Long academyId) {
         LocalDate today = LocalDate.now();
         String dayName = today.getDayOfWeek().name();

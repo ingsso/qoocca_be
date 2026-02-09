@@ -6,6 +6,7 @@ import com.qoocca.teachers.api.academy.model.request.AcademyUpdateRequest;
 import com.qoocca.teachers.api.academy.model.response.AcademyResponse;
 import com.qoocca.teachers.api.age.model.AgeResponse;
 import com.qoocca.teachers.api.subject.model.SubjectResponse;
+import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.academy.entity.AcademyAgeEntity;
@@ -20,6 +21,9 @@ import com.qoocca.teachers.db.age.repository.AgeRepository;
 import com.qoocca.teachers.db.subject.repository.SubjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -56,6 +60,7 @@ public class AcademyProfileService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheConfig.ACADEMY_SUBJECTS, key = "#academyId")
     public List<SubjectResponse> getAcademySubjects(Long academyId) {
         List<AcademySubjectEntity> mappings = academySubjectRepository.findAllByAcademyId(academyId);
         return mappings.stream()
@@ -64,6 +69,7 @@ public class AcademyProfileService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheConfig.ACADEMY_AGES, key = "#academyId")
     public List<AgeResponse> getAcademyAges(Long academyId) {
         List<AcademyAgeEntity> mappings = academyAgeRepository.findAllByAcademyId(academyId);
         return mappings.stream()
@@ -72,6 +78,11 @@ public class AcademyProfileService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.ME_ACADEMIES, key = "#userId"),
+            @CacheEvict(cacheNames = CacheConfig.ACADEMY_SUBJECTS, key = "#id"),
+            @CacheEvict(cacheNames = CacheConfig.ACADEMY_AGES, key = "#id")
+    })
     public void updateAcademy(Long id, AcademyUpdateRequest req, Long userId) {
         AcademyEntity academy = academyRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
@@ -158,6 +169,11 @@ public class AcademyProfileService {
         deletePhysicalFile(image.getImageUrl());
     }
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.ME_ACADEMIES, key = "#userId"),
+            @CacheEvict(cacheNames = CacheConfig.ACADEMY_SUBJECTS, key = "#id"),
+            @CacheEvict(cacheNames = CacheConfig.ACADEMY_AGES, key = "#id")
+    })
     public void resubmitAcademy(Long id, AcademyResubmitRequest req, Long userId) {
         AcademyEntity academy = academyRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
@@ -221,5 +237,6 @@ public class AcademyProfileService {
             academy.updateSubjects(subjectRepository.findAllById(req.getSubjects()));
         }
     }
+
 
 }

@@ -1,10 +1,14 @@
 package com.qoocca.teachers.api.academy.model.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DashboardStatsResponse {
     private Long studentCount;      // 전체 원생 수
     private Long presentCount;      // 현재 실제 등원 완료 수

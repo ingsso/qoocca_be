@@ -2,10 +2,12 @@ package com.qoocca.teachers.api.academy.service;
 
 import com.qoocca.teachers.api.academy.model.response.AcademyCheckResponse;
 import com.qoocca.teachers.api.academy.model.response.AcademyListResponse;
+import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.db.academy.entity.AcademyEntity;
 import com.qoocca.teachers.db.academy.entity.ApprovalStatus;
 import com.qoocca.teachers.db.academy.repository.AcademyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,7 @@ public class AcademyAccountService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheConfig.ME_ACADEMIES, key = "#userId")
     public List<AcademyListResponse> getMyAcademies(Long userId) {
         return academyRepository.findAllByUserId(userId).stream()
                 .map(academy -> AcademyListResponse.builder()

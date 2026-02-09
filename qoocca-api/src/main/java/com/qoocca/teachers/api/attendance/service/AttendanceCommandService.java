@@ -3,6 +3,7 @@ package com.qoocca.teachers.api.attendance.service;
 import com.qoocca.teachers.api.attendance.model.AttendanceCreateRequest;
 import com.qoocca.teachers.api.attendance.model.AttendanceCheckOutRequest;
 import com.qoocca.teachers.api.attendance.model.AttendanceResponse;
+import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.attendance.entity.AttendanceEntity;
@@ -13,6 +14,7 @@ import com.qoocca.teachers.db.classInfo.repository.ClassInfoStudentRepository;
 import com.qoocca.teachers.db.student.entity.StudentEntity;
 import com.qoocca.teachers.db.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,7 @@ public class AttendanceCommandService {
     private final AttendanceRepository attendanceRepository;
     private final StudentRepository studentRepository;
     private final ClassInfoStudentRepository classInfoStudentRepository;
+    private final CacheManager cacheManager;
 
     public AttendanceResponse createAttendance(Long studentId, AttendanceCreateRequest request) {
         StudentEntity student = studentRepository.findById(studentId)
@@ -49,6 +52,7 @@ public class AttendanceCommandService {
 
         attendance.calculateStatus(targetClass.getStartTime());
         AttendanceEntity saved = attendanceRepository.save(attendance);
+        evictAttendanceCaches(targetClass.getAcademy().getId(), request.getAttendanceDate());
         return AttendanceResponse.fromEntity(saved);
     }
 
@@ -66,6 +70,7 @@ public class AttendanceCommandService {
         if (request.getCheckOut().isBefore(attendance.getClassInfo().getEndTime())) {
             attendance.setStatus(AttendanceEntity.AttendanceStatus.EARLY_LEAVE);
         }
+        evictAttendanceCaches(attendance.getClassInfo().getAcademy().getId(), request.getAttendanceDate());
         return AttendanceResponse.fromEntity(attendance);
     }
 
@@ -83,5 +88,21 @@ public class AttendanceCommandService {
     private boolean isTimeWithinRange(ClassInfoEntity c, LocalTime checkInTime) {
         return !checkInTime.isBefore(c.getStartTime().minusMinutes(30)) &&
                 !checkInTime.isAfter(c.getEndTime());
+    }
+
+    private void evictAttendanceCaches(Long academyId, LocalDate date) {
+        if (academyId == null || date == null) {
+            return;
+        }
+        String key = academyId + ":" + date;
+        if (cacheManager.getCache(CacheConfig.ATTENDANCE_SUMMARY) != null) {
+            cacheManager.getCache(CacheConfig.ATTENDANCE_SUMMARY).evict(key);
+        }
+        if (cacheManager.getCache(CacheConfig.ATTENDANCE_TODAY) != null) {
+            cacheManager.getCache(CacheConfig.ATTENDANCE_TODAY).evict(key);
+        }
+        if (cacheManager.getCache(CacheConfig.DASHBOARD_STATS) != null) {
+            cacheManager.getCache(CacheConfig.DASHBOARD_STATS).evict(academyId);
+        }
     }
 }

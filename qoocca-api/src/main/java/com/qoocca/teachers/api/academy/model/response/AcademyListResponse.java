@@ -5,9 +5,11 @@ import com.qoocca.teachers.db.academy.entity.ApprovalStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class AcademyListResponse {
     private Long academyId;

@@ -9,7 +9,6 @@ import com.qoocca.teachers.api.receipt.model.response.ParentReceiptResponse;
 import com.qoocca.teachers.api.receipt.model.response.ReceiptCreateResponse;
 import com.qoocca.teachers.api.receipt.model.response.ReceiptResponse;
 import com.qoocca.teachers.api.receipt.model.response.ReceiptUpdateResponse;
-import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoEntity;
@@ -25,8 +24,6 @@ import com.qoocca.teachers.db.student.entity.StudentParentEntity;
 import com.qoocca.teachers.db.student.repository.StudentParentRepository;
 import com.qoocca.teachers.db.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +45,6 @@ public class ReceiptService {
     private final ClassInfoStudentRepository classInfoStudentRepository;
     private final StudentParentRepository studentParentRepository;
     private final FcmPushService fcmPushService;
-    private final CacheManager cacheManager;
 
     public ReceiptCreateResponse createReceipt(Long studentId, ReceiptCreateRequest request) {
         StudentEntity student = studentRepository.findById(studentId)
@@ -73,8 +69,6 @@ public class ReceiptService {
         ReceiptEntity receipt = ReceiptEntity.createReceipt(
                 student, classInfo, request.getAmount(), request.getReceiptDate(), ReceiptEntity.ReceiptStatus.ISSUED);
         ReceiptEntity saved = receiptRepository.save(receipt);
-        evictDashboardStats(classInfo.getAcademy().getId());
-        evictReceiptCaches(classInfo.getAcademy().getId(), saved.getReceiptDate());
 
         String title = "결제 요청이 도착했어요";
         String body = String.format("%s 학생의 %s 수업 수강료 %,d원 결제를 진행해 주세요.",
@@ -117,8 +111,6 @@ public class ReceiptService {
         if (request.getReceiptStatus() != null) {
             receipt.setReceiptStatus(request.getReceiptStatus());
         }
-        evictDashboardStats(receipt.getClassInfo().getAcademy().getId());
-        evictReceiptCaches(receipt.getClassInfo().getAcademy().getId(), receipt.getReceiptDate());
 
         return ReceiptUpdateResponse.fromEntity(receipt);
     }
@@ -138,8 +130,6 @@ public class ReceiptService {
     ) {
         ReceiptEntity receipt = getReceiptForParentAction(receiptId, parentId);
         receipt.setReceiptStatus(targetStatus);
-        evictDashboardStats(receipt.getClassInfo().getAcademy().getId());
-        evictReceiptCaches(receipt.getClassInfo().getAcademy().getId(), receipt.getReceiptDate());
         return ReceiptUpdateResponse.fromEntity(receipt);
     }
 
@@ -150,7 +140,6 @@ public class ReceiptService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = CacheConfig.RECEIPT_CLASS_SUMMARY, key = "#academyId + ':' + #year + ':' + #month")
     public List<ClassPaymentSummaryResponse> getClassReceiptSummary(Long academyId, int year, int month) {
         ReceiptDataContainer data = prepareReceiptData(academyId, year, month);
 
@@ -186,7 +175,6 @@ public class ReceiptService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = CacheConfig.RECEIPT_MAIN, key = "#academyId + ':' + #year + ':' + #month")
     public List<DashboardMainSummaryResponse> getDashboardMainSummary(Long academyId, int year, int month) {
         ReceiptDataContainer data = prepareReceiptData(academyId, year, month);
 
@@ -340,25 +328,4 @@ public class ReceiptService {
                 || (parent.getCardNum() != null && !parent.getCardNum().isBlank());
     }
 
-    private void evictDashboardStats(Long academyId) {
-        if (academyId == null) {
-            return;
-        }
-        if (cacheManager.getCache(CacheConfig.DASHBOARD_STATS) != null) {
-            cacheManager.getCache(CacheConfig.DASHBOARD_STATS).evict(academyId);
-        }
-    }
-
-    private void evictReceiptCaches(Long academyId, LocalDateTime receiptDate) {
-        if (academyId == null || receiptDate == null) {
-            return;
-        }
-        String key = academyId + ":" + receiptDate.getYear() + ":" + receiptDate.getMonthValue();
-        if (cacheManager.getCache(CacheConfig.RECEIPT_CLASS_SUMMARY) != null) {
-            cacheManager.getCache(CacheConfig.RECEIPT_CLASS_SUMMARY).evict(key);
-        }
-        if (cacheManager.getCache(CacheConfig.RECEIPT_MAIN) != null) {
-            cacheManager.getCache(CacheConfig.RECEIPT_MAIN).evict(key);
-        }
-    }
 }

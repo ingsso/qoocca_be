@@ -1,4 +1,4 @@
-﻿package com.qoocca.teachers.auth.config;
+package com.qoocca.teachers.auth.config;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +59,6 @@ public class RedisConfig {
     }
 
 
-    // 罹먯떛 湲곕뒫???쒖슜?섍린 ?꾪븳 CacheManager ?ㅼ젙
     @Bean(name = "authCacheManager")
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         ObjectMapper objectMapper = new ObjectMapper()
@@ -73,11 +72,11 @@ public class RedisConfig {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper)))
-                .entryTtl(Duration.ofMinutes(30)); // 湲곕낯 ?좏슚?쒓컙 30遺?
+                .entryTtl(Duration.ofMinutes(30))
+                .computePrefixWith(cacheName -> "qoocca-auth::v2::" + cacheName);
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(config)
-                .prefixCacheNameWith("qoocca-auth::")
                 .build();
     }
 }

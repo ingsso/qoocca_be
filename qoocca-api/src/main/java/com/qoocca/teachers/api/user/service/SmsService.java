@@ -6,6 +6,7 @@ import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -19,6 +20,12 @@ import java.util.concurrent.ThreadLocalRandom;
 public class SmsService {
     private final RedisDao redisDao;
     private final UserRepository userRepository;
+
+    @Value("${sms.test-mode:false}")
+    private boolean testMode;
+
+    @Value("${sms.test-code:}")
+    private String testCode;
 
     private String normalizePhone(String phone) {
         if (phone == null) {
@@ -34,7 +41,12 @@ public class SmsService {
             throw new CustomException(ErrorCode.SMS_INVALID_PHONE);
         }
 
-        String verificationCode = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
+        String verificationCode;
+        if (testMode && testCode != null && !testCode.isBlank()) {
+            verificationCode = testCode;
+        } else {
+            verificationCode = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
+        }
         redisDao.setValues("SMS:" + cleanPhone, verificationCode, Duration.ofMinutes(3));
 
         log.info("SMS verification issued phone={}, code={}", cleanPhone, verificationCode);

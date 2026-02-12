@@ -3,7 +3,6 @@ package com.qoocca.teachers.api.attendance.service;
 import com.qoocca.teachers.api.attendance.model.ClassAttendanceResponse;
 import com.qoocca.teachers.api.attendance.model.StudentMonthlyStatResponse;
 import com.qoocca.teachers.api.classInfo.model.response.ClassSummaryResponse;
-import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.db.attendance.entity.AttendanceEntity;
 import com.qoocca.teachers.db.attendance.repository.AttendanceRepository;
 import com.qoocca.teachers.db.attendance.model.StudentMonthlyStatProjection;
@@ -14,7 +13,6 @@ import com.qoocca.teachers.db.classInfo.repository.ClassInfoRepository;
 import com.qoocca.teachers.db.classInfo.repository.ClassInfoStudentRepository;
 import com.qoocca.teachers.db.student.entity.StudentEntity;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +32,6 @@ public class AttendanceAnalyticsService {
     private final ClassInfoStudentRepository classInfoStudentRepository;
     private final ClassInfoRepository classInfoRepository;
 
-    @Cacheable(cacheNames = CacheConfig.ATTENDANCE_TODAY, key = "#academyId + ':' + T(java.time.LocalDate).now()")
     public List<ClassAttendanceResponse> getTodayAttendanceByAcademy(Long academyId) {
         LocalDate today = LocalDate.now();
         String dayOfWeek = today.getDayOfWeek().name().toLowerCase();
@@ -67,7 +64,6 @@ public class AttendanceAnalyticsService {
         }).collect(Collectors.toList());
     }
 
-    @Cacheable(cacheNames = CacheConfig.ATTENDANCE_SUMMARY, key = "#academyId + ':' + #targetDate")
     public List<ClassSummaryResponse> getClassSummariesByDate(Long academyId, LocalDate targetDate) {
         String dayOfWeek = targetDate.getDayOfWeek().name().toLowerCase();
 

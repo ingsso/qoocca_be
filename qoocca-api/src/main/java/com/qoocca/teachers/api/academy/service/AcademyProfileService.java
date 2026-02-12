@@ -121,28 +121,24 @@ public class AcademyProfileService {
             throw new CustomException(ErrorCode.NO_AUTHORITY);
         }
 
-        String folderPath = imageSavePath + academy.getId() + "/";
-        File folder = new File(folderPath);
-        if (!folder.exists()) folder.mkdirs();
+        saveImages(academy, images);
+    }
 
-        for (MultipartFile file : images) {
-            if (file.isEmpty()) continue;
+    @Transactional
+    public void uploadAcademyFiles(Long academyId, MultipartFile certificateFile, List<MultipartFile> images, Long userId) {
+        AcademyEntity academy = academyRepository.findById(academyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
-            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            try {
-                file.transferTo(new File(folderPath + filename));
+        if (!academy.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.NO_AUTHORITY);
+        }
 
-                AcademyImageEntity image = AcademyImageEntity.builder()
-                        .academy(academy)
-                        .imageUrl(imageBaseUrl + academy.getId() + "/" + filename)
-                        .build();
+        if (certificateFile != null && !certificateFile.isEmpty()) {
+            updateCertificateFile(academy, certificateFile);
+        }
 
-                // ✅ 기존 이미지 유지하면서 새 이미지만 추가
-                academy.getAcademyImages().add(image);
-
-            } catch (IOException e) {
-                throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
-            }
+        if (images != null && !images.isEmpty()) {
+            saveImages(academy, images);
         }
     }
 
@@ -225,6 +221,31 @@ public class AcademyProfileService {
             academy.setCertificate(imageBaseUrl + academy.getId() + "/" + certFileName);
         } catch (IOException e) {
             throw new CustomException(ErrorCode.ACADEMY_CERTIFICATE_SAVE_FAILED);
+        }
+    }
+
+    private void saveImages(AcademyEntity academy, List<MultipartFile> images) {
+        String folderPath = imageSavePath + academy.getId() + "/";
+        File folder = new File(folderPath);
+        if (!folder.exists()) folder.mkdirs();
+
+        for (MultipartFile file : images) {
+            if (file == null || file.isEmpty()) continue;
+
+            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            try {
+                file.transferTo(new File(folderPath + filename));
+
+                AcademyImageEntity image = AcademyImageEntity.builder()
+                        .academy(academy)
+                        .imageUrl(imageBaseUrl + academy.getId() + "/" + filename)
+                        .build();
+
+                academy.getAcademyImages().add(image);
+
+            } catch (IOException e) {
+                throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
+            }
         }
     }
 

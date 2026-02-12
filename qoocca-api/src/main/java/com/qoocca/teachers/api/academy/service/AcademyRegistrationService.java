@@ -16,11 +16,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -61,37 +59,20 @@ public class AcademyRegistrationService {
         updateRelationalData(academy, req);
         academyRepository.save(academy);
 
+        if (req.getCertificateFile() == null || req.getCertificateFile().isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
         String academyFolderPath = imageSavePath + academy.getId() + "/";
         File folder = new File(academyFolderPath);
         if (!folder.exists()) folder.mkdirs();
 
-        if (req.getCertificateFile() != null && !req.getCertificateFile().isEmpty()) {
-            String certFileName = "cert_" + UUID.randomUUID() + "_" + req.getCertificateFile().getOriginalFilename();
-            try {
-                req.getCertificateFile().transferTo(new File(academyFolderPath + certFileName));
-                academy.setCertificate(imageBaseUrl + academy.getId() + "/" + certFileName);
-            } catch (IOException e) {
-                throw new CustomException(ErrorCode.ACADEMY_CERTIFICATE_SAVE_FAILED);
-            }
-        }
-
-        List<String> finalImageUrls = new ArrayList<>();
-        if (req.getImageFiles() != null && !req.getImageFiles().isEmpty()) {
-            for (MultipartFile file : req.getImageFiles()) {
-                if (file.isEmpty()) continue;
-
-                String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-                try {
-                    file.transferTo(new File(academyFolderPath + filename));
-                    finalImageUrls.add(imageBaseUrl + academy.getId() + "/" + filename);
-                } catch (IOException e) {
-                    throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
-                }
-            }
-        }
-
-        if (!finalImageUrls.isEmpty()) {
-            academy.updateImages(finalImageUrls);
+        String certFileName = "cert_" + UUID.randomUUID() + "_" + req.getCertificateFile().getOriginalFilename();
+        try {
+            req.getCertificateFile().transferTo(new File(academyFolderPath + certFileName));
+            academy.setCertificate(imageBaseUrl + academy.getId() + "/" + certFileName);
+        } catch (IOException e) {
+            throw new CustomException(ErrorCode.ACADEMY_CERTIFICATE_SAVE_FAILED);
         }
 
         return academy.getId();

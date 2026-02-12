@@ -93,6 +93,21 @@ public class AcademyController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PostMapping(
+            value = "/{id}/files",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<Void> uploadAcademyFiles(
+            @PathVariable Long id,
+            @RequestPart(value = "certificateFile", required = false) MultipartFile certificateFile,
+            @RequestPart(value = "imageFiles", required = false) MultipartFile[] imageFiles,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        List<MultipartFile> images = imageFiles == null ? List.of() : List.of(imageFiles);
+        academyProfileService.uploadAcademyFiles(id, certificateFile, images, userDetails.getUserId());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
 
     /* ================= 이미지 삭제 ================= */
 

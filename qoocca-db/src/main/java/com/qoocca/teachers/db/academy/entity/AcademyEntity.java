@@ -23,7 +23,10 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @DynamicUpdate
-@Table(name = "academy")
+// [최적화] user_id 컬럼에 인덱스를 추가하여 조회 성능 향상
+@Table(name = "academy", indexes = {
+        @Index(name = "idx_academy_user_id", columnList = "user_id")
+})
 public class AcademyEntity {
 
     @Id

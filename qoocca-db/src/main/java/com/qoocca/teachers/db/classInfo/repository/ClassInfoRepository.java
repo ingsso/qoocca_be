@@ -1,6 +1,7 @@
 package com.qoocca.teachers.db.classInfo.repository;
 
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoEntity;
+import com.qoocca.teachers.db.classInfo.entity.ClassInfoStudentEntity;
 import com.qoocca.teachers.db.classInfo.entity.StudentStatus;
 import com.qoocca.teachers.db.classInfo.model.ClassSummaryDto;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -77,4 +78,6 @@ public interface ClassInfoRepository extends JpaRepository<ClassInfoEntity, Long
             @Param("dayName") String dayName,
             @Param("status") StudentStatus status
     );
+
+
 }

@@ -19,7 +19,9 @@ import java.time.LocalTime;
 @Builder
 @ToString
 @Entity
-@Table(name = "class_info")
+@Table(name = "class_info", indexes = {
+        @Index(name = "idx_class_info_academy", columnList = "academy_id")
+})
 public class ClassInfoEntity {
 
     /* =========================

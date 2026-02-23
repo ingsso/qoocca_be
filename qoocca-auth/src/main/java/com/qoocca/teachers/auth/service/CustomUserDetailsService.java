@@ -4,6 +4,7 @@ import com.qoocca.teachers.db.user.entity.UserEntity;
 import com.qoocca.teachers.db.user.repository.UserRepository;
 import com.qoocca.teachers.auth.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
+    @Lazy
     private final UserRepository userRepository;
 
     @Override

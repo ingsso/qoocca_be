@@ -14,8 +14,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -45,7 +47,7 @@ public class UserService {
         addAcademyIdToResponse(response, userEntity.getId());
         return response;
 
-   
+    }
 
     @Transactional
     protected UserEntity saveUser(UserRequest req, String encodedPassword) {
@@ -76,6 +78,7 @@ public class UserService {
                 });
 
         return userRepository.save(userEntity);
+    }
 
 
     public LoginResponse linkSocialAccount(SocialLinkRequest req, HttpServletResponse res) {

@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 1. Spring Boot API 서버 (사용자 코드 빌드 방식)
   api:
     build:
       context: .
@@ -11,13 +10,30 @@ services:
     env_file:
       - .env
     environment:
-      SPRING_PROFILES_ACTIVE: prod      # 운영 프로필 적용
-      JAVA_TOOL_OPTIONS: "-Xms512m -Xmx1g -XX:+UseG1GC" # EC2 사양에 맞춰 메모리 조정 (t3.micro 고려)
-      # YAML 설정을 환경 변수로 덮어쓰기 (운영 최적화)
-      SPRING_JPA_OPEN_IN_VIEW: "false"
-      SPRING_JPA_SHOW_SQL: "false"
-      SERVER_TOMCAT_THREADS_MAX: "200"
-      SERVER_TOMCAT_THREADS_MIN_SPARE: "20"
+      SPRING_PROFILES_ACTIVE: prod
+      # 핵심: 스프링 설정 계층구조(jwt.secret)를 환경변수(JWT_SECRET)로 매핑
+      JWT_SECRET: ${SECRET_KEY}
+      JWT_COOKIE_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+
+      # DB 설정
+      SPRING_DATASOURCE_URL: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+
+      # Redis 설정 (내부 네트워크이므로 서비스명 'redis' 사용)
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+
+      # 나머지 인프라 변수
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
+      NAVER_REDIRECT_URI: ${NAVER_REDIRECT_URI}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      EC2_PUBLIC_IP: ${EC2_PUBLIC_IP}
+
+      JAVA_TOOL_OPTIONS: "-Xms512m -Xmx1g -XX:+UseG1GC"
     ports:
       - "8080:8080"
     volumes:
@@ -28,7 +44,6 @@ services:
     networks:
       - teachers_network
 
-  # 2. Redis (캐시 및 세션용)
   redis:
     image: redis:latest
     container_name: basic-redis
@@ -36,7 +51,6 @@ services:
     networks:
       - teachers_network
 
-  # 3. Nginx (정적 이미지 서버)
   nginx:
     image: nginx:latest
     container_name: nginx-image-server
@@ -50,7 +64,7 @@ services:
       - teachers_network
 
 volumes:
-  academy_images_data: # API와 Nginx가 공유하는 이미지 저장소
+  academy_images_data:
 
 networks:
   teachers_network:

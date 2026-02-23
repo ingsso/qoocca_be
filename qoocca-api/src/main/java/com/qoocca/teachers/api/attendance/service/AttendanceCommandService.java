@@ -111,24 +111,4 @@ public class AttendanceCommandService {
     }
 
 
-    private void evictAttendanceCaches(Long academyId, LocalDate date) {
-        if (academyId == null || date == null) {
-            return;
-        }
-        String key = academyId + ":" + date;
-        if (cacheManager.getCache(CacheConfig.ATTENDANCE_SUMMARY) != null) {
-            cacheManager.getCache(CacheConfig.ATTENDANCE_SUMMARY).evict(key);
-        }
-        if (cacheManager.getCache(CacheConfig.ATTENDANCE_TODAY) != null) {
-            cacheManager.getCache(CacheConfig.ATTENDANCE_TODAY).evict(key);
-        }
-        if (cacheManager.getCache(CacheConfig.DASHBOARD_STATS) != null) {
-            cacheManager.getCache(CacheConfig.DASHBOARD_STATS).evict(academyId);
-        }
-        if (cacheManager.getCache(CacheConfig.DASHBOARD_CLASS_SUMMARY) != null) {
-            cacheManager.getCache(CacheConfig.DASHBOARD_CLASS_SUMMARY).evict(academyId);
-        }
-
-      
-    }
 }

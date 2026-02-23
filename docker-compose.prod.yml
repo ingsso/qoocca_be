@@ -1,44 +1,56 @@
+version: '3.8'
+
 services:
+  # 1. Spring Boot API 서버 (사용자 코드 빌드 방식)
   api:
-    image: ${API_IMAGE}
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: qoocca-api
     restart: always
     env_file:
-      - .env.prod
+      - .env
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
-      JAVA_TOOL_OPTIONS: "-Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+      SPRING_PROFILES_ACTIVE: prod      # 운영 프로필 적용
+      JAVA_TOOL_OPTIONS: "-Xms512m -Xmx1g -XX:+UseG1GC" # EC2 사양에 맞춰 메모리 조정 (t3.micro 고려)
+      # YAML 설정을 환경 변수로 덮어쓰기 (운영 최적화)
       SPRING_JPA_OPEN_IN_VIEW: "false"
       SPRING_JPA_SHOW_SQL: "false"
-      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "false"
-      LOGGING_LEVEL_ORG_HIBERNATE_SQL: "OFF"
-      LOGGING_LEVEL_ORG_HIBERNATE_ORM_JDBC_BIND: "OFF"
-      LOGGING_LEVEL_ORG_HIBERNATE_TYPE_DESCRIPTOR_SQL_BASICBINDER: "OFF"
+      SERVER_TOMCAT_THREADS_MAX: "200"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "20"
     ports:
       - "8080:8080"
     volumes:
-      - /opt/qoocca/config:/app/config:ro
-      - /opt/qoocca/logs:/app/logs
+      - ./logs:/app/logs
       - academy_images_data:/app/uploads
     depends_on:
       - redis
     networks:
       - teachers_network
 
+  # 2. Redis (캐시 및 세션용)
   redis:
-    image: redis:7-alpine
-    container_name: qoocca-redis
+    image: redis:latest
+    container_name: basic-redis
     restart: always
-    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      - teachers_network
+
+  # 3. Nginx (정적 이미지 서버)
+  nginx:
+    image: nginx:latest
+    container_name: nginx-image-server
+    restart: always
+    ports:
+      - "8081:80"
     volumes:
-      - redis_data:/data
+      - academy_images_data:/usr/share/nginx/html/academy
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
       - teachers_network
 
 volumes:
-  academy_images_data:
-  redis_data:
+  academy_images_data: # API와 Nginx가 공유하는 이미지 저장소
 
 networks:
   teachers_network:

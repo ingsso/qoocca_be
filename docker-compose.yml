@@ -6,7 +6,7 @@ services:
     container_name: qoocca-api
     restart: always
     env_file:
-      - .env.docker
+      - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
       JAVA_TOOL_OPTIONS: "-Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"

@@ -28,7 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@Tag(name = "Academy Student API", description = "Academy student management API")
+@Tag(name = "학원 학생 API", description = "학원 학생 관리 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/academy/{academyId}/student")
@@ -37,67 +37,67 @@ public class AcademyStudentController {
     private final AcademyStudentService academyStudentService;
     private final AcademyStudentUploadQueueService academyStudentUploadQueueService;
 
-    @Operation(summary = "Register student")
+    @Operation(summary = "학생 등록")
     @PostMapping
     public AcademyStudentResponse register(
-            @Parameter(description = "Academy ID") @PathVariable Long academyId,
+            @Parameter(description = "학원 ID") @PathVariable Long academyId,
             @RequestBody @Valid AcademyStudentCreateRequest request
     ) {
         return academyStudentService.registerStudent(academyId, request);
     }
 
-    @Operation(summary = "Register student with parent")
+    @Operation(summary = "학부모 포함 학생 등록")
     @PostMapping("/with-parent")
     public AcademyStudentResponse registerWithParent(
-            @Parameter(description = "Academy ID") @PathVariable Long academyId,
+            @Parameter(description = "학원 ID") @PathVariable Long academyId,
             @RequestBody @Valid AcademyStudentWithParentCreateRequest request
     ) {
         return academyStudentService.registerStudentWithParent(academyId, request);
     }
 
-    @Operation(summary = "Modify student")
+    @Operation(summary = "학생 수정")
     @PutMapping("/{studentId}")
     public AcademyStudentResponse modifyStudent(
-            @Parameter(description = "Academy ID") @PathVariable Long academyId,
-            @Parameter(description = "Student ID") @PathVariable Long studentId,
+            @Parameter(description = "학원 ID") @PathVariable Long academyId,
+            @Parameter(description = "학생 ID") @PathVariable Long studentId,
             @RequestBody @Valid AcademyStudentModifyRequest request
     ) {
         return academyStudentService.modifyStudent(academyId, studentId, request);
     }
 
-    @Operation(summary = "Get students")
+    @Operation(summary = "학생 목록 조회")
     @GetMapping
     public List<AcademyStudentResponse> getStudents(
-            @Parameter(description = "Academy ID") @PathVariable Long academyId
+            @Parameter(description = "학원 ID") @PathVariable Long academyId
     ) {
         return academyStudentService.getStudents(academyId);
     }
 
-    @Operation(summary = "Delete student")
+    @Operation(summary = "학생 삭제")
     @DeleteMapping("/{studentId}")
     public void delete(
-            @Parameter(description = "Academy ID") @PathVariable Long academyId,
-            @Parameter(description = "Student ID") @PathVariable Long studentId
+            @Parameter(description = "학원 ID") @PathVariable Long academyId,
+            @Parameter(description = "학생 ID") @PathVariable Long studentId
     ) {
         academyStudentService.deleteStudent(academyId, studentId);
     }
 
-    @Operation(summary = "Enqueue excel upload")
+    @Operation(summary = "학생 엑셀 업로드 작업 등록")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public AcademyStudentUploadEnqueueResponse upload(
-            @Parameter(description = "Academy ID") @PathVariable Long academyId,
-            @Parameter(description = "Excel file") @RequestPart("file") MultipartFile file,
-            @Parameter(description = "Default class ID when class column is missing")
+            @Parameter(description = "학원 ID") @PathVariable Long academyId,
+            @Parameter(description = "엑셀 파일") @RequestPart("file") MultipartFile file,
+            @Parameter(description = "클래스 컬럼이 없을 때 사용할 기본 클래스 ID")
             @RequestParam(value = "classId", required = false) Long classId,
-            @Parameter(description = "Use AI header mapping")
+            @Parameter(description = "AI 헤더 매핑 사용 여부")
             @RequestParam(value = "useAi", defaultValue = "true") boolean useAi,
-            @Parameter(description = "Validation only")
+            @Parameter(description = "검증만 수행 여부")
             @RequestParam(value = "dryRun", defaultValue = "false") boolean dryRun
     ) {
         return academyStudentUploadQueueService.enqueue(academyId, file, classId, useAi, dryRun);
     }
 
-    @Operation(summary = "Get excel upload job status")
+    @Operation(summary = "학생 엑셀 업로드 작업 상태 조회")
     @GetMapping("/upload/jobs/{jobId}")
     public AcademyStudentUploadJobStatusResponse getUploadJobStatus(
             @PathVariable Long academyId,

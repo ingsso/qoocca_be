@@ -31,26 +31,29 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final SmsService smsService;
 
-    private void setAgreements(UserEntity user, UserRequest.AgreementsRequest agreements) {
-        if (agreements == null) {
-            return;
-        }
-
-        user.setServiceAgree(agreements.isService());
-        user.setPrivacyAgree(agreements.isPrivacy());
-        user.setThirdPartyAgree(agreements.isThirdParty());
-        user.setMarketingAgree(agreements.isMarketing());
-    }
-
+    // [추가] 다른 서비스에서 유저 정보를 조회할 때 꼭 필요한 메서드입니다.
     public UserEntity findById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
-    @Transactional
+    // [최적화] 비밀번호 암호화 연산은 CPU를 많이 써서 오래 걸리므로 트랜잭션 밖에서 미리 실행
     public LoginResponse signup(UserRequest req, HttpServletResponse res) {
         smsService.checkIsVerified(req.getPhone());
 
+        // 트랜잭션 시작 전 무거운 암호화 작업 수행 (커넥션 점유 시간 단축)
+        String encodedPassword = passwordEncoder.encode(req.getPassword());
+
+        UserEntity userEntity = saveUser(req, encodedPassword);
+
+        smsService.deleteVerifiedState(req.getPhone());
+
+        // 학원 정보를 한 번에 가져오는 최적화된 응답 빌드 호출
+        return buildLoginResponse(userEntity, res);
+    }
+
+    @Transactional
+    protected UserEntity saveUser(UserRequest req, String encodedPassword) {
         UserEntity userEntity = userRepository.findByPhoneNumber(req.getPhone())
                 .map(existingUser -> {
                     if (existingUser.getPassword() != null) {
@@ -58,7 +61,7 @@ public class UserService {
                     }
                     existingUser.setEmail(req.getEmail());
                     existingUser.setUserName(req.getUsername());
-                    existingUser.setPassword(passwordEncoder.encode(req.getPassword()));
+                    existingUser.setPassword(encodedPassword);
                     if (req.getAgreements() != null) {
                         setAgreements(existingUser, req.getAgreements());
                     }
@@ -68,7 +71,7 @@ public class UserService {
                     UserEntity newUser = UserEntity.builder()
                             .userName(req.getUsername())
                             .email(req.getEmail())
-                            .password(passwordEncoder.encode(req.getPassword()))
+                            .password(encodedPassword)
                             .phoneNumber(req.getPhone())
                             .role("ROLE_USER")
                             .alarm(true)
@@ -77,13 +80,7 @@ public class UserService {
                     return newUser;
                 });
 
-        userRepository.save(userEntity);
-        smsService.deleteVerifiedState(req.getPhone());
-
-        LoginResponse response = jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole(), res);
-
-        addAcademyIdToResponse(response, userEntity.getId());
-        return response;
+        return userRepository.save(userEntity);
     }
 
     @Transactional
@@ -121,7 +118,6 @@ public class UserService {
 
             smsService.deleteVerifiedState(cleanPhone);
             return buildLoginResponse(existingUser, res);
-
         }
 
         validateRequiredAgreements(req.agreements());
@@ -131,34 +127,23 @@ public class UserService {
         userRepository.save(tempSocialUser);
         smsService.deleteVerifiedState(cleanPhone);
 
-        LoginResponse response = jwtTokenProvider.generateTokens(tempSocialUser.getId(), tempSocialUser.getRole(), res);
-
-        addAcademyIdToResponse(response, tempSocialUser.getId());
-        return response;
+        return buildLoginResponse(tempSocialUser, res);
     }
 
-    private void addAcademyIdToResponse(LoginResponse response, Long userId) {
-        academyRepository.findAllByUserId(userId).stream()
-                .findFirst()
-                .ifPresent(academy -> response.setAcademyId(academy.getId()));
+    private void setAgreements(UserEntity user, UserRequest.AgreementsRequest agreements) {
+        if (agreements == null) return;
+        user.setServiceAgree(agreements.isService());
+        user.setPrivacyAgree(agreements.isPrivacy());
+        user.setThirdPartyAgree(agreements.isThirdParty());
+        user.setMarketingAgree(agreements.isMarketing());
     }
 
-    private void validateRequiredAgreements(UserRequest.AgreementsRequest agreements) {
-        if (agreements == null ||
-                !agreements.isService() ||
-                !agreements.isPrivacy() ||
-                !agreements.isThirdParty()) {
-            throw new CustomException(ErrorCode.REQUIRED_AGREEMENTS_MISSING);
-        }
-    }
-
+    // [최적화] 학원 조회를 한 번으로 통일하고 응답 객체를 완성함
     private LoginResponse buildLoginResponse(UserEntity user, HttpServletResponse res) {
+        LoginResponse tokenResponse = jwtTokenProvider.generateTokens(user.getId(), user.getRole(), res);
 
-        LoginResponse tokenResponse =
-                jwtTokenProvider.generateTokens(user.getId(), user.getRole(), res);
-
-        List<AcademyEntity> academies =
-                academyRepository.findAllByUserId(user.getId());
+        // Academy 테이블 인덱스를 활용한 단일 쿼리
+        List<AcademyEntity> academies = academyRepository.findAllByUserId(user.getId());
 
         List<LoginResponse.AcademyListResponse> academyInfos = academies.stream()
                 .map(a -> LoginResponse.AcademyListResponse.builder()
@@ -168,14 +153,20 @@ public class UserService {
                         .build())
                 .toList();
 
-        Long academyId = academyInfos.size() == 1
-                ? academyInfos.get(0).getAcademyId()
-                : null;
-
         tokenResponse.setAcademies(academyInfos);
-        tokenResponse.setAcademyId(academyId);
+
+        if (academyInfos.size() == 1) {
+            tokenResponse.setAcademyId(academyInfos.get(0).getAcademyId());
+        } else {
+            tokenResponse.setAcademyId(null);
+        }
 
         return tokenResponse;
     }
 
+    private void validateRequiredAgreements(UserRequest.AgreementsRequest agreements) {
+        if (agreements == null || !agreements.isService() || !agreements.isPrivacy() || !agreements.isThirdParty()) {
+            throw new CustomException(ErrorCode.REQUIRED_AGREEMENTS_MISSING);
+        }
+    }
 }

@@ -19,7 +19,10 @@ import java.time.LocalTime;
 @Builder
 @ToString
 @Entity
-@Table(name = "attendance")
+@Table(name = "attendance", indexes = {
+        // [최적화] 퇴실 시 가장 최근 기록을 빨리 찾기 위해 checkin 컬럼을 인덱스에 포함
+        @Index(name = "idx_attendance_lookup", columnList = "student_id, attendance_date, checkin")
+})
 public class AttendanceEntity {
 
     /* =========================

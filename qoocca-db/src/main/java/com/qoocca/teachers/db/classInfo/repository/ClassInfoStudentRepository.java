@@ -31,15 +31,57 @@ public interface ClassInfoStudentRepository extends JpaRepository<ClassInfoStude
             @Param("status") StudentStatus status
     );
 
+    /**
+     * [성능 최적화의 핵심]
+     * Student, ClassInfo, Academy를 한 번에 FETCH JOIN으로 가져옵니다.
+     * 이 쿼리 덕분에 Response DTO를 만들 때 추가 SELECT 쿼리가 발생하지 않습니다.
+     */
     @Query("""
-        SELECT cse.classInfo
-        FROM ClassInfoStudentEntity cse
-        WHERE cse.student.studentId = :studentId
-          AND cse.status = :status
+    SELECT cse 
+    FROM ClassInfoStudentEntity cse 
+    JOIN FETCH cse.student s
+    JOIN FETCH cse.classInfo c 
+    JOIN FETCH c.academy a
+    WHERE s.studentId = :studentId 
+      AND cse.status = :status
+      AND (
+        (:day = 'monday' AND c.monday = true) OR
+        (:day = 'tuesday' AND c.tuesday = true) OR
+        (:day = 'wednesday' AND c.wednesday = true) OR
+        (:day = 'thursday' AND c.thursday = true) OR
+        (:day = 'friday' AND c.friday = true) OR
+        (:day = 'saturday' AND c.saturday = true) OR
+        (:day = 'sunday' AND c.sunday = true)
+      )
     """)
-    List<ClassInfoEntity> findClassesByStudentId(
+    List<ClassInfoStudentEntity> findEnrollmentsWithDetails(
             @Param("studentId") Long studentId,
-            @Param("status") StudentStatus status
+            @Param("status") StudentStatus status,
+            @Param("day") String day
+    );
+
+    // 기존 메서드 유지 (하위 호환성)
+    @Query("""
+    SELECT cse.classInfo 
+    FROM ClassInfoStudentEntity cse 
+    JOIN cse.classInfo c 
+    JOIN FETCH c.academy 
+    WHERE cse.student.studentId = :studentId 
+      AND cse.status = :status
+      AND (
+        (:day = 'monday' AND c.monday = true) OR
+        (:day = 'tuesday' AND c.tuesday = true) OR
+        (:day = 'wednesday' AND c.wednesday = true) OR
+        (:day = 'thursday' AND c.thursday = true) OR
+        (:day = 'friday' AND c.friday = true) OR
+        (:day = 'saturday' AND c.saturday = true) OR
+        (:day = 'sunday' AND c.sunday = true)
+      )
+    """)
+    List<ClassInfoEntity> findClassesByStudentIdAndDay(
+            @Param("studentId") Long studentId,
+            @Param("status") StudentStatus status,
+            @Param("day") String day
     );
 
     @Query("""
@@ -57,7 +99,7 @@ public interface ClassInfoStudentRepository extends JpaRepository<ClassInfoStude
         (:day = 'saturday' AND c.saturday = true) OR
         (:day = 'sunday' AND c.sunday = true)
       )
-""")
+    """)
     long countExpectedStudentsToday(
             @Param("academyId") Long academyId,
             @Param("day") String day,

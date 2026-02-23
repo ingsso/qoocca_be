@@ -17,7 +17,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "class_info_student")
+@Table(name = "class_info_student", indexes = {
+        @Index(name = "idx_class_student_map", columnList = "student_id, status")
+})
 public class ClassInfoStudentEntity {
 
     @Id

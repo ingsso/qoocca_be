@@ -1,6 +1,7 @@
 package com.qoocca.teachers.api.academy.service;
 
 import com.qoocca.teachers.api.academy.model.response.DashboardStatsResponse;
+import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.db.academy.repository.AcademyStudentRepository;
 import com.qoocca.teachers.db.attendance.entity.AttendanceEntity;
 import com.qoocca.teachers.db.attendance.repository.AttendanceRepository;
@@ -8,6 +9,7 @@ import com.qoocca.teachers.db.classInfo.entity.StudentStatus;
 import com.qoocca.teachers.db.classInfo.repository.ClassInfoStudentRepository;
 import com.qoocca.teachers.db.receipt.repository.ReceiptRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ public class AcademyDashboardService {
     private final ClassInfoStudentRepository classInfoStudentRepository;
     private final ReceiptRepository receiptRepository;
 
+    @Cacheable(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId")
     @Transactional(readOnly = true)
     public DashboardStatsResponse getDashboardStats(Long academyId) {
         LocalDate today = LocalDate.now();

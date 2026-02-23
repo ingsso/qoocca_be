@@ -6,17 +6,19 @@ import com.qoocca.teachers.api.classInfo.model.response.ClassCreateResponse;
 import com.qoocca.teachers.api.classInfo.model.response.ClassGetResponse;
 import com.qoocca.teachers.api.classInfo.service.ClassInfoService;
 import com.qoocca.teachers.api.classInfo.service.ClassInfoStudentService;
+import com.qoocca.teachers.auth.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "Class Info API", description = "학원별 클래스 관리 API")
+@Tag(name = "Class Info API", description = "Academy class management API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/academy/{academyId}/class")
@@ -25,29 +27,30 @@ public class ClassInfoController {
     private final ClassInfoStudentService classInfoStudentService;
     private final ClassInfoService classInfoService;
 
-    @Operation(summary = "반 생성", description = "학원에 새로운 반을 생성합니다.")
+    @Operation(summary = "Create class", description = "Creates a new class under an academy.")
     @PostMapping
     public ResponseEntity<ClassCreateResponse> createClass(
-            @Parameter(description = "학원 ID") @PathVariable Long academyId,
-            @Valid @RequestBody ClassCreateRequest request
+            @Parameter(description = "Academy ID") @PathVariable Long academyId,
+            @Valid @RequestBody ClassCreateRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(classInfoService.createClass(academyId, request));
+        return ResponseEntity.ok(classInfoService.createClass(academyId, request, userDetails));
     }
 
-    @Operation(summary = "반 목록 조회", description = "학원에 등록된 반 목록을 조회합니다.")
+    @Operation(summary = "Get classes", description = "Returns class list for an academy.")
     @GetMapping
     public ResponseEntity<List<ClassGetResponse>> getClasses(
-            @Parameter(description = "학원 ID") @PathVariable Long academyId
+            @Parameter(description = "Academy ID") @PathVariable Long academyId
     ) {
         return ResponseEntity.ok(classInfoService.getClasses(academyId));
     }
 
-    @Operation(summary = "학생 반 이동", description = "학생을 같은 학원 내 다른 반으로 이동시킵니다.")
+    @Operation(summary = "Move student", description = "Moves a student to another class in the same academy.")
     @PutMapping("/{classId}/student/{studentId}/move")
     public ResponseEntity<Void> moveStudent(
-            @Parameter(description = "학원 ID") @PathVariable Long academyId,
-            @Parameter(description = "현재 반 ID") @PathVariable Long classId,
-            @Parameter(description = "학생 ID") @PathVariable Long studentId,
+            @Parameter(description = "Academy ID") @PathVariable Long academyId,
+            @Parameter(description = "Current class ID") @PathVariable Long classId,
+            @Parameter(description = "Student ID") @PathVariable Long studentId,
             @Valid @RequestBody ClassStudentMoveRequest request
     ) {
         classInfoStudentService.moveStudent(academyId, classId, studentId, request.getTargetClassId());

@@ -2,6 +2,7 @@ package com.qoocca.teachers.api.classInfo.service;
 
 import com.qoocca.teachers.api.classInfo.model.ClassParentStudent;
 import com.qoocca.teachers.api.classInfo.model.response.ClassParentStatsResponse;
+import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.db.classInfo.repository.ClassParentStatsRepository;
 import com.qoocca.teachers.api.parent.model.ParentResponse;
 import com.qoocca.teachers.db.classInfo.entity.ClassInfoEntity;
@@ -9,6 +10,7 @@ import com.qoocca.teachers.db.student.entity.StudentEntity;
 import com.qoocca.teachers.db.student.entity.StudentParentEntity;
 import com.qoocca.teachers.db.student.repository.StudentParentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -21,6 +23,7 @@ public class ClassParentStatsService {
     private final ClassParentStatsRepository repository;
     private final StudentParentRepository studentParentRepository;
 
+    @Cacheable(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId")
     public List<ClassParentStatsResponse> getParentStats(Long academyId) {
 
         List<Object[]> rows = repository.findStudentsByAcademy(academyId, null);

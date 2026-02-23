@@ -4,6 +4,8 @@ import com.qoocca.teachers.api.academy.model.request.AcademyCreateRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyResubmitRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyUpdateRequest;
 import com.qoocca.teachers.api.academy.model.response.AcademyResponse;
+import com.qoocca.teachers.api.academy.model.response.AcademyImageUploadEnqueueResponse;
+import com.qoocca.teachers.api.academy.model.response.AcademyImageUploadJobStatusResponse;
 import com.qoocca.teachers.api.academy.model.response.DashboardStatsResponse;
 import com.qoocca.teachers.api.academy.service.AcademyDashboardService;
 import com.qoocca.teachers.api.academy.service.AcademyProfileService;
@@ -84,13 +86,25 @@ public class AcademyController {
             value = "/{id}/images",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public ResponseEntity<Void> uploadAcademyImages(
+    public ResponseEntity<AcademyImageUploadEnqueueResponse> uploadAcademyImages(
             @PathVariable Long id,
             @RequestPart("images") MultipartFile[] images,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        academyProfileService.uploadAcademyImages(id, List.of(images), userDetails.getUserId());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        AcademyImageUploadEnqueueResponse response =
+                academyProfileService.enqueueAcademyImages(id, List.of(images), userDetails.getUserId());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+    }
+
+    @GetMapping("/{id}/images/uploads/{jobId}")
+    public ResponseEntity<AcademyImageUploadJobStatusResponse> getImageUploadJobStatus(
+            @PathVariable Long id,
+            @PathVariable String jobId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        AcademyImageUploadJobStatusResponse response =
+                academyProfileService.getImageUploadJobStatus(id, jobId, userDetails.getUserId());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(

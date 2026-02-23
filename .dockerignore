@@ -1,0 +1,11 @@
+.git
+.gitignore
+.idea
+.gradle
+build
+**/build
+logs
+monitoring
+performance
+nginx/images
+*.log

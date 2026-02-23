@@ -104,5 +104,8 @@ public class AttendanceCommandService {
         if (cacheManager.getCache(CacheConfig.DASHBOARD_STATS) != null) {
             cacheManager.getCache(CacheConfig.DASHBOARD_STATS).evict(academyId);
         }
+        if (cacheManager.getCache(CacheConfig.DASHBOARD_CLASS_SUMMARY) != null) {
+            cacheManager.getCache(CacheConfig.DASHBOARD_CLASS_SUMMARY).evict(academyId);
+        }
     }
 }

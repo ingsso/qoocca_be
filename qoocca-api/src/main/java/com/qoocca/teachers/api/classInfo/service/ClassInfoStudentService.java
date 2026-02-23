@@ -1,5 +1,6 @@
 package com.qoocca.teachers.api.classInfo.service;
 
+import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.api.classInfo.model.request.ClassStudentModifyRequest;
 import com.qoocca.teachers.api.classInfo.model.request.ClassStudentRequest;
 import com.qoocca.teachers.api.classInfo.model.response.ClassStudentResponse;
@@ -16,6 +17,8 @@ import com.qoocca.teachers.db.student.entity.StudentParentEntity;
 import com.qoocca.teachers.db.student.repository.StudentParentRepository;
 import com.qoocca.teachers.db.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,14 @@ public class ClassInfoStudentService {
     private final ClassInfoStudentRepository classInfoStudentRepository;
     private final StudentParentRepository studentParentRepository;
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_CLASS_SUMMARY, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_CLASS_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_CLASS_SUMMARY, allEntries = true),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_MAIN, allEntries = true)
+    })
     public void register(Long academyId, Long classId, ClassStudentRequest request) {
         ClassInfoEntity classInfo = getClassInAcademy(academyId, classId);
 
@@ -52,6 +63,14 @@ public class ClassInfoStudentService {
         classInfoStudentRepository.save(entity);
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_CLASS_SUMMARY, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_CLASS_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_CLASS_SUMMARY, allEntries = true),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_MAIN, allEntries = true)
+    })
     public void modifyStatus(Long academyId, Long classId, Long studentId, ClassStudentModifyRequest request) {
         getClassInAcademy(academyId, classId);
 
@@ -62,6 +81,14 @@ public class ClassInfoStudentService {
         entity.setStatus(request.getStatus());
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_CLASS_SUMMARY, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_CLASS_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_CLASS_SUMMARY, allEntries = true),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_MAIN, allEntries = true)
+    })
     public void moveStudent(Long academyId, Long classId, Long studentId, Long targetClassId) {
         getClassInAcademy(academyId, classId);
         ClassInfoEntity targetClass = getClassInAcademy(academyId, targetClassId);
@@ -95,6 +122,14 @@ public class ClassInfoStudentService {
                 .toList();
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_CLASS_SUMMARY, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_CLASS_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_CLASS_SUMMARY, allEntries = true),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_MAIN, allEntries = true)
+    })
     public void remove(Long academyId, Long classId, Long studentId) {
         getClassInAcademy(academyId, classId);
 

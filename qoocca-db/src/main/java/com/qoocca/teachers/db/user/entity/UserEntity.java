@@ -31,10 +31,10 @@ public class UserEntity {
     @Column(name = "user_name")
     private String userName;
 
-    @Column(name = "kakao_id")
+    @Column(name = "kakao_id", unique = true)
     private String kakaoId;
 
-    @Column(name = "naver_id")
+    @Column(name = "naver_id", unique = true)
     private String naverId;
 
     @Column(unique = true)
@@ -42,7 +42,7 @@ public class UserEntity {
 
     private String password;
 
-    @Column(name = "user_phone_number", length = 11)
+    @Column(name = "user_phone_number", length = 11, unique = true)
     private String phoneNumber;
 
     @Builder.Default

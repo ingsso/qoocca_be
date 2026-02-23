@@ -1,5 +1,6 @@
 package com.qoocca.teachers.api.receipt.service;
 
+import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.api.global.service.FcmPushService;
 import com.qoocca.teachers.api.receipt.model.ReceiptCreateRequest;
 import com.qoocca.teachers.api.receipt.model.ReceiptUpdateRequest;
@@ -24,6 +25,9 @@ import com.qoocca.teachers.db.student.entity.StudentParentEntity;
 import com.qoocca.teachers.db.student.repository.StudentParentRepository;
 import com.qoocca.teachers.db.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +50,11 @@ public class ReceiptService {
     private final StudentParentRepository studentParentRepository;
     private final FcmPushService fcmPushService;
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_CLASS_SUMMARY, allEntries = true),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_MAIN, allEntries = true),
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, allEntries = true)
+    })
     public ReceiptCreateResponse createReceipt(Long studentId, ReceiptCreateRequest request) {
         StudentEntity student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
@@ -100,6 +109,10 @@ public class ReceiptService {
                 .collect(Collectors.toList());
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_CLASS_SUMMARY, allEntries = true),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_MAIN, allEntries = true)
+    })
     public ReceiptUpdateResponse updateReceiptStatus(Long studentId, Long receiptId, ReceiptUpdateRequest request) {
         ReceiptEntity receipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECEIPT_NOT_FOUND));
@@ -115,10 +128,18 @@ public class ReceiptService {
         return ReceiptUpdateResponse.fromEntity(receipt);
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_CLASS_SUMMARY, allEntries = true),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_MAIN, allEntries = true)
+    })
     public ReceiptUpdateResponse payReceipt(Long receiptId, Long parentId) {
         return changeReceiptStatusForParent(receiptId, parentId, ReceiptEntity.ReceiptStatus.PAID);
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_CLASS_SUMMARY, allEntries = true),
+            @CacheEvict(cacheNames = CacheConfig.RECEIPT_MAIN, allEntries = true)
+    })
     public ReceiptUpdateResponse cancelReceipt(Long receiptId, Long parentId) {
         return changeReceiptStatusForParent(receiptId, parentId, ReceiptEntity.ReceiptStatus.CANCELLED);
     }
@@ -139,6 +160,7 @@ public class ReceiptService {
         return ParentReceiptResponse.fromEntity(receipt);
     }
 
+    @Cacheable(cacheNames = CacheConfig.RECEIPT_CLASS_SUMMARY, key = "#academyId + ':' + #year + ':' + #month")
     @Transactional(readOnly = true)
     public List<ClassPaymentSummaryResponse> getClassReceiptSummary(Long academyId, int year, int month) {
         ReceiptDataContainer data = prepareReceiptData(academyId, year, month);
@@ -174,6 +196,7 @@ public class ReceiptService {
         }).collect(Collectors.toList());
     }
 
+    @Cacheable(cacheNames = CacheConfig.RECEIPT_MAIN, key = "#academyId + ':' + #year + ':' + #month")
     @Transactional(readOnly = true)
     public List<DashboardMainSummaryResponse> getDashboardMainSummary(Long academyId, int year, int month) {
         ReceiptDataContainer data = prepareReceiptData(academyId, year, month);

@@ -27,6 +27,9 @@ public class SmsService {
     @Value("${sms.test-code:}")
     private String testCode;
 
+    @Value("${sms.verify-skip-user-lookup:false}")
+    private boolean verifySkipUserLookup;
+
     private String normalizePhone(String phone) {
         if (phone == null) {
             return "";
@@ -49,7 +52,7 @@ public class SmsService {
         }
         redisDao.setValues("SMS:" + cleanPhone, verificationCode, Duration.ofMinutes(3));
 
-        log.info("SMS verification issued phone={}, code={}", cleanPhone, verificationCode);
+        log.debug("SMS verification issued phone={}", cleanPhone);
     }
 
     public Map<String, Object> verifyCode(String phone, String code) {
@@ -59,15 +62,16 @@ public class SmsService {
         if (savedCode != null && savedCode.equals(code)) {
             redisDao.deleteValues("SMS:" + cleanPhone);
             redisDao.setValues("SMS_VERIFIED:" + cleanPhone, "true", Duration.ofMinutes(5));
-            log.info("SMS verification success phone={}, code={}", cleanPhone, code);
+            log.debug("SMS verification success phone={}", cleanPhone);
 
-            boolean isExistingUser = userRepository.findByPhoneNumber(cleanPhone).isPresent();
+            boolean isExistingUser = !verifySkipUserLookup
+                    && userRepository.findByPhoneNumber(cleanPhone).isPresent();
 
             Map<String, Object> result = new HashMap<>();
             result.put("isExistingUser", isExistingUser);
             return result;
         } else {
-            log.warn("SMS verification failed phone={}, code={}", cleanPhone, code);
+            log.warn("SMS verification failed phone={}", cleanPhone);
             throw new CustomException(ErrorCode.SMS_CODE_INVALID);
         }
     }

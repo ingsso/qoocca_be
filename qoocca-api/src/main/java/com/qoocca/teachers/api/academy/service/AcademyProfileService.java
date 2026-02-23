@@ -58,6 +58,7 @@ public class AcademyProfileService {
 
     private final AcademyRepository academyRepository;
     private final AcademyImageRepository academyImageRepository;
+    private final AcademyImageUploadQueueService academyImageUploadQueueService;
     private final AcademySubjectRepository academySubjectRepository;
     private final AcademyAgeRepository academyAgeRepository;
     private final AgeRepository ageRepository;
@@ -137,16 +138,7 @@ public class AcademyProfileService {
         if (images == null || images.isEmpty()) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
-
-        ImageUploadJob job = createImageUploadJob(academyId, images);
-        boolean queued = imageUploadQueue.offer(job);
-        if (!queued) {
-            cleanupTempFiles(job.queuedFiles);
-            imageUploadJobs.remove(job.jobId);
-            throw new CustomException(ErrorCode.ACADEMY_IMAGE_UPLOAD_QUEUE_FULL);
-        }
-
-        return new AcademyImageUploadEnqueueResponse(job.jobId, job.state.name(), job.submittedAt);
+        return academyImageUploadQueueService.enqueue(academyId, images);
     }
 
     public AcademyImageUploadJobStatusResponse getImageUploadJobStatus(Long academyId, String jobId, Long userId) {
@@ -156,19 +148,7 @@ public class AcademyProfileService {
             throw new CustomException(ErrorCode.NO_AUTHORITY);
         }
 
-        ImageUploadJob job = imageUploadJobs.get(jobId);
-        if (job == null || !academyId.equals(job.academyId)) {
-            throw new CustomException(ErrorCode.ACADEMY_IMAGE_NOT_FOUND);
-        }
-
-        return new AcademyImageUploadJobStatusResponse(
-                job.jobId,
-                job.academyId,
-                job.state.name(),
-                job.submittedAt,
-                job.completedAt,
-                job.errorMessage
-        );
+        return academyImageUploadQueueService.getStatus(academyId, jobId);
     }
 
     @Transactional

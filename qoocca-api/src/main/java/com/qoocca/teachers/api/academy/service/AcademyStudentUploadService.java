@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,19 +59,43 @@ public class AcademyStudentUploadService {
             boolean useAi,
             boolean dryRun
     ) {
+        if (file == null || file.isEmpty()) {
+            List<AcademyStudentUploadError> errors = List.of(new AcademyStudentUploadError(0, "Empty file"));
+            return buildResponse(0, 0, 0, Map.of(), errors);
+        }
+        try (InputStream inputStream = file.getInputStream()) {
+            return uploadFromInputStream(academyId, inputStream, classId, useAi, dryRun);
+        } catch (Exception e) {
+            return buildResponse(0, 0, 0, Map.of(), List.of(new AcademyStudentUploadError(0, "Failed to parse Excel file")));
+        }
+    }
+
+    public AcademyStudentUploadResponse uploadFromStoredFile(
+            Long academyId,
+            String storedFilePath,
+            Long classId,
+            boolean useAi,
+            boolean dryRun
+    ) {
+        try (InputStream inputStream = Files.newInputStream(Path.of(storedFilePath))) {
+            return uploadFromInputStream(academyId, inputStream, classId, useAi, dryRun);
+        } catch (Exception e) {
+            return buildResponse(0, 0, 0, Map.of(), List.of(new AcademyStudentUploadError(0, "Failed to parse Excel file")));
+        }
+    }
+
+    private AcademyStudentUploadResponse uploadFromInputStream(
+            Long academyId,
+            InputStream inputStream,
+            Long classId,
+            boolean useAi,
+            boolean dryRun
+    ) throws Exception {
         List<AcademyStudentUploadError> errors = new ArrayList<>();
         Map<String, String> headerMapping = new HashMap<>();
-
-        if (file == null || file.isEmpty()) {
-            errors.add(new AcademyStudentUploadError(0, "Empty file"));
-            return buildResponse(0, 0, 0, headerMapping, errors);
-        }
-
         DataFormatter formatter = new DataFormatter();
 
-        try (InputStream inputStream = file.getInputStream();
-             Workbook workbook = WorkbookFactory.create(inputStream)) {
-
+        try (Workbook workbook = WorkbookFactory.create(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
             Row headerRow = sheet.getRow(0);
             if (headerRow == null) {
@@ -156,9 +182,6 @@ public class AcademyStudentUploadService {
             }
 
             return buildResponse(totalRows, successCount, totalRows - successCount, headerMapping, errors);
-        } catch (Exception e) {
-            errors.add(new AcademyStudentUploadError(0, "Failed to parse Excel file"));
-            return buildResponse(0, 0, 0, headerMapping, errors);
         }
     }
 

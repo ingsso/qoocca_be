@@ -1,0 +1,45 @@
+services:
+  api:
+    image: ${API_IMAGE}
+    container_name: qoocca-api
+    restart: always
+    env_file:
+      - .env.prod
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
+      JAVA_TOOL_OPTIONS: "-Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+      SPRING_JPA_OPEN_IN_VIEW: "false"
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "false"
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: "OFF"
+      LOGGING_LEVEL_ORG_HIBERNATE_ORM_JDBC_BIND: "OFF"
+      LOGGING_LEVEL_ORG_HIBERNATE_TYPE_DESCRIPTOR_SQL_BASICBINDER: "OFF"
+    ports:
+      - "8080:8080"
+    volumes:
+      - /opt/qoocca/config:/app/config:ro
+      - /opt/qoocca/logs:/app/logs
+      - academy_images_data:/app/uploads
+    depends_on:
+      - redis
+    networks:
+      - teachers_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: qoocca-redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - teachers_network
+
+volumes:
+  academy_images_data:
+  redis_data:
+
+networks:
+  teachers_network:
+    driver: bridge

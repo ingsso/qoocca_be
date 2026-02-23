@@ -57,3 +57,6 @@ qoocca-api/src/main/resources/application.yml
 qoocca-api/src/main/resources/application-local.yml
 qoocca-api/src/main/resources/application-docker.yml
 qoocca-api/src/main/resources/application-prod.yml
+Dockerfile
+docker-compose.yml
+docker-compose.prod.yml

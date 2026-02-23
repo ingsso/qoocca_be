@@ -13,12 +13,9 @@ import com.qoocca.teachers.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -26,31 +23,29 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserWriteService userWriteService;
     private final AcademyRepository academyRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final SmsService smsService;
 
-    // [추가] 다른 서비스에서 유저 정보를 조회할 때 꼭 필요한 메서드입니다.
+
     public UserEntity findById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
-    // [최적화] 비밀번호 암호화 연산은 CPU를 많이 써서 오래 걸리므로 트랜잭션 밖에서 미리 실행
+
     public LoginResponse signup(UserRequest req, HttpServletResponse res) {
-        smsService.checkIsVerified(req.getPhone());
+        String cleanPhone = normalizePhone(req.getPhone());
+        smsService.checkIsVerified(cleanPhone);
+        UserEntity userEntity = userWriteService.signup(req, cleanPhone);
+        smsService.deleteVerifiedState(cleanPhone);
 
-        // 트랜잭션 시작 전 무거운 암호화 작업 수행 (커넥션 점유 시간 단축)
-        String encodedPassword = passwordEncoder.encode(req.getPassword());
+        LoginResponse response = jwtTokenProvider.generateTokens(userEntity.getId(), userEntity.getRole(), res);
+        addAcademyIdToResponse(response, userEntity.getId());
+        return response;
 
-        UserEntity userEntity = saveUser(req, encodedPassword);
-
-        smsService.deleteVerifiedState(req.getPhone());
-
-        // 학원 정보를 한 번에 가져오는 최적화된 응답 빌드 호출
-        return buildLoginResponse(userEntity, res);
-    }
+   
 
     @Transactional
     protected UserEntity saveUser(UserRequest req, String encodedPassword) {
@@ -81,12 +76,14 @@ public class UserService {
                 });
 
         return userRepository.save(userEntity);
-    }
 
-    @Transactional
+
     public LoginResponse linkSocialAccount(SocialLinkRequest req, HttpServletResponse res) {
-        String cleanPhone = req.phone().replaceAll("[^0-9]", "");
+        String cleanPhone = normalizePhone(req.phone());
         smsService.checkIsVerified(cleanPhone);
+
+        UserEntity userEntity = userWriteService.linkSocialAccount(req, cleanPhone);
+
 
         UserEntity tempSocialUser = ("kakao".equals(req.provider())
                 ? userRepository.findByKakaoId(req.socialId())
@@ -126,9 +123,25 @@ public class UserService {
         setAgreements(tempSocialUser, req.agreements());
         userRepository.save(tempSocialUser);
         smsService.deleteVerifiedState(cleanPhone);
-
-        return buildLoginResponse(tempSocialUser, res);
+        return buildLoginResponse(userEntity, res);
     }
+
+
+    private String normalizePhone(String phone) {
+        if (phone == null) {
+            return "";
+        }
+        return phone.replaceAll("[^0-9]", "");
+    }
+
+    private void addAcademyIdToResponse(LoginResponse response, Long userId) {
+        academyRepository.findAllByUserId(userId).stream()
+                .findFirst()
+                .ifPresent(academy -> response.setAcademyId(academy.getId()));
+    }
+
+
+   
 
     private void setAgreements(UserEntity user, UserRequest.AgreementsRequest agreements) {
         if (agreements == null) return;
@@ -139,6 +152,7 @@ public class UserService {
     }
 
     // [최적화] 학원 조회를 한 번으로 통일하고 응답 객체를 완성함
+
     private LoginResponse buildLoginResponse(UserEntity user, HttpServletResponse res) {
         LoginResponse tokenResponse = jwtTokenProvider.generateTokens(user.getId(), user.getRole(), res);
 

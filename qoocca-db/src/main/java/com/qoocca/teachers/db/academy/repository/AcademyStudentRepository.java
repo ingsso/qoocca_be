@@ -14,6 +14,13 @@ public interface AcademyStudentRepository extends JpaRepository<AcademyStudentEn
 
     Optional<AcademyStudentEntity> findByAcademy_IdAndStudent_StudentId(Long academyId, Long studentId);
 
+    @Query("""
+    SELECT COUNT(DISTINCT ast.student.studentId)
+    FROM AcademyStudentEntity ast
+    WHERE ast.academy.id = :academyId
+""")
+    long countStudentsByAcademy(@Param("academyId") Long academyId);
+
     /**
      * 카드 미등록 학생 수 카운트
      * 1. 학원에 소속된 학생 중 (AcademyStudent)

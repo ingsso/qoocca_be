@@ -6,9 +6,9 @@ import com.qoocca.teachers.api.academy.model.request.AcademyStudentWithParentCre
 import com.qoocca.teachers.api.academy.model.response.AcademyStudentResponse;
 import com.qoocca.teachers.api.classInfo.model.request.ClassStudentRequest;
 import com.qoocca.teachers.api.classInfo.service.ClassInfoStudentService;
+import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.api.parent.model.ParentResponse;
 import com.qoocca.teachers.api.student.service.StudentParentService;
-import com.qoocca.teachers.api.global.config.CacheConfig;
 import com.qoocca.teachers.common.global.exception.CustomException;
 import com.qoocca.teachers.common.global.exception.ErrorCode;
 import com.qoocca.teachers.db.academy.entity.AcademyEntity;
@@ -20,6 +20,7 @@ import com.qoocca.teachers.db.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,11 @@ public class AcademyStudentService {
     private final StudentParentService studentParentService;
     private final ClassInfoStudentService classInfoStudentService;
 
-    @CacheEvict(cacheNames = CacheConfig.ACADEMY_STUDENTS, key = "#academyId")
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.ACADEMY_STUDENTS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId")
+    })
     public AcademyStudentResponse registerStudent(Long academyId, AcademyStudentCreateRequest request) {
 
         AcademyEntity academy = academyRepository.findById(academyId)
@@ -68,7 +73,11 @@ public class AcademyStudentService {
         return AcademyStudentResponse.from(student);
     }
 
-    @CacheEvict(cacheNames = CacheConfig.ACADEMY_STUDENTS, key = "#academyId")
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.ACADEMY_STUDENTS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId")
+    })
     public AcademyStudentResponse registerStudentWithParent(Long academyId, AcademyStudentWithParentCreateRequest request) {
         AcademyStudentResponse student = registerStudent(academyId, request.getStudent());
         ParentResponse parent = studentParentService.addParent(student.getStudentId(), request.getParent());
@@ -92,7 +101,11 @@ public class AcademyStudentService {
     }
 
 
-    @CacheEvict(cacheNames = CacheConfig.ACADEMY_STUDENTS, key = "#academyId")
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.ACADEMY_STUDENTS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId")
+    })
     public AcademyStudentResponse modifyStudent(
             Long academyId,
             Long studentId,
@@ -112,15 +125,19 @@ public class AcademyStudentService {
     }
 
 
-    @Transactional(readOnly = true)
     @Cacheable(cacheNames = CacheConfig.ACADEMY_STUDENTS, key = "#academyId")
+    @Transactional(readOnly = true)
     public List<AcademyStudentResponse> getStudents(Long academyId) {
         return academyStudentRepository.findByAcademy_Id(academyId).stream()
                 .map(e -> AcademyStudentResponse.from(e.getStudent()))
                 .toList();
     }
 
-    @CacheEvict(cacheNames = CacheConfig.ACADEMY_STUDENTS, key = "#academyId")
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.ACADEMY_STUDENTS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId"),
+            @CacheEvict(cacheNames = CacheConfig.ANALYTICS_PARENT_STATS, key = "#academyId")
+    })
     public void deleteStudent(Long academyId, Long studentId) {
 
         AcademyStudentEntity relation = academyStudentRepository

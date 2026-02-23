@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
@@ -28,6 +30,8 @@ public class ClassPaymentSummaryResponse {
         private String studentName;
         private Long amount;
         private String status;
+        @JsonProperty("cardRegistered")
+        @JsonAlias({"isCardRegistered"})
         private boolean isCardRegistered;
     }
 }

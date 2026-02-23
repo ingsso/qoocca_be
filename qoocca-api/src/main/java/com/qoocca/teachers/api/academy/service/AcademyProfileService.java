@@ -4,6 +4,8 @@ import com.qoocca.teachers.api.academy.model.request.AcademyRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyResubmitRequest;
 import com.qoocca.teachers.api.academy.model.request.AcademyUpdateRequest;
 import com.qoocca.teachers.api.academy.model.response.AcademyResponse;
+import com.qoocca.teachers.api.academy.model.response.AcademyImageUploadEnqueueResponse;
+import com.qoocca.teachers.api.academy.model.response.AcademyImageUploadJobStatusResponse;
 import com.qoocca.teachers.api.age.model.AgeResponse;
 import com.qoocca.teachers.api.subject.model.SubjectResponse;
 import com.qoocca.teachers.api.global.config.CacheConfig;
@@ -15,11 +17,15 @@ import com.qoocca.teachers.db.academy.entity.AcademyImageEntity;
 import com.qoocca.teachers.db.academy.entity.AcademySubjectEntity;
 import com.qoocca.teachers.db.academy.entity.ApprovalStatus;
 import com.qoocca.teachers.db.academy.repository.AcademyAgeRepository;
+import com.qoocca.teachers.db.academy.repository.AcademyImageRepository;
 import com.qoocca.teachers.db.academy.repository.AcademyRepository;
 import com.qoocca.teachers.db.academy.repository.AcademySubjectRepository;
 import com.qoocca.teachers.db.age.repository.AgeRepository;
 import com.qoocca.teachers.db.subject.repository.SubjectRepository;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -30,17 +36,28 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AcademyProfileService {
 
     private final AcademyRepository academyRepository;
+    private final AcademyImageRepository academyImageRepository;
     private final AcademySubjectRepository academySubjectRepository;
     private final AcademyAgeRepository academyAgeRepository;
     private final AgeRepository ageRepository;
@@ -51,6 +68,22 @@ public class AcademyProfileService {
 
     @Value("${file.upload.base-url}")
     private String imageBaseUrl;
+
+    @Value("${academy.image-upload.queue-capacity:300}")
+    private int imageUploadQueueCapacity;
+
+    @Value("${academy.image-upload.worker-count:4}")
+    private int imageUploadWorkerCount;
+
+    @Value("${academy.image-upload.tmp-dir:_upload_tmp}")
+    private String imageUploadTmpDir;
+
+    @Value("${academy.image-upload.job-retention-minutes:30}")
+    private int imageUploadJobRetentionMinutes;
+
+    private ArrayBlockingQueue<ImageUploadJob> imageUploadQueue;
+    private final Map<String, ImageUploadJob> imageUploadJobs = new ConcurrentHashMap<>();
+    private ExecutorService imageUploadWorkerPool;
 
     @Transactional(readOnly = true)
     public AcademyResponse getAcademyDetail(Long id) {
@@ -75,6 +108,67 @@ public class AcademyProfileService {
         return mappings.stream()
                 .map(mapping -> AgeResponse.from(mapping.getAge()))
                 .collect(Collectors.toList());
+    }
+
+    @PostConstruct
+    void initImageUploadQueue() {
+        imageUploadQueue = new ArrayBlockingQueue<>(imageUploadQueueCapacity);
+        imageUploadWorkerPool = Executors.newFixedThreadPool(imageUploadWorkerCount);
+        for (int i = 0; i < imageUploadWorkerCount; i++) {
+            imageUploadWorkerPool.submit(this::runImageUploadWorker);
+        }
+        log.info("academy image upload queue initialized: capacity={}, workers={}", imageUploadQueueCapacity, imageUploadWorkerCount);
+    }
+
+    @PreDestroy
+    void shutdownImageUploadQueue() {
+        if (imageUploadWorkerPool != null) {
+            imageUploadWorkerPool.shutdownNow();
+        }
+    }
+
+    public AcademyImageUploadEnqueueResponse enqueueAcademyImages(Long academyId, List<MultipartFile> images, Long userId) {
+        AcademyEntity academy = academyRepository.findById(academyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
+
+        if (!academy.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.NO_AUTHORITY);
+        }
+        if (images == null || images.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        ImageUploadJob job = createImageUploadJob(academyId, images);
+        boolean queued = imageUploadQueue.offer(job);
+        if (!queued) {
+            cleanupTempFiles(job.queuedFiles);
+            imageUploadJobs.remove(job.jobId);
+            throw new CustomException(ErrorCode.ACADEMY_IMAGE_UPLOAD_QUEUE_FULL);
+        }
+
+        return new AcademyImageUploadEnqueueResponse(job.jobId, job.state.name(), job.submittedAt);
+    }
+
+    public AcademyImageUploadJobStatusResponse getImageUploadJobStatus(Long academyId, String jobId, Long userId) {
+        AcademyEntity academy = academyRepository.findById(academyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
+        if (!academy.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.NO_AUTHORITY);
+        }
+
+        ImageUploadJob job = imageUploadJobs.get(jobId);
+        if (job == null || !academyId.equals(job.academyId)) {
+            throw new CustomException(ErrorCode.ACADEMY_IMAGE_NOT_FOUND);
+        }
+
+        return new AcademyImageUploadJobStatusResponse(
+                job.jobId,
+                job.academyId,
+                job.state.name(),
+                job.submittedAt,
+                job.completedAt,
+                job.errorMessage
+        );
     }
 
     @Transactional
@@ -112,7 +206,6 @@ public class AcademyProfileService {
 
     }
 
-    @Transactional
     public void uploadAcademyImages(Long academyId, List<MultipartFile> images, Long userId) {
         AcademyEntity academy = academyRepository.findById(academyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
@@ -121,28 +214,26 @@ public class AcademyProfileService {
             throw new CustomException(ErrorCode.NO_AUTHORITY);
         }
 
-        String folderPath = imageSavePath + academy.getId() + "/";
-        File folder = new File(folderPath);
-        if (!folder.exists()) folder.mkdirs();
+        List<String> imageUrls = saveImages(academyId, images);
+        persistImageUrls(academyId, imageUrls);
+    }
 
-        for (MultipartFile file : images) {
-            if (file.isEmpty()) continue;
+    public void uploadAcademyFiles(Long academyId, MultipartFile certificateFile, List<MultipartFile> images, Long userId) {
+        AcademyEntity academy = academyRepository.findById(academyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACADEMY_NOT_FOUND));
 
-            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            try {
-                file.transferTo(new File(folderPath + filename));
+        if (!academy.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.NO_AUTHORITY);
+        }
 
-                AcademyImageEntity image = AcademyImageEntity.builder()
-                        .academy(academy)
-                        .imageUrl(imageBaseUrl + academy.getId() + "/" + filename)
-                        .build();
+        if (certificateFile != null && !certificateFile.isEmpty()) {
+            updateCertificateFile(academy, certificateFile);
+            academyRepository.save(academy);
+        }
 
-                // ✅ 기존 이미지 유지하면서 새 이미지만 추가
-                academy.getAcademyImages().add(image);
-
-            } catch (IOException e) {
-                throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
-            }
+        if (images != null && !images.isEmpty()) {
+            List<String> imageUrls = saveImages(academyId, images);
+            persistImageUrls(academyId, imageUrls);
         }
     }
 
@@ -225,6 +316,202 @@ public class AcademyProfileService {
             academy.setCertificate(imageBaseUrl + academy.getId() + "/" + certFileName);
         } catch (IOException e) {
             throw new CustomException(ErrorCode.ACADEMY_CERTIFICATE_SAVE_FAILED);
+        }
+    }
+
+    private List<String> saveImages(Long academyId, List<MultipartFile> images) {
+        List<String> imageUrls = new ArrayList<>();
+        String folderPath = imageSavePath + academyId + "/";
+        File folder = new File(folderPath);
+        if (!folder.exists()) folder.mkdirs();
+
+        for (MultipartFile file : images) {
+            if (file == null || file.isEmpty()) continue;
+
+            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            try {
+                file.transferTo(new File(folderPath + filename));
+                imageUrls.add(imageBaseUrl + academyId + "/" + filename);
+
+            } catch (IOException e) {
+                throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
+            }
+        }
+        return imageUrls;
+    }
+
+    @Transactional
+    protected void persistImageUrls(Long academyId, List<String> imageUrls) {
+        if (imageUrls == null || imageUrls.isEmpty()) {
+            return;
+        }
+        AcademyEntity academyRef = academyRepository.getReferenceById(academyId);
+        List<AcademyImageEntity> entities = imageUrls.stream()
+                .map(url -> AcademyImageEntity.builder()
+                        .academy(academyRef)
+                        .imageUrl(url)
+                        .build())
+                .toList();
+        academyImageRepository.saveAll(entities);
+    }
+
+    @Transactional
+    protected void persistUploadedFiles(Long academyId, List<QueuedFile> queuedFiles) {
+        if (queuedFiles == null || queuedFiles.isEmpty()) {
+            return;
+        }
+
+        List<String> imageUrls = moveQueuedFilesToAcademyFolder(academyId, queuedFiles);
+        persistImageUrls(academyId, imageUrls);
+    }
+
+    private ImageUploadJob createImageUploadJob(Long academyId, List<MultipartFile> images) {
+        String jobId = UUID.randomUUID().toString();
+        LocalDateTime submittedAt = LocalDateTime.now();
+        List<QueuedFile> queuedFiles = spoolToTemp(jobId, images);
+        ImageUploadJob job = new ImageUploadJob(jobId, academyId, queuedFiles, submittedAt);
+        imageUploadJobs.put(jobId, job);
+        return job;
+    }
+
+    private List<QueuedFile> spoolToTemp(String jobId, List<MultipartFile> images) {
+        List<QueuedFile> queuedFiles = new ArrayList<>();
+        Path tmpBase = Path.of(imageSavePath, imageUploadTmpDir, jobId);
+        try {
+            Files.createDirectories(tmpBase);
+            for (MultipartFile file : images) {
+                if (file == null || file.isEmpty()) {
+                    continue;
+                }
+                String safeOriginalName = file.getOriginalFilename() == null ? "image.bin" : file.getOriginalFilename();
+                String tempName = UUID.randomUUID() + "_" + safeOriginalName;
+                Path tempPath = tmpBase.resolve(tempName);
+                file.transferTo(tempPath.toFile());
+                queuedFiles.add(new QueuedFile(tempPath, safeOriginalName));
+            }
+            return queuedFiles;
+        } catch (IOException e) {
+            cleanupTempFiles(queuedFiles);
+            throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
+        }
+    }
+
+    private List<String> moveQueuedFilesToAcademyFolder(Long academyId, List<QueuedFile> queuedFiles) {
+        List<String> imageUrls = new ArrayList<>();
+        Path targetFolder = Path.of(imageSavePath, String.valueOf(academyId));
+        try {
+            Files.createDirectories(targetFolder);
+            for (QueuedFile queuedFile : queuedFiles) {
+                String filename = UUID.randomUUID() + "_" + queuedFile.originalName;
+                Path targetPath = targetFolder.resolve(filename);
+                Files.move(queuedFile.tempPath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                imageUrls.add(imageBaseUrl + academyId + "/" + filename);
+            }
+            return imageUrls;
+        } catch (IOException e) {
+            throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
+        } finally {
+            cleanupTempFiles(queuedFiles);
+        }
+    }
+
+    private void runImageUploadWorker() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                ImageUploadJob job = imageUploadQueue.take();
+                processImageUploadJob(job);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error("academy image upload worker error", e);
+            }
+        }
+    }
+
+    private void processImageUploadJob(ImageUploadJob job) {
+        job.markProcessing();
+        try {
+            persistUploadedFiles(job.academyId, job.queuedFiles);
+            job.markCompleted();
+        } catch (Exception e) {
+            cleanupTempFiles(job.queuedFiles);
+            job.markFailed(e.getMessage());
+            log.error("academy image upload failed: academyId={}, jobId={}", job.academyId, job.jobId, e);
+        } finally {
+            cleanupFinishedJobs();
+        }
+    }
+
+    private void cleanupTempFiles(List<QueuedFile> queuedFiles) {
+        if (queuedFiles == null || queuedFiles.isEmpty()) {
+            return;
+        }
+        for (QueuedFile queuedFile : queuedFiles) {
+            try {
+                Files.deleteIfExists(queuedFile.tempPath);
+            } catch (IOException ignore) {
+            }
+        }
+    }
+
+    private void cleanupFinishedJobs() {
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(imageUploadJobRetentionMinutes);
+        imageUploadJobs.entrySet().removeIf(entry -> {
+            ImageUploadJob job = entry.getValue();
+            if (job.completedAt == null) {
+                return false;
+            }
+            return job.completedAt.isBefore(threshold);
+        });
+    }
+
+    private enum ImageUploadState {
+        QUEUED,
+        PROCESSING,
+        COMPLETED,
+        FAILED
+    }
+
+    private static final class QueuedFile {
+        private final Path tempPath;
+        private final String originalName;
+
+        private QueuedFile(Path tempPath, String originalName) {
+            this.tempPath = tempPath;
+            this.originalName = originalName;
+        }
+    }
+
+    private static final class ImageUploadJob {
+        private final String jobId;
+        private final Long academyId;
+        private final List<QueuedFile> queuedFiles;
+        private final LocalDateTime submittedAt;
+        private volatile LocalDateTime completedAt;
+        private volatile String errorMessage;
+        private volatile ImageUploadState state;
+
+        private ImageUploadJob(String jobId, Long academyId, List<QueuedFile> queuedFiles, LocalDateTime submittedAt) {
+            this.jobId = jobId;
+            this.academyId = academyId;
+            this.queuedFiles = queuedFiles;
+            this.submittedAt = submittedAt;
+            this.state = ImageUploadState.QUEUED;
+        }
+
+        private void markProcessing() {
+            this.state = ImageUploadState.PROCESSING;
+        }
+
+        private void markCompleted() {
+            this.state = ImageUploadState.COMPLETED;
+            this.completedAt = LocalDateTime.now();
+        }
+
+        private void markFailed(String errorMessage) {
+            this.state = ImageUploadState.FAILED;
+            this.completedAt = LocalDateTime.now();
+            this.errorMessage = errorMessage;
         }
     }
 

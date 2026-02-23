@@ -12,19 +12,18 @@ import com.qoocca.teachers.db.age.repository.AgeRepository;
 import com.qoocca.teachers.db.subject.repository.SubjectRepository;
 import com.qoocca.teachers.db.user.entity.UserEntity;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AcademyRegistrationService {
 
@@ -39,10 +38,18 @@ public class AcademyRegistrationService {
     @Value("${file.upload.base-url}")
     private String imageBaseUrl;
 
+    @Value("${academy.registration.slow-log-threshold-ms:2000}")
+    private long slowLogThresholdMs;
+
+    @Value("${academy.registration.verbose-log:false}")
+    private boolean verboseLogEnabled;
+
     @Transactional
     @CacheEvict(cacheNames = CacheConfig.ME_ACADEMIES, key = "#userId")
     public Long registerAcademy(AcademyCreateRequest req, Long userId) {
+        long startNanos = System.nanoTime();
         UserEntity user = userService.findById(userId);
+        long afterUserLookupNanos = System.nanoTime();
 
         AcademyEntity academy = AcademyEntity.builder()
                 .name(req.getName())
@@ -60,41 +67,66 @@ public class AcademyRegistrationService {
         academy.updateAddress(req.getBaseAddress(), req.getDetailAddress());
         updateRelationalData(academy, req);
         academyRepository.save(academy);
+        long afterEntitySaveNanos = System.nanoTime();
+
+        if (req.getCertificateFile() == null || req.getCertificateFile().isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
 
         String academyFolderPath = imageSavePath + academy.getId() + "/";
         File folder = new File(academyFolderPath);
+        long fileSaveStartNanos = System.nanoTime();
         if (!folder.exists()) folder.mkdirs();
+        long afterFolderReadyNanos = System.nanoTime();
 
-        if (req.getCertificateFile() != null && !req.getCertificateFile().isEmpty()) {
-            String certFileName = "cert_" + UUID.randomUUID() + "_" + req.getCertificateFile().getOriginalFilename();
-            try {
-                req.getCertificateFile().transferTo(new File(academyFolderPath + certFileName));
-                academy.setCertificate(imageBaseUrl + academy.getId() + "/" + certFileName);
-            } catch (IOException e) {
-                throw new CustomException(ErrorCode.ACADEMY_CERTIFICATE_SAVE_FAILED);
-            }
+        String certFileName = "cert_" + UUID.randomUUID() + "_" + req.getCertificateFile().getOriginalFilename();
+        try {
+            req.getCertificateFile().transferTo(new File(academyFolderPath + certFileName));
+            academy.setCertificate(imageBaseUrl + academy.getId() + "/" + certFileName);
+        } catch (IOException e) {
+            throw new CustomException(ErrorCode.ACADEMY_CERTIFICATE_SAVE_FAILED);
         }
+        long afterCertTransferNanos = System.nanoTime();
 
-        List<String> finalImageUrls = new ArrayList<>();
         if (req.getImageFiles() != null && !req.getImageFiles().isEmpty()) {
-            for (MultipartFile file : req.getImageFiles()) {
-                if (file.isEmpty()) continue;
-
-                String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-                try {
-                    file.transferTo(new File(academyFolderPath + filename));
-                    finalImageUrls.add(imageBaseUrl + academy.getId() + "/" + filename);
-                } catch (IOException e) {
-                    throw new CustomException(ErrorCode.ACADEMY_IMAGE_SAVE_FAILED);
-                }
-            }
+            log.warn(
+                    "academy register ignored inline images academyId={}, userId={}, imageCount={}. " +
+                            "Upload images via /api/academy/{id}/images",
+                    academy.getId(),
+                    userId,
+                    req.getImageFiles().size()
+            );
         }
 
-        if (!finalImageUrls.isEmpty()) {
-            academy.updateImages(finalImageUrls);
+        long afterFileSaveNanos = System.nanoTime();
+        long totalMs = nanosToMs(afterFileSaveNanos - startNanos);
+        long userLookupMs = nanosToMs(afterUserLookupNanos - startNanos);
+        long dbWriteMs = nanosToMs(afterEntitySaveNanos - afterUserLookupNanos);
+        long fileSaveMs = nanosToMs(afterFileSaveNanos - afterEntitySaveNanos);
+        long folderReadyMs = nanosToMs(afterFolderReadyNanos - fileSaveStartNanos);
+        long certTransferMs = nanosToMs(afterCertTransferNanos - afterFolderReadyNanos);
+        long certSizeKb = req.getCertificateFile().getSize() / 1024;
+
+        if (verboseLogEnabled || totalMs >= slowLogThresholdMs) {
+            log.warn(
+                    "academy register timing academyId={}, userId={}, totalMs={}, userLookupMs={}, dbWriteMs={}, fileSaveMs={}, folderReadyMs={}, certTransferMs={}, certSizeKb={}",
+                    academy.getId(),
+                    userId,
+                    totalMs,
+                    userLookupMs,
+                    dbWriteMs,
+                    fileSaveMs,
+                    folderReadyMs,
+                    certTransferMs,
+                    certSizeKb
+            );
         }
 
         return academy.getId();
+    }
+
+    private long nanosToMs(long nanos) {
+        return nanos / 1_000_000;
     }
 
     private void updateRelationalData(AcademyEntity academy, AcademyRequest req) {

@@ -39,7 +39,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ErrorResponse> handleUnexpectedException(Exception e) {
-        logger.error("Unhandled exception", e);
+        String rootSummary = summarizeThrowable(getRootCause(e));
+        logger.error(
+                "Unhandled exception: type={}, message={}, rootCause={}",
+                e.getClass().getSimpleName(),
+                safeMessage(e.getMessage()),
+                rootSummary
+        );
+        logger.debug("Unhandled exception stacktrace", e);
         return buildErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
     }
 
@@ -51,5 +58,25 @@ public class GlobalExceptionHandler {
                         .code(errorCode.getCode())
                         .message(message)
                         .build());
+    }
+
+    private static Throwable getRootCause(Throwable t) {
+        Throwable cur = t;
+        while (cur != null && cur.getCause() != null && cur.getCause() != cur) {
+            cur = cur.getCause();
+        }
+        return cur;
+    }
+
+    private static String summarizeThrowable(Throwable t) {
+        if (t == null) {
+            return "none";
+        }
+        String msg = safeMessage(t.getMessage());
+        return t.getClass().getSimpleName() + (msg.isEmpty() ? "" : ": " + msg);
+    }
+
+    private static String safeMessage(String message) {
+        return message == null ? "" : message;
     }
 }

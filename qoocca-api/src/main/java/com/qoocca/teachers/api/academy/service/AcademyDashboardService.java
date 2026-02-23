@@ -26,8 +26,8 @@ public class AcademyDashboardService {
     private final ClassInfoStudentRepository classInfoStudentRepository;
     private final ReceiptRepository receiptRepository;
 
-    @Transactional(readOnly = true)
     @Cacheable(cacheNames = CacheConfig.DASHBOARD_STATS, key = "#academyId")
+    @Transactional(readOnly = true)
     public DashboardStatsResponse getDashboardStats(Long academyId) {
         LocalDate today = LocalDate.now();
         LocalDateTime startOfMonth = today.withDayOfMonth(1).atStartOfDay();
@@ -40,7 +40,7 @@ public class AcademyDashboardService {
                 AttendanceEntity.AttendanceStatus.EARLY_LEAVE
         );
 
-        Long studentCount = classInfoStudentRepository.countUniqueStudentsByAcademy(academyId, StudentStatus.ENROLLED);
+        Long studentCount = academyStudentRepository.countStudentsByAcademy(academyId);
         Long totalTodayCount = classInfoStudentRepository.countExpectedStudentsToday(
                 academyId,
                 dayOfWeek,

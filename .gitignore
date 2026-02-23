@@ -37,6 +37,8 @@ out/
 .vscode/
 
 .env
+.env.docker
+.env.local
 **/.env
 service-account.json
 google-services.json
@@ -47,4 +49,9 @@ key.properties
 *.yml
 *.yaml
 !nginx/nginx.conf
-nginx/images/
+nginx/images
+logs
+docs
+monitoring
+performance
+Dockerfile

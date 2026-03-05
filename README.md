@@ -400,13 +400,3 @@ docker compose exec k6 k6 run `
 정확한 정책은 `qoocca-auth` 모듈의 Security 설정을 기준으로 합니다.
 
 ---
-
-## 테스트
-```powershell
-./gradlew test
-```
-
----
-
-## 라이선스
-프로젝트 정책에 따라 추가하세요.
